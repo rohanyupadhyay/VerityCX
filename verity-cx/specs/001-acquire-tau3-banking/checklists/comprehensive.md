@@ -1,3 +1,5 @@
+<!-- Defines the reviewer-owned requirements-quality checklist for Feature 001. -->
+
 # Comprehensive Requirements Quality Checklist: Acquire τ³-Banking Data
 
 **Purpose**: Review the completeness, clarity, consistency, measurability, and scenario coverage of the acquisition, validation, inspection, portability, and data-governance requirements before implementation

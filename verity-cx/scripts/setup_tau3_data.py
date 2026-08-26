@@ -11,6 +11,7 @@ from veritycx.data_sources.tau3 import (
     SetupResult,
     Tau3Config,
     Tau3OperationError,
+    format_tau3_diagnostic,
     setup_tau3_data,
 )
 
@@ -73,7 +74,7 @@ def main(
     try:
         result = setup_tau3_data(root, config=config, check_only=bool(arguments.check))
     except Tau3OperationError as error:
-        print(f"error[{error.category}]: {error.message}", file=sys.stderr)
+        print(format_tau3_diagnostic(error), file=sys.stderr)
         return 1
     print(_format_success(result))
     return 0

@@ -6,8 +6,11 @@ validation, setup transaction, and safe inspection summaries for Feature 001.
 
 from __future__ import annotations
 
+import ctypes
+import errno
 import json
 import os
+import platform
 import re
 import shutil
 import stat
@@ -19,6 +22,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from io import BufferedReader
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from typing import NoReturn
 
 _CONFIG_RELATIVE_PATH = Path("config/tau3-bench.toml")
 _EXPECTED_REPOSITORY_URL = "https://github.com/sierra-research/tau2-bench.git"
@@ -35,6 +39,24 @@ _SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 _GIT_VERSION_PATTERN = re.compile(r"^git version (\d+)\.(\d+)(?:\.\d+)?")
 _MINIMUM_GIT_VERSION = (2, 34)
 _FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+_DIAGNOSTIC_RECOVERY = {
+    "banking-data-invalid": "review the preserved checkout and reacquire only after resolving it",
+    "checkout-changed": "wait for concurrent activity to stop and retry inspection",
+    "checkout-missing": "run setup without --check before retrying",
+    "clone-failed": "verify Git and network availability, then retry without credentials",
+    "configuration-invalid": "correct the fixed configuration and retry",
+    "destination-conflict": "review the preserved destination and resolve ownership manually",
+    "dirty-checkout": "review and resolve local changes manually before retrying",
+    "git-unavailable": "install or upgrade Git 2.34 or newer and retry",
+    "malformed-database": "review the preserved checkout and reacquire only after resolving it",
+    "not-standalone-repository": "review the preserved checkout manually",
+    "origin-mismatch": "use a clean checkout from the configured origin",
+    "revision-mismatch": "use a clean checkout at the configured revision",
+    "setup-locked": "confirm no setup is active before handling the preserved lock manually",
+    "staging-cleanup-failed": "remove only the reported current-run-owned path after review",
+    "tag-mismatch": "use a clean checkout with the configured tag binding",
+    "unexpected-target": "review the preserved path manually",
+}
 
 
 class Tau3OperationError(Exception):
@@ -52,10 +74,28 @@ class Tau3OperationError(Exception):
             message: Sanitized human-readable failure and recovery guidance.
             path: Optional configured or current-run-owned path relevant to the failure.
         """
+        if category not in _DIAGNOSTIC_RECOVERY:
+            raise ValueError("diagnostic category must be declared")
         super().__init__(message)
         self.category = category
         self.message = message
         self.path = path
+
+
+def format_tau3_diagnostic(error: Tau3OperationError) -> str:
+    """Render one declared expected failure for either public command.
+
+    Args:
+        error: Validated expected failure carrying only safe application context.
+
+    Returns:
+        Stable single-line category, reason, optional JSON-escaped path, and recovery.
+    """
+    fields = [f"reason={error.message}"]
+    if error.path is not None:
+        fields.append(f"path={json.dumps(str(error.path), ensure_ascii=True)}")
+    fields.append(f"recovery={_DIAGNOSTIC_RECOVERY[error.category]}")
+    return f"error[{error.category}]: {'; '.join(fields)}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,6 +219,35 @@ def _sanitized_origin_summary(origin: str) -> str:
         host, repository_path = scp_match.groups()
         return f"{host}:{repository_path}"
     return "<local-or-unreportable-origin>"
+
+
+def _sanitized_git_failure_detail(stderr: str) -> str:
+    """Map Git stderr to a concise allow-listed cause without echoing source text.
+
+    Args:
+        stderr: Captured Git error text, treated as untrusted and never returned.
+
+    Returns:
+        One safe coarse failure description.
+    """
+    lowered = stderr.casefold()
+    if any(
+        marker in lowered
+        for marker in (
+            "could not resolve host",
+            "does not exist",
+            "failed to connect",
+            "not found",
+            "unable to access",
+        )
+    ):
+        return "repository unavailable"
+    if any(
+        marker in lowered
+        for marker in ("authentication failed", "could not read username", "permission denied")
+    ):
+        return "authentication unavailable"
+    return "unreportable Git error"
 
 
 def _configuration_error(message: str, path: Path) -> Tau3OperationError:
@@ -429,7 +498,7 @@ def _run_git(
     arguments: Sequence[str],
     *,
     cwd: Path,
-    failure_category: str = "git-failed",
+    failure_category: str,
 ) -> str:
     """Run Git through the sanitized non-shell subprocess boundary.
 
@@ -450,9 +519,25 @@ def _run_git(
             "git-unavailable",
             "Git 2.34 or newer is required; install Git and retry",
         )
-    environment = os.environ.copy()
-    environment["GIT_TERMINAL_PROMPT"] = "0"
-    environment["GIT_OPTIONAL_LOCKS"] = "0"
+    environment = {
+        name: value
+        for name, value in os.environ.items()
+        if not name.upper().startswith(("GIT_", "SSH_ASKPASS"))
+    }
+    environment.update(
+        {
+            "GIT_CONFIG_COUNT": "2",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_KEY_0": "credential.helper",
+            "GIT_CONFIG_KEY_1": "core.askPass",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_SYSTEM": os.devnull,
+            "GIT_CONFIG_VALUE_0": "",
+            "GIT_CONFIG_VALUE_1": "",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+    )
     try:
         # The executable is resolved by shutil.which and arguments bypass a shell.
         result = subprocess.run(  # noqa: S603
@@ -474,7 +559,8 @@ def _run_git(
     if result.returncode != 0:
         raise Tau3OperationError(
             failure_category,
-            f"Git operation failed with exit code {result.returncode}; review local Git state",
+            "Git operation failed with exit code "
+            f"{result.returncode}; detail={_sanitized_git_failure_detail(result.stderr)}",
             cwd,
         )
     return result.stdout.strip()
@@ -489,7 +575,11 @@ def _require_supported_git(cwd: Path) -> None:
     Raises:
         Tau3OperationError: If the installed Git version is malformed or unsupported.
     """
-    version_output = _run_git(("--version",), cwd=cwd)
+    version_output = _run_git(
+        ("--version",),
+        cwd=cwd,
+        failure_category="git-unavailable",
+    )
     match = _GIT_VERSION_PATTERN.match(version_output)
     if match is None:
         raise Tau3OperationError(
@@ -513,8 +603,51 @@ def _is_reparse_point(path_stat: os.stat_result) -> bool:
     Returns:
         True for junctions and other Windows reparse points.
     """
-    attributes = getattr(path_stat, "st_file_attributes", 0)
+    attributes = getattr(path_stat, "st_file_attributes", 0) or 0
     return bool(attributes & _FILE_ATTRIBUTE_REPARSE_POINT)
+
+
+def _filesystem_kind(path_stat: os.stat_result) -> str:
+    """Return an allow-listed non-following kind for a filesystem object.
+
+    Args:
+        path_stat: Non-following stat result for the object.
+
+    Returns:
+        Safe kind label without an object name or content.
+    """
+    if stat.S_ISLNK(path_stat.st_mode):
+        return "symbolic link"
+    if _is_reparse_point(path_stat):
+        return "junction or reparse point"
+    if stat.S_ISDIR(path_stat.st_mode):
+        return "directory"
+    if stat.S_ISREG(path_stat.st_mode):
+        return "regular file"
+    return "special filesystem object"
+
+
+def _git_status_summary(status_output: str) -> str:
+    """Summarize porcelain status by count and coarse category only.
+
+    Args:
+        status_output: Captured porcelain text whose path portion is never returned.
+
+    Returns:
+        Safe status-entry count and sorted allow-listed categories.
+    """
+    entries = status_output.splitlines()
+    categories: set[str] = set()
+    for entry in entries:
+        status_code = entry[:2]
+        if "?" in status_code:
+            categories.add("untracked")
+        elif "U" in status_code or status_code in {"AA", "DD"}:
+            categories.add("conflicted")
+        else:
+            categories.add("tracked")
+    noun = "entry" if len(entries) == 1 else "entries"
+    return f"{len(entries)} status {noun} in categories {', '.join(sorted(categories))}"
 
 
 def _banking_data_error(message: str, path: Path) -> Tau3OperationError:
@@ -652,6 +785,18 @@ def _json_kind(value: object) -> str:
     raise Tau3OperationError("malformed-database", "db.json contains an unsupported JSON value")
 
 
+def _reject_nonstandard_json_constant(_constant: str) -> NoReturn:
+    """Reject a decoder extension that is not part of standard JSON.
+
+    Args:
+        _constant: Decoder token such as NaN or either infinity spelling.
+
+    Raises:
+        ValueError: Always, without exposing the database token or source.
+    """
+    raise ValueError("db.json contains a non-standard numeric constant")
+
+
 def _load_database_shapes(
     database: Path,
     containment_root: Path,
@@ -684,11 +829,20 @@ def _load_database_shapes(
             database,
         ) from None
     try:
-        parsed: object = json.loads(source)
+        parsed: object = json.loads(
+            source,
+            parse_constant=_reject_nonstandard_json_constant,
+        )
     except json.JSONDecodeError as error:
         raise Tau3OperationError(
             "malformed-database",
             f"db.json is malformed at line {error.lineno}, column {error.colno}",
+            database,
+        ) from None
+    except ValueError:
+        raise Tau3OperationError(
+            "malformed-database",
+            "db.json must use standard JSON numeric values",
             database,
         ) from None
     if not isinstance(parsed, dict) or not parsed:
@@ -793,7 +947,7 @@ def _require_real_directory(path: Path, containment_root: Path, label: str) -> N
     ):
         raise Tau3OperationError(
             "unexpected-target",
-            f"{label} must be a real directory and was preserved; review it manually",
+            f"Expected {label} to be a real directory; detected {_filesystem_kind(path_stat)}",
             path,
         )
     try:
@@ -841,6 +995,7 @@ def _validate_checkout(
         Tau3OperationError: If identity, cleanliness, or required data is invalid.
     """
     _require_real_directory(paths.checkout, project_root, "checkout")
+    expected_checkout = json.dumps(str(paths.checkout.resolve()), ensure_ascii=True)
     try:
         top_level_text = _run_git(
             ("rev-parse", "--show-toplevel"),
@@ -851,7 +1006,8 @@ def _validate_checkout(
         if error.category == "not-standalone-repository":
             raise Tau3OperationError(
                 error.category,
-                "Checkout must be a standalone Git repository; preserve it and review manually",
+                f"Expected Git top level {expected_checkout}; "
+                "detected unavailable or non-repository",
                 paths.checkout,
             ) from None
         raise
@@ -859,16 +1015,25 @@ def _validate_checkout(
     if top_level != paths.checkout.resolve():
         raise Tau3OperationError(
             "not-standalone-repository",
-            "Checkout Git top level differs from the configured root; "
-            "preserve it and review manually",
+            f"Expected Git top level {expected_checkout}; "
+            f"detected {json.dumps(str(top_level), ensure_ascii=True)}",
             paths.checkout,
         )
 
-    origin_output = _run_git(
-        ("config", "--local", "--get-all", "remote.origin.url"),
-        cwd=paths.checkout,
-        failure_category="origin-mismatch",
-    )
+    try:
+        origin_output = _run_git(
+            ("config", "--local", "--get-all", "remote.origin.url"),
+            cwd=paths.checkout,
+            failure_category="origin-mismatch",
+        )
+    except Tau3OperationError as error:
+        if error.category == "origin-mismatch":
+            raise Tau3OperationError(
+                "origin-mismatch",
+                f"Expected origin {config.upstream.repository_url}; detected origin unavailable",
+                paths.checkout,
+            ) from None
+        raise
     origins = origin_output.splitlines()
     if origins != [config.upstream.repository_url]:
         detected_summary = (
@@ -882,37 +1047,66 @@ def _validate_checkout(
             paths.checkout,
         )
 
-    head_sha = _run_git(
-        ("rev-parse", "HEAD"),
-        cwd=paths.checkout,
-        failure_category="revision-mismatch",
-    )
+    try:
+        head_sha = _run_git(
+            ("rev-parse", "HEAD"),
+            cwd=paths.checkout,
+            failure_category="revision-mismatch",
+        )
+    except Tau3OperationError as error:
+        if error.category == "revision-mismatch":
+            raise Tau3OperationError(
+                "revision-mismatch",
+                f"Expected revision {config.upstream.commit_sha}; detected revision unavailable",
+                paths.checkout,
+            ) from None
+        raise
     if head_sha != config.upstream.commit_sha:
         raise Tau3OperationError(
             "revision-mismatch",
             f"Expected revision {config.upstream.commit_sha}; detected {head_sha}",
             paths.checkout,
         )
-    tag_sha = _run_git(
-        ("rev-parse", "--verify", f"refs/tags/{config.upstream.tag}^{{commit}}"),
-        cwd=paths.checkout,
-        failure_category="tag-mismatch",
-    )
+    try:
+        tag_sha = _run_git(
+            ("rev-parse", "--verify", f"refs/tags/{config.upstream.tag}^{{commit}}"),
+            cwd=paths.checkout,
+            failure_category="tag-mismatch",
+        )
+    except Tau3OperationError as error:
+        if error.category == "tag-mismatch":
+            raise Tau3OperationError(
+                "tag-mismatch",
+                f"Expected tag {config.upstream.tag} at {config.upstream.commit_sha}; "
+                "detected missing or invalid binding",
+                paths.checkout,
+            ) from None
+        raise
     if tag_sha != config.upstream.commit_sha:
         raise Tau3OperationError(
             "tag-mismatch",
-            f"Expected tag {config.upstream.tag} at {config.upstream.commit_sha}; binding differs",
+            f"Expected tag {config.upstream.tag} at {config.upstream.commit_sha}; "
+            f"detected binding {tag_sha}",
             paths.checkout,
         )
-    status_output = _run_git(
-        ("--no-optional-locks", "status", "--porcelain=v1", "--untracked-files=all"),
-        cwd=paths.checkout,
-        failure_category="dirty-checkout",
-    )
+    try:
+        status_output = _run_git(
+            ("--no-optional-locks", "status", "--porcelain=v1", "--untracked-files=all"),
+            cwd=paths.checkout,
+            failure_category="dirty-checkout",
+        )
+    except Tau3OperationError as error:
+        if error.category == "dirty-checkout":
+            raise Tau3OperationError(
+                "dirty-checkout",
+                "Expected a clean checkout; detected unavailable Git status",
+                paths.checkout,
+            ) from None
+        raise
     if status_output:
         raise Tau3OperationError(
             "dirty-checkout",
-            "Checkout contains local changes; resolve them manually and retry",
+            f"Expected a clean checkout; detected {_git_status_summary(status_output)}",
             paths.checkout,
         )
 
@@ -965,18 +1159,103 @@ def _remove_owned_state(staging_parent: Path | None, lock: Path, owns_lock: bool
         Path(path).chmod(stat.S_IREAD | stat.S_IWRITE)
         function(path)
 
-    try:
-        if staging_parent is not None and _path_lstat(staging_parent) is not None:
+    if staging_parent is not None and _path_lstat(staging_parent) is not None:
+        try:
             shutil.rmtree(staging_parent, onexc=clear_readonly_and_retry)
-        if owns_lock and _path_lstat(lock) is not None:
+        except OSError:
+            raise Tau3OperationError(
+                "staging-cleanup-failed",
+                "Current-run staging state could not be removed",
+                staging_parent,
+            ) from None
+    if owns_lock and _path_lstat(lock) is not None:
+        try:
             lock.rmdir()
-    except OSError:
-        retained = staging_parent if staging_parent is not None else lock
-        raise Tau3OperationError(
-            "staging-cleanup-failed",
-            "Current-run setup state could not be removed; review the reported path manually",
-            retained,
-        ) from None
+        except OSError:
+            raise Tau3OperationError(
+                "staging-cleanup-failed",
+                "Current-run setup lock could not be removed",
+                lock,
+            ) from None
+
+
+def _raise_rename_error(error_number: int, destination: Path) -> None:
+    """Raise the typed Python error reported by a native rename operation.
+
+    Args:
+        error_number: Platform error number captured immediately after the call.
+        destination: Safe configured destination associated with the failure.
+
+    Raises:
+        FileExistsError: If the destination already exists.
+        OSError: For every other native failure.
+    """
+    if error_number == errno.EEXIST:
+        raise FileExistsError(error_number, os.strerror(error_number), destination)
+    raise OSError(error_number, os.strerror(error_number), destination)
+
+
+def _rename_directory_no_replace(source: Path, destination: Path) -> None:
+    """Atomically rename a same-filesystem directory only if destination is absent.
+
+    Windows already gives ``os.rename`` no-replace behavior. Linux and macOS require
+    their native exclusive-rename flags because ordinary POSIX rename may replace an
+    empty destination directory.
+
+    Args:
+        source: Current-run-owned staged checkout.
+        destination: Configured final checkout path on the same filesystem.
+
+    Raises:
+        FileExistsError: If another owner created the destination first.
+        OSError: If exclusive promotion is unavailable or otherwise fails.
+    """
+    system_name = platform.system()
+    if system_name == "Windows":
+        os.rename(source, destination)
+        return
+
+    source_bytes = os.fsencode(source)
+    destination_bytes = os.fsencode(destination)
+    library = ctypes.CDLL(None, use_errno=True)
+    if system_name == "Linux":
+        try:
+            renameat2 = library.renameat2
+        except AttributeError:
+            raise OSError(
+                errno.ENOTSUP,
+                "atomic no-replace rename is unavailable",
+                destination,
+            ) from None
+        renameat2.argtypes = [
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+        ]
+        renameat2.restype = ctypes.c_int
+        result = renameat2(-100, source_bytes, -100, destination_bytes, 1)
+    elif system_name == "Darwin":
+        try:
+            renamex_np = library.renamex_np
+        except AttributeError:
+            raise OSError(
+                errno.ENOTSUP,
+                "atomic no-replace rename is unavailable",
+                destination,
+            ) from None
+        renamex_np.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+        renamex_np.restype = ctypes.c_int
+        result = renamex_np(source_bytes, destination_bytes, 0x00000004)
+    else:
+        raise OSError(
+            errno.ENOTSUP,
+            "atomic no-replace rename is unavailable",
+            destination,
+        )
+    if result != 0:
+        _raise_rename_error(ctypes.get_errno(), destination)
 
 
 def setup_tau3_data(
@@ -1086,7 +1365,7 @@ def setup_tau3_data(
                 paths.checkout,
             )
         try:
-            staging_checkout.rename(paths.checkout)
+            _rename_directory_no_replace(staging_checkout, paths.checkout)
         except FileExistsError:
             raise Tau3OperationError(
                 "destination-conflict",

@@ -8,6 +8,7 @@ import importlib.util
 import json
 import os
 import shutil
+import stat
 import subprocess
 import threading
 from collections.abc import Callable, Iterator, Sequence
@@ -21,6 +22,7 @@ import pytest
 
 from veritycx.data_sources.tau3 import (
     BankingDataState,
+    DatabaseCollectionShape,
     GitCheckoutState,
     ResolvedTau3Paths,
     Tau3Config,
@@ -190,6 +192,11 @@ def _create_local_fixture(
         (banking_root / "db.json").write_text("{MALFORMED_DATABASE_CANARY", encoding="utf-8")
     elif variant == "empty-database-object":
         (banking_root / "db.json").write_text("{}", encoding="utf-8")
+    elif variant == "nonstandard-database":
+        (banking_root / "db.json").write_text(
+            '{"accounts": NaN, "private": "DATABASE_SOURCE_CANARY"}',
+            encoding="utf-8",
+        )
     elif variant == "documents-file":
         shutil.rmtree(documents)
         documents.write_text("wrong kind", encoding="utf-8")
@@ -275,7 +282,24 @@ def test_load_config_accepts_the_exact_closed_schema(tmp_path: Path) -> None:
         ("", "schema"),
         (_production_toml().replace("schema_version = 1\n", ""), "schema_version"),
         (_production_toml() + "\nunknown = true\n", "unknown"),
+        (
+            _production_toml().replace(
+                'license = "MIT"',
+                'license = "MIT"\nunknown_upstream = true',
+            ),
+            "unknown",
+        ),
+        (
+            _production_toml().replace(
+                'tasks = ".cache/tau3-bench/data/tau2/domains/banking_knowledge/tasks/"',
+                'tasks = ".cache/tau3-bench/data/tau2/domains/banking_knowledge/tasks/"\n'
+                'unknown_path = ".cache/other/"',
+            ),
+            "unknown",
+        ),
+        (_production_toml().replace(f'tag = "{TAG}"\n', ""), "tag"),
         (_production_toml().replace("schema_version = 1", "schema_version = true"), "integer"),
+        (_production_toml().replace(f'tag = "{TAG}"', "tag = true"), "string"),
         (_production_toml().replace('license = "MIT"', 'license = "Apache-2.0"'), "license"),
         (_production_toml().replace(COMMIT_SHA, "abc"), "commit_sha"),
         (
@@ -332,6 +356,49 @@ def test_resolve_paths_rejects_required_paths_outside_checkout(tmp_path: Path) -
         _tau3_module().load_tau3_config(tmp_path)
 
 
+@pytest.mark.parametrize("escaping_field", ["checkout", "documents", "database", "tasks"])
+def test_resolve_paths_rejects_filesystem_resolved_escapes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    escaping_field: str,
+) -> None:
+    """Recheck containment after filesystem resolution for every configured path."""
+    project_root = tmp_path / "project"
+    outside = tmp_path / "outside"
+    project_root.mkdir()
+    outside.mkdir()
+    config = Tau3Config(
+        1,
+        Tau3UpstreamConfig(REPOSITORY_URL, "MIT", TAG, COMMIT_SHA),
+        Tau3PathConfig(
+            checkout=".cache/tau3-bench/",
+            documents=".cache/tau3-bench/data/documents/",
+            database=".cache/tau3-bench/data/db.json",
+            tasks=".cache/tau3-bench/data/tasks/",
+        ),
+    )
+    configured = {
+        "checkout": project_root / config.paths.checkout,
+        "documents": project_root / config.paths.documents,
+        "database": project_root / config.paths.database,
+        "tasks": project_root / config.paths.tasks,
+    }
+    original_resolve = Path.resolve
+
+    def resolve_with_escape(path: Path, strict: bool = False) -> Path:
+        """Resolve exactly one configured path outside its required containment."""
+        if path == configured[escaping_field]:
+            if escaping_field == "checkout":
+                return outside
+            return project_root / "other" / path.name
+        return original_resolve(path, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", resolve_with_escape)
+
+    with pytest.raises(Tau3OperationError, match="escapes"):
+        _tau3_module().resolve_tau3_paths(project_root, config)
+
+
 def test_config_and_paths_are_independent_of_current_directory(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -356,9 +423,33 @@ def test_git_runner_uses_argument_list_and_read_only_environment(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Invoke resolved Git without a shell, prompts, or optional validation locks."""
+    """Invoke Git without a shell or inherited repository and config controls."""
     module = _tau3_module()
     observed: dict[str, object] = {}
+    poisoned_environment = {
+        "GIT_DIR": str(tmp_path / "foreign.git"),
+        "GIT_WORK_TREE": str(tmp_path / "foreign-worktree"),
+        "GIT_INDEX_FILE": str(tmp_path / "foreign.index"),
+        "GIT_OBJECT_DIRECTORY": str(tmp_path / "foreign-objects"),
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(tmp_path / "alternate-objects"),
+        "GIT_COMMON_DIR": str(tmp_path / "foreign-common"),
+        "GIT_NAMESPACE": "foreign-namespace",
+        "GIT_CONFIG_GLOBAL": str(tmp_path / "hostile-global-config"),
+        "GIT_CONFIG_SYSTEM": str(tmp_path / "hostile-system-config"),
+        "GIT_CONFIG_PARAMETERS": "'url.https://hostile.invalid/.insteadOf'='https://'",
+        "GIT_CONFIG_COUNT": "2",
+        "GIT_CONFIG_KEY_0": "credential.helper",
+        "GIT_CONFIG_VALUE_0": "hostile-helper",
+        "GIT_CONFIG_KEY_1": "url.https://hostile.invalid/.insteadOf",
+        "GIT_CONFIG_VALUE_1": "https://",
+        "GIT_SSH": str(tmp_path / "hostile-ssh"),
+        "GIT_SSH_COMMAND": "hostile-ssh-command",
+        "GIT_ASKPASS": str(tmp_path / "hostile-git-askpass"),
+        "SSH_ASKPASS": str(tmp_path / "hostile-ssh-askpass"),
+        "SSH_ASKPASS_REQUIRE": "force",
+    }
+    for name, value in poisoned_environment.items():
+        monkeypatch.setenv(name, value)
 
     def fake_which(executable: str) -> str:
         """Return a deterministic resolved Git executable."""
@@ -377,7 +468,11 @@ def test_git_runner_uses_argument_list_and_read_only_environment(
     monkeypatch.setattr(module.shutil, "which", fake_which)
     monkeypatch.setattr(module.subprocess, "run", fake_run)
 
-    output = module._run_git(("status", "--porcelain=v1"), cwd=tmp_path)
+    output = module._run_git(
+        ("status", "--porcelain=v1"),
+        cwd=tmp_path,
+        failure_category="dirty-checkout",
+    )
 
     assert output == "clean"
     assert observed["arguments"] == ["C:/Git/bin/git.exe", "status", "--porcelain=v1"]
@@ -385,8 +480,46 @@ def test_git_runner_uses_argument_list_and_read_only_environment(
     assert observed["check"] is False
     environment = observed["env"]
     assert isinstance(environment, dict)
-    assert environment["GIT_TERMINAL_PROMPT"] == "0"
-    assert environment["GIT_OPTIONAL_LOCKS"] == "0"
+    git_controls = {
+        name: value
+        for name, value in environment.items()
+        if name.startswith("GIT_") or name.startswith("SSH_ASKPASS")
+    }
+    assert git_controls == {
+        "GIT_CONFIG_COUNT": "2",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_KEY_0": "credential.helper",
+        "GIT_CONFIG_KEY_1": "core.askPass",
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_SYSTEM": os.devnull,
+        "GIT_CONFIG_VALUE_0": "",
+        "GIT_CONFIG_VALUE_1": "",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_TERMINAL_PROMPT": "0",
+    }
+
+
+def test_git_runner_ignores_inherited_repository_selection(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Resolve Git state from the explicit cwd despite hostile parent controls."""
+    module = _tau3_module()
+    intended_repository = tmp_path / "intended"
+    foreign_repository = tmp_path / "foreign"
+    intended_repository.mkdir()
+    foreign_repository.mkdir()
+    _run_git("init", "--initial-branch", "main", cwd=intended_repository)
+    _run_git("init", "--initial-branch", "main", cwd=foreign_repository)
+    monkeypatch.setenv("GIT_DIR", str(foreign_repository / ".git"))
+
+    git_directory = module._run_git(
+        ("rev-parse", "--git-dir"),
+        cwd=intended_repository,
+        failure_category="not-standalone-repository",
+    )
+
+    assert Path(git_directory) == Path(".git")
 
 
 def test_git_runner_reports_missing_git_without_traceback_context(
@@ -398,7 +531,7 @@ def test_git_runner_reports_missing_git_without_traceback_context(
     monkeypatch.setattr(module.shutil, "which", lambda _executable: None)
 
     with pytest.raises(Tau3OperationError, match=r"Git 2\.34") as raised:
-        module._run_git(("status",), cwd=tmp_path)
+        module._run_git(("status",), cwd=tmp_path, failure_category="dirty-checkout")
 
     assert raised.value.category == "git-unavailable"
 
@@ -422,10 +555,42 @@ def test_git_runner_sanitizes_nonzero_process_output(
     monkeypatch.setattr(module.subprocess, "run", fake_run)
 
     with pytest.raises(Tau3OperationError) as raised:
-        module._run_git(("status", canary), cwd=tmp_path)
+        module._run_git(("status", canary), cwd=tmp_path, failure_category="clone-failed")
 
-    assert raised.value.category == "git-failed"
+    assert raised.value.category == "clone-failed"
+    assert raised.value.message == (
+        "Git operation failed with exit code 128; detail=unreportable Git error"
+    )
     assert canary not in str(raised.value)
+
+
+def test_git_version_process_failure_uses_declared_prerequisite_category(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Map a failed Git version probe to the public prerequisite diagnostic."""
+    module = _tau3_module()
+    monkeypatch.setattr(module.shutil, "which", lambda _executable: "C:/Git/bin/git.exe")
+
+    def failed_version(
+        arguments: Sequence[str],
+        **_options: object,
+    ) -> subprocess.CompletedProcess[str]:
+        """Return a deterministic version-process failure."""
+        return subprocess.CompletedProcess(arguments, 1, stdout="", stderr="failure")
+
+    monkeypatch.setattr(module.subprocess, "run", failed_version)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module._require_supported_git(tmp_path)
+
+    assert raised.value.category == "git-unavailable"
+
+
+def test_operation_error_rejects_undeclared_diagnostic_categories() -> None:
+    """Prevent an internal category from reaching either public CLI renderer."""
+    with pytest.raises(ValueError, match="declared"):
+        Tau3OperationError("git-failed", "internal category")
 
 
 def test_git_boundary_rejects_an_unsupported_version(
@@ -435,9 +600,15 @@ def test_git_boundary_rejects_an_unsupported_version(
     """Require the documented Git 2.34 minimum before acquisition."""
     module = _tau3_module()
 
-    def old_git(_arguments: Sequence[str], *, cwd: Path) -> str:
+    def old_git(
+        _arguments: Sequence[str],
+        *,
+        cwd: Path,
+        failure_category: str,
+    ) -> str:
         """Return an installed but unsupported Git version."""
         assert cwd == tmp_path
+        assert failure_category == "git-unavailable"
         return "git version 2.33.9"
 
     monkeypatch.setattr(module, "_run_git", old_git, raising=False)
@@ -501,6 +672,84 @@ def test_file_counter_reports_injected_permission_failure(tmp_path: Path) -> Non
         )
 
 
+@pytest.mark.parametrize("label", ["documents", "tasks"])
+@pytest.mark.parametrize(
+    "variant",
+    ["missing", "empty", "wrong-kind", "unreadable", "link", "junction", "special", "escape"],
+)
+def test_required_directory_validation_matrix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    label: str,
+    variant: str,
+) -> None:
+    """Reject every unsafe required-directory state with its configured path."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    required = checkout / label
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    module = _tau3_module()
+    opener: Callable[[Path], BufferedReader] = module._open_binary
+    if variant == "wrong-kind":
+        required.write_text("WRONG_KIND_CONTENT_CANARY", encoding="utf-8")
+    elif variant != "missing":
+        required.mkdir()
+        if variant == "unreadable":
+            (required / "blocked.bin").write_bytes(b"BLOCKED_CONTENT_CANARY")
+
+            def deny_open(_path: Path) -> BufferedReader:
+                """Inject a deterministic unreadable descendant."""
+                raise PermissionError("injected")
+
+            opener = deny_open
+        elif variant not in {"empty", "link", "junction", "special", "escape"}:
+            (required / "valid.bin").write_bytes(b"valid")
+    if variant == "link":
+        original_lstat: Callable[[Path], os.stat_result] = Path.lstat
+        linked_stat = os.stat_result((stat.S_IFLNK | 0o777, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+
+        def lstat_link(path: Path) -> os.stat_result:
+            """Classify only the configured path as a symbolic link."""
+            if path == required:
+                return linked_stat
+            return original_lstat(path)
+
+        monkeypatch.setattr(Path, "lstat", lstat_link)
+    elif variant == "junction":
+        monkeypatch.setattr(module, "_is_reparse_point", lambda _path_stat: True)
+    elif variant == "special":
+        original_validate: Callable[[Path, Path, str], os.stat_result] = (
+            module._validate_contained_object
+        )
+        special_stat = os.stat_result((stat.S_IFIFO | 0o600, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+
+        def validate_special(path: Path, root: Path, safe_label: str) -> os.stat_result:
+            """Classify only the configured path as a special filesystem object."""
+            if path == required:
+                return special_stat
+            return original_validate(path, root, safe_label)
+
+        monkeypatch.setattr(module, "_validate_contained_object", validate_special)
+    elif variant == "escape":
+        original_resolve = Path.resolve
+
+        def resolve_escape(path: Path, strict: bool = False) -> Path:
+            """Resolve only the configured path outside its checkout."""
+            if path == required:
+                return outside
+            return original_resolve(path, strict=strict)
+
+        monkeypatch.setattr(Path, "resolve", resolve_escape)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module._count_readable_files(required, checkout, label, opener=opener)
+
+    assert raised.value.category == "banking-data-invalid"
+    assert raised.value.path == required
+    assert "CONTENT_CANARY" not in str(raised.value)
+
+
 def test_database_shapes_include_only_top_level_safe_metadata(tmp_path: Path) -> None:
     """Derive sorted kinds and direct collection counts without nested values."""
     checkout = tmp_path / "checkout"
@@ -546,6 +795,128 @@ def test_database_shapes_reject_invalid_roots_without_source_echo(
 
     assert raised.value.category == "malformed-database"
     assert canary not in str(raised.value)
+
+
+@pytest.mark.parametrize("constant", ["NaN", "Infinity", "-Infinity"])
+def test_database_shapes_reject_nonstandard_numeric_constants(
+    tmp_path: Path,
+    constant: str,
+) -> None:
+    """Reject JavaScript numeric extensions without echoing database source."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    database = checkout / "db.json"
+    canary = "NONSTANDARD_DATABASE_SOURCE_CANARY"
+    database.write_text(
+        f'{{"accounts": {constant}, "private": "{canary}"}}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(Tau3OperationError) as raised:
+        _tau3_module()._load_database_shapes(database, checkout)
+
+    assert raised.value.category == "malformed-database"
+    assert canary not in str(raised.value)
+
+
+@pytest.mark.parametrize(
+    "variant",
+    ["missing", "empty", "wrong-kind", "unreadable", "link", "junction", "special", "escape"],
+)
+def test_required_database_validation_matrix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    variant: str,
+) -> None:
+    """Reject every unsafe database state with only its configured path."""
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    database = checkout / "db.json"
+    outside = tmp_path / "outside.json"
+    outside.write_text('{"outside": true}', encoding="utf-8")
+    module = _tau3_module()
+    opener: Callable[[Path], BufferedReader] = module._open_binary
+    if variant == "wrong-kind":
+        database.mkdir()
+    elif variant != "missing":
+        database.write_text("" if variant == "empty" else '{"valid": true}', encoding="utf-8")
+    if variant == "unreadable":
+
+        def deny_open(_path: Path) -> BufferedReader:
+            """Inject a deterministic unreadable database file."""
+            raise PermissionError("injected")
+
+        opener = deny_open
+    elif variant == "link":
+        original_lstat: Callable[[Path], os.stat_result] = Path.lstat
+        linked_stat = os.stat_result((stat.S_IFLNK | 0o777, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+
+        def lstat_link(path: Path) -> os.stat_result:
+            """Classify only the configured database as a symbolic link."""
+            if path == database:
+                return linked_stat
+            return original_lstat(path)
+
+        monkeypatch.setattr(Path, "lstat", lstat_link)
+    elif variant == "junction":
+        monkeypatch.setattr(module, "_is_reparse_point", lambda _path_stat: True)
+    elif variant == "special":
+        original_validate: Callable[[Path, Path, str], os.stat_result] = (
+            module._validate_contained_object
+        )
+        special_stat = os.stat_result((stat.S_IFIFO | 0o600, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+
+        def validate_special(path: Path, root: Path, label: str) -> os.stat_result:
+            """Classify only the configured database as a special object."""
+            if path == database:
+                return special_stat
+            return original_validate(path, root, label)
+
+        monkeypatch.setattr(module, "_validate_contained_object", validate_special)
+    elif variant == "escape":
+        original_resolve = Path.resolve
+
+        def resolve_escape(path: Path, strict: bool = False) -> Path:
+            """Resolve only the configured database outside its checkout."""
+            if path == database:
+                return outside
+            return original_resolve(path, strict=strict)
+
+        monkeypatch.setattr(Path, "resolve", resolve_escape)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module._load_database_shapes(database, checkout, opener=opener)
+
+    assert raised.value.category in {"banking-data-invalid", "malformed-database"}
+    assert raised.value.path == database
+    assert "outside" not in str(raised.value)
+
+
+def test_inspection_rejects_nonstandard_database_constants_without_output(
+    tmp_path: Path,
+) -> None:
+    """Apply strict JSON validation through the complete inspection boundary."""
+    fixture = _create_local_fixture(tmp_path, variant="nonstandard-database")
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    checkout.parent.mkdir()
+    _run_git(
+        "clone",
+        "--branch",
+        TAG,
+        "--single-branch",
+        "--",
+        fixture.config.upstream.repository_url,
+        str(checkout),
+        cwd=fixture.project_root,
+    )
+    before = _snapshot_tree(checkout)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        _tau3_module().inspect_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "malformed-database"
+    assert "DATABASE_SOURCE_CANARY" not in str(raised.value)
+    assert _snapshot_tree(checkout) == before
 
 
 def test_first_install_promotes_only_a_fully_validated_checkout(tmp_path: Path) -> None:
@@ -658,17 +1029,27 @@ def test_inspection_cli_rejects_usage_and_buffers_expected_failures(
     captured = capsys.readouterr()
     assert exit_code == 1
     assert captured.out == ""
-    assert captured.err.startswith("error[checkout-missing]:")
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    assert captured.err == (
+        "error[checkout-missing]: reason=Checkout is missing; run setup before inspection; "
+        f"path={json.dumps(str(checkout))}; "
+        "recovery=run setup without --check before retrying\n"
+    )
     assert "Traceback" not in captured.err
     assert not (fixture.project_root / ".cache").exists()
 
 
+@pytest.mark.parametrize(
+    "change_kind",
+    ["git-state", "document-count", "task-count", "database-shape"],
+)
 def test_inspection_detects_changed_second_observation_without_output(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
+    change_kind: str,
 ) -> None:
-    """Reject an injected aggregate change before returning or printing a summary."""
+    """Reject identity, count, and shape changes without printing a partial summary."""
     fixture = _create_local_fixture(tmp_path)
     module = _tau3_module()
     module.setup_tau3_data(fixture.project_root, config=fixture.config)
@@ -690,11 +1071,35 @@ def test_inspection_detects_changed_second_observation_without_output(
         git_state, data_state = original_validate(project_root, config, paths)
         observations += 1
         if observations == 2:
-            data_state = BankingDataState(
-                data_state.document_count + 1,
-                data_state.task_count,
-                data_state.database_collections,
-            )
+            if change_kind == "git-state":
+                git_state = GitCheckoutState(
+                    git_state.top_level,
+                    git_state.origin_url,
+                    "0" * 40,
+                    git_state.tag_sha,
+                    git_state.is_clean,
+                )
+            elif change_kind == "document-count":
+                data_state = BankingDataState(
+                    data_state.document_count + 1,
+                    data_state.task_count,
+                    data_state.database_collections,
+                )
+            elif change_kind == "task-count":
+                data_state = BankingDataState(
+                    data_state.document_count,
+                    data_state.task_count + 1,
+                    data_state.database_collections,
+                )
+            else:
+                data_state = BankingDataState(
+                    data_state.document_count,
+                    data_state.task_count,
+                    (
+                        *data_state.database_collections,
+                        DatabaseCollectionShape("changed", "array", 0),
+                    ),
+                )
         return git_state, data_state
 
     monkeypatch.setattr(module, "_validate_checkout", changed_second_observation)
@@ -796,6 +1201,31 @@ def test_setup_cli_routes_expected_failure_to_stderr(
     assert "Traceback" not in captured.err
 
 
+def test_setup_cli_emits_exact_centralized_diagnostic(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Render setup failures with category, safe path, reason, and recovery."""
+    fixture = _create_local_fixture(tmp_path)
+    script = _setup_script_module()
+
+    exit_code = script.main(
+        ["--check"],
+        project_root=fixture.project_root,
+        config=fixture.config,
+    )
+
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert captured.err == (
+        "error[checkout-missing]: reason=Checkout is missing; run setup without --check; "
+        f"path={json.dumps(str(checkout))}; "
+        "recovery=run setup without --check before retrying\n"
+    )
+
+
 def test_setup_cli_preserves_argparse_usage_exit_two() -> None:
     """Reject unknown production overrides through argparse's usage contract."""
     script = _setup_script_module()
@@ -804,6 +1234,87 @@ def test_setup_cli_preserves_argparse_usage_exit_two() -> None:
         script.main(["--repository-url", "https://example.invalid/repository.git"])
 
     assert raised.value.code == 2
+
+
+def test_public_scripts_run_from_an_unrelated_working_directory(
+    tmp_path: Path,
+) -> None:
+    """Run setup, check, and inspection through the locked copied project."""
+    source_project = Path(__file__).resolve().parents[2]
+    copied_project = tmp_path / "copied-project"
+    unrelated_directory = tmp_path / "unrelated"
+    copied_project.mkdir()
+    unrelated_directory.mkdir()
+    for directory_name in ("config", "scripts", "src"):
+        shutil.copytree(source_project / directory_name, copied_project / directory_name)
+    for file_name in (".python-version", "pyproject.toml", "uv.lock"):
+        shutil.copy2(source_project / file_name, copied_project / file_name)
+    target = copied_project / ".cache" / "tau3-bench"
+    target.parent.mkdir()
+    target.write_text("PREEXISTING_TARGET_CANARY", encoding="utf-8")
+    uv_executable = shutil.which("uv")
+    assert uv_executable is not None
+    environment = {
+        name: value
+        for name, value in os.environ.items()
+        if name.upper() not in {"PYTHONPATH", "UV_PROJECT", "UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV"}
+    }
+    synchronized = subprocess.run(  # noqa: S603
+        [
+            uv_executable,
+            "sync",
+            "--project",
+            str(copied_project),
+            "--locked",
+            "--no-dev",
+        ],
+        cwd=unrelated_directory,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=environment,
+        shell=False,
+        timeout=60,
+    )
+    assert synchronized.returncode == 0
+    cases = (
+        ("setup_tau3_data.py", (), "error[unexpected-target]:"),
+        ("setup_tau3_data.py", ("--check",), "error[unexpected-target]:"),
+        ("inspect_tau3_banking_data.py", (), "error[unexpected-target]:"),
+    )
+
+    for script_name, arguments, expected_error in cases:
+        script_path = copied_project / "scripts" / script_name
+        result = subprocess.run(  # noqa: S603
+            [
+                uv_executable,
+                "run",
+                "--project",
+                str(copied_project),
+                "--locked",
+                "--no-dev",
+                "python",
+                str(script_path),
+                *arguments,
+            ],
+            cwd=unrelated_directory,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=environment,
+            shell=False,
+            timeout=60,
+        )
+
+        assert result.returncode == 1
+        assert result.stdout == ""
+        assert result.stderr.startswith(expected_error)
+        assert "Traceback" not in result.stderr
+        assert target.read_text(encoding="utf-8") == "PREEXISTING_TARGET_CANARY"
 
 
 def test_existing_and_check_modes_are_offline_and_byte_stable(tmp_path: Path) -> None:
@@ -830,6 +1341,47 @@ def test_existing_and_check_modes_are_offline_and_byte_stable(tmp_path: Path) ->
     assert not list((fixture.project_root / ".cache").glob("tau3-bench-staging-*"))
 
 
+@pytest.mark.parametrize("check_only", [False, True])
+def test_invalid_existing_checkout_is_offline_and_preserved(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    check_only: bool,
+) -> None:
+    """Validate invalid existing state offline in both default and check modes."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    module.setup_tau3_data(fixture.project_root, config=fixture.config)
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    (checkout / "OFFLINE_DIRTY_CANARY.txt").write_text("dirty", encoding="utf-8")
+    before = _snapshot_tree(checkout)
+    fixture.bare_remote.rename(fixture.bare_remote.with_name("remote-unavailable.git"))
+    original_run_git: Callable[..., str] = module._run_git
+
+    def reject_network_git(
+        arguments: Sequence[str],
+        *,
+        cwd: Path,
+        failure_category: str,
+    ) -> str:
+        """Fail the test if validation attempts a network-capable Git operation."""
+        assert not arguments or arguments[0] not in {"clone", "fetch", "pull"}
+        return original_run_git(arguments, cwd=cwd, failure_category=failure_category)
+
+    monkeypatch.setattr(module, "_run_git", reject_network_git)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module.setup_tau3_data(
+            fixture.project_root,
+            config=fixture.config,
+            check_only=check_only,
+        )
+
+    assert raised.value.category == "dirty-checkout"
+    assert _snapshot_tree(checkout) == before
+    assert not (fixture.project_root / ".cache" / "tau3-bench.setup.lock").exists()
+    assert not list((fixture.project_root / ".cache").glob("tau3-bench-staging-*"))
+
+
 def test_check_missing_checkout_creates_no_cache_or_runtime_state(tmp_path: Path) -> None:
     """Return checkout-missing without creating the cache, lock, or staging state."""
     fixture = _create_local_fixture(tmp_path)
@@ -843,6 +1395,23 @@ def test_check_missing_checkout_creates_no_cache_or_runtime_state(tmp_path: Path
 
     assert raised.value.category == "checkout-missing"
     assert not (fixture.project_root / ".cache").exists()
+
+
+def test_unexpected_target_reports_expected_and_detected_kinds(tmp_path: Path) -> None:
+    """Describe a wrong-kind target without changing or disclosing its contents."""
+    fixture = _create_local_fixture(tmp_path)
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    checkout.parent.mkdir()
+    checkout.write_text("UNEXPECTED_TARGET_CONTENT_CANARY", encoding="utf-8")
+
+    with pytest.raises(Tau3OperationError) as raised:
+        _tau3_module().setup_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "unexpected-target"
+    assert raised.value.message == (
+        "Expected checkout to be a real directory; detected regular file"
+    )
+    assert "UNEXPECTED_TARGET_CONTENT_CANARY" not in str(raised.value)
 
 
 def test_origin_mismatch_reports_credential_redacted_detected_origin(tmp_path: Path) -> None:
@@ -917,6 +1486,8 @@ def test_dirty_checkout_diagnostic_never_discloses_changed_paths(
         module.setup_tau3_data(fixture.project_root, config=fixture.config)
 
     assert raised.value.category == "dirty-checkout"
+    assert "detected 1 status entry" in raised.value.message
+    assert change_kind in raised.value.message
     assert filename_canary not in str(raised.value)
     assert "db.json" not in str(raised.value)
     assert _snapshot_tree(checkout) == before
@@ -963,6 +1534,56 @@ def test_failed_clone_removes_only_current_owned_state(tmp_path: Path) -> None:
     assert list(cache.glob("tau3-bench-staging-*")) == [unrelated]
 
 
+def test_no_replace_promotion_preserves_an_empty_competing_directory(tmp_path: Path) -> None:
+    """Reject even an empty destination without consuming the staged source."""
+    module = _tau3_module()
+    staged_checkout = tmp_path / "staged-checkout"
+    destination = tmp_path / "destination"
+    staged_checkout.mkdir()
+    (staged_checkout / "owned.txt").write_text("STAGED_OWNER_CANARY", encoding="utf-8")
+    destination.mkdir()
+    destination_identity = destination.stat().st_ino
+
+    with pytest.raises(FileExistsError):
+        module._rename_directory_no_replace(staged_checkout, destination)
+
+    assert destination.stat().st_ino == destination_identity
+    assert not list(destination.iterdir())
+    assert (staged_checkout / "owned.txt").read_text(encoding="utf-8") == ("STAGED_OWNER_CANARY")
+
+
+def test_destination_created_inside_promotion_is_preserved(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Close the final absence-check race with the atomic no-replace primitive."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    original_promote: Callable[[Path, Path], None] = module._rename_directory_no_replace
+    destination = fixture.project_root / ".cache" / "tau3-bench"
+    destination_identity: int | None = None
+
+    def promote_with_race(source: Path, target: Path) -> None:
+        """Create a competing empty directory in the final promotion window."""
+        nonlocal destination_identity
+        assert target == destination
+        target.mkdir()
+        destination_identity = target.stat().st_ino
+        original_promote(source, target)
+
+    monkeypatch.setattr(module, "_rename_directory_no_replace", promote_with_race)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module.setup_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "destination-conflict"
+    assert destination_identity is not None
+    assert destination.stat().st_ino == destination_identity
+    assert not list(destination.iterdir())
+    assert not (fixture.project_root / ".cache" / "tau3-bench.setup.lock").exists()
+    assert not list((fixture.project_root / ".cache").glob("tau3-bench-staging-*"))
+
+
 def test_destination_appearance_is_preserved_and_aborts_promotion(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -970,7 +1591,10 @@ def test_destination_appearance_is_preserved_and_aborts_promotion(
     """Preserve a destination created after staging validation and remove owned state."""
     fixture = _create_local_fixture(tmp_path)
     module = _tau3_module()
-    original_validate = module._validate_checkout
+    original_validate: Callable[
+        [Path, Tau3Config, ResolvedTau3Paths],
+        tuple[GitCheckoutState, BankingDataState],
+    ] = module._validate_checkout
     destination = fixture.project_root / ".cache" / "tau3-bench"
 
     def validate_with_race(
@@ -997,25 +1621,91 @@ def test_destination_appearance_is_preserved_and_aborts_promotion(
     assert not list((fixture.project_root / ".cache").glob("tau3-bench-staging-*"))
 
 
-@pytest.mark.parametrize("target_kind", ["checkout-file", "cache-file"])
+def test_post_promotion_failure_preserves_promoted_checkout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Retain a fully promoted checkout when final revalidation reports failure."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    original_validate: Callable[
+        [Path, Tau3Config, ResolvedTau3Paths],
+        tuple[GitCheckoutState, BankingDataState],
+    ] = module._validate_checkout
+    destination = fixture.project_root / ".cache" / "tau3-bench"
+
+    def fail_final_validation(
+        project_root: Path,
+        config: Tau3Config,
+        paths: ResolvedTau3Paths,
+    ) -> tuple[GitCheckoutState, BankingDataState]:
+        """Fail only after the staged checkout has become the final destination."""
+        if paths.checkout == destination and destination.exists():
+            raise Tau3OperationError(
+                "checkout-changed",
+                "Final checkout validation did not remain stable",
+                destination,
+            )
+        return original_validate(project_root, config, paths)
+
+    monkeypatch.setattr(module, "_validate_checkout", fail_final_validation)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module.setup_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "checkout-changed"
+    assert destination.is_dir()
+    assert _run_git("rev-parse", "HEAD", cwd=destination).stdout.strip() == fixture.commit_sha
+    assert not (fixture.project_root / ".cache" / "tau3-bench.setup.lock").exists()
+    assert not list((fixture.project_root / ".cache").glob("tau3-bench-staging-*"))
+
+
+@pytest.mark.parametrize(
+    "target_kind",
+    [
+        "checkout-file",
+        "cache-file",
+        "checkout-reparse",
+        "cache-reparse",
+        "checkout-special",
+        "cache-special",
+    ],
+)
 def test_unexpected_target_kinds_are_preserved(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     target_kind: str,
 ) -> None:
-    """Reject file objects at cache boundaries without changing neighboring state."""
+    """Reject wrong-kind cache boundaries without changing neighboring state."""
     fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
     cache = fixture.project_root / ".cache"
-    if target_kind == "checkout-file":
-        cache.mkdir()
-        (cache / "tau3-bench").write_text("TARGET_FILE_CANARY", encoding="utf-8")
+    boundary = cache / "tau3-bench" if target_kind.startswith("checkout-") else cache
+    if target_kind.endswith("-file"):
+        if boundary == cache / "tau3-bench":
+            cache.mkdir()
+        boundary.write_text("BOUNDARY_FILE_CANARY", encoding="utf-8")
     else:
-        cache.write_text("CACHE_FILE_CANARY", encoding="utf-8")
+        boundary.mkdir(parents=True)
+    if target_kind.endswith("-reparse"):
+        monkeypatch.setattr(module, "_is_reparse_point", lambda _path_stat: True)
+    elif target_kind.endswith("-special"):
+        original_lstat: Callable[[Path], os.stat_result] = Path.lstat
+        special_stat = os.stat_result((stat.S_IFIFO | 0o600, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+
+        def lstat_special(path: Path) -> os.stat_result:
+            """Classify only the selected cache boundary as a special object."""
+            if path == boundary:
+                return special_stat
+            return original_lstat(path)
+
+        monkeypatch.setattr(Path, "lstat", lstat_special)
     neighbor = fixture.project_root / "neighbor.txt"
     neighbor.write_text("NEIGHBOR_CANARY", encoding="utf-8")
     before = _snapshot_tree(fixture.project_root)
 
     with pytest.raises(Tau3OperationError) as raised:
-        _tau3_module().setup_tau3_data(fixture.project_root, config=fixture.config)
+        module.setup_tau3_data(fixture.project_root, config=fixture.config)
 
     assert raised.value.category == "unexpected-target"
     assert _snapshot_tree(fixture.project_root) == before
@@ -1067,6 +1757,49 @@ def test_host_path_length_failure_is_categorized_without_path_contents(tmp_path:
     assert component_canary not in str(raised.value)
 
 
+@pytest.mark.parametrize("denied_operation", ["target-classification", "cache-create"])
+def test_cache_and_target_permission_failures_are_safe(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    denied_operation: str,
+) -> None:
+    """Categorize injected cache/target permission failures without mutation."""
+    fixture = _create_local_fixture(tmp_path)
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    cache = fixture.project_root / ".cache"
+    original_lstat: Callable[[Path], os.stat_result] = Path.lstat
+    original_mkdir = Path.mkdir
+
+    def deny_target_lstat(path: Path) -> os.stat_result:
+        """Deny only the configured target classification."""
+        if denied_operation == "target-classification" and path == checkout:
+            raise PermissionError("injected target denial")
+        return original_lstat(path)
+
+    def deny_cache_mkdir(
+        path: Path,
+        mode: int = 0o777,
+        parents: bool = False,
+        exist_ok: bool = False,
+    ) -> None:
+        """Deny only creation of the configured cache root."""
+        if denied_operation == "cache-create" and path == cache:
+            raise PermissionError("injected cache denial")
+        original_mkdir(path, mode=mode, parents=parents, exist_ok=exist_ok)
+
+    monkeypatch.setattr(Path, "lstat", deny_target_lstat)
+    monkeypatch.setattr(Path, "mkdir", deny_cache_mkdir)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        _tau3_module().setup_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "unexpected-target"
+    assert not checkout.exists()
+    assert not (cache / "tau3-bench.setup.lock").exists()
+    if cache.exists():
+        assert not list(cache.glob("tau3-bench-staging-*"))
+
+
 def test_path_resolution_preserves_configured_case_without_casefolding(tmp_path: Path) -> None:
     """Use filesystem containment semantics without trusting case-folded path strings."""
     fixture = _create_local_fixture(tmp_path)
@@ -1106,7 +1839,7 @@ def test_two_concurrent_setups_preserve_lock_ownership(
         arguments: Sequence[str],
         *,
         cwd: Path,
-        failure_category: str = "git-failed",
+        failure_category: str,
     ) -> str:
         """Hold the owning clone while the competing setup observes its lock."""
         if arguments and arguments[0] == "clone":
@@ -1170,6 +1903,34 @@ def test_cleanup_failure_reports_owned_state_without_removing_it(
     assert not (cache / "tau3-bench").exists()
 
 
+def test_lock_cleanup_failure_reports_the_retained_lock_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Report the lock rather than the removed staging parent when lock cleanup fails."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    lock = fixture.project_root / ".cache" / "tau3-bench.setup.lock"
+    original_rmdir = Path.rmdir
+
+    def deny_lock_cleanup(path: Path) -> None:
+        """Inject a deterministic failure only for the owned setup lock."""
+        if path == lock:
+            raise PermissionError("injected lock cleanup denial")
+        original_rmdir(path)
+
+    monkeypatch.setattr(module.Path, "rmdir", deny_lock_cleanup)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module.setup_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "staging-cleanup-failed"
+    assert raised.value.path == lock
+    assert lock.is_dir()
+    assert (fixture.project_root / ".cache" / "tau3-bench").is_dir()
+    assert not list((fixture.project_root / ".cache").glob("tau3-bench-staging-*"))
+
+
 def test_invalid_existing_repository_and_tag_binding_are_distinct(
     tmp_path: Path,
 ) -> None:
@@ -1194,6 +1955,36 @@ def test_invalid_existing_repository_and_tag_binding_are_distinct(
         module.setup_tau3_data(fixture.project_root, config=fixture.config)
     assert tag_error.value.category == "tag-mismatch"
     assert _snapshot_tree(checkout) == tag_before
+
+
+def test_wrong_existing_tag_binding_reports_expected_and_detected_shas(tmp_path: Path) -> None:
+    """Reject a present approved tag that resolves to the wrong commit object."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    module.setup_tau3_data(fixture.project_root, config=fixture.config)
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    tree_sha = _run_git("rev-parse", "HEAD^{tree}", cwd=checkout).stdout.strip()
+    alternate_sha = _run_git(
+        "-c",
+        "user.name=VerityCX Test",
+        "-c",
+        "user.email=veritycx-test@example.invalid",
+        "commit-tree",
+        tree_sha,
+        "-m",
+        "Create alternate tag target",
+        cwd=checkout,
+    ).stdout.strip()
+    _run_git("tag", "--force", TAG, alternate_sha, cwd=checkout)
+    before = _snapshot_tree(checkout)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        module.setup_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "tag-mismatch"
+    assert fixture.commit_sha in raised.value.message
+    assert alternate_sha in raised.value.message
+    assert _snapshot_tree(checkout) == before
 
 
 def test_multiple_origins_are_rejected_without_disclosing_values(tmp_path: Path) -> None:

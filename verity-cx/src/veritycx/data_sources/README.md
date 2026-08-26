@@ -10,8 +10,8 @@ transactional setup, and safe inspection for external dependencies. `tau3.py` is
 
 Public interfaces are the immutable `Tau3Config` family, `ResolvedTau3Paths`, `GitCheckoutState`,
 `BankingDataState`, `DatabaseCollectionShape`, `SetupResult`, `InspectionSummary`,
-`Tau3OperationError`, `load_tau3_config()`, `resolve_tau3_paths()`, `setup_tau3_data()`, and
-`inspect_tau3_data()`.
+`Tau3OperationError`, `format_tau3_diagnostic()`, `load_tau3_config()`,
+`resolve_tau3_paths()`, `setup_tau3_data()`, and `inspect_tau3_data()`.
 
 ## Layers and Dependencies
 
@@ -50,7 +50,10 @@ This module intentionally exposes no generic upstream reader.
 
 Expected boundary failures use stable `Tau3OperationError` categories. A concurrent inspection
 difference is `checkout-changed`; ownership conflicts and cleanup failures preserve state and direct
-manual recovery. Programming errors remain visible rather than being mislabeled as expected success.
+manual recovery. `format_tau3_diagnostic()` is the shared setup/inspection renderer and emits the
+declared category, sanitized configured/current-run-owned path when applicable, safe reason, and
+category-specific non-destructive recovery. Programming errors remain visible rather than being
+mislabeled as expected success.
 
 ```text
 uv run ruff check src/veritycx/data_sources/tau3.py

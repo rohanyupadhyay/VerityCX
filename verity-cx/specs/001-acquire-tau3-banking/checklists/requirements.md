@@ -1,4 +1,5 @@
 <!-- Tracks pre-planning quality validation for Feature 001. -->
+
 # Specification Quality Checklist: Acquire τ³-Banking Data
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning

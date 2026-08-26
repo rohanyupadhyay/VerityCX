@@ -12,9 +12,11 @@ upstream repository, use credentials, or modify production cache state.
 ## Public Contract and Structure
 
 The required status is the `quality / verify (<runner>)` matrix. Each job checks out project code,
-installs Python 3.12 and uv 0.12.5, requires Git 2.34 or newer, records runner image and tool versions,
-uses locked dependencies, records the local-fixture first-acquisition duration, and runs Ruff,
-mdformat, yamlfix, strict mypy, and the full network-independent pytest suite.
+installs Python 3.12 and uv 0.12.5, requires Git 2.34 or newer, and records the matrix label, runner
+name/OS/architecture, hosted `ImageOS`/`ImageVersion`, and tool versions. It uses locked
+dependencies, records the monotonic local-fixture first-acquisition duration, fails at 600 seconds
+or more, and runs Ruff, mdformat, yamlfix, strict mypy, and the full network-independent pytest
+suite.
 
 All run steps use `defaults.run.working-directory: verity-cx`; Git-root workflow files are addressed
 with `../.github/workflows/`. The directory contains only this documentation and `quality.yml`.

@@ -10,6 +10,8 @@ uv run python scripts/inspect_tau3_banking_data.py
 
 The command has no production source/path override and performs no clone, fetch, repair, lock creation, staging creation, or cache mutation.
 
+When the caller is outside the project root, the equivalent absolute-path form is `uv run --project <absolute-project-root> --locked python <absolute-project-root>/scripts/inspect_tau3_banking_data.py`. The explicit uv project selection supplies the same locked package environment without changing the caller's working directory or modifying `PYTHONPATH`/`sys.path`.
+
 ## Preconditions
 
 Inspection loads the reviewed config and invokes the same non-mutating validator used by setup `--check`. The checkout must have the exact origin, `HEAD`, tag binding, clean status, and valid banking paths. Inspection derives a buffered summary, repeats identity, cleanliness, required-path, count, and database-shape validation, and emits the summary only when both observations agree. A missing, invalid, dirty, unreadable, or detectably changing checkout fails with no partial stdout and no mutation.
@@ -23,6 +25,8 @@ Inspection loads the reviewed config and invokes the same non-mutating validator
 | `2` | Command-line usage error. |
 
 Success is written to stdout. Categorized diagnostics are written to stderr. Expected failures do not print tracebacks or partial summaries.
+
+Expected diagnostics use the shared setup shape, `error[category]: reason=...; path="..."; recovery=...`. The JSON-escaped `path` field is omitted only when no configured or current-run-owned path applies.
 
 A detected difference between initial and final validation is `checkout-changed` with exit code `1`. Final validation does not claim to detect an actor that changes state and restores the identical validated state entirely between observations.
 

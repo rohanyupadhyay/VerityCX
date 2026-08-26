@@ -11,6 +11,9 @@
 
 Both scripts depend on `veritycx.data_sources.tau3`, Python 3.12, the fixed TOML configuration, and
 Git 2.34 or newer. They expose no source, revision, path, credential, or configuration overrides.
+From outside the project root, select the same locked project explicitly and use an absolute script
+path: `uv run --project <absolute-project-root> --locked python <absolute-script-path>`. This keeps
+the caller's working directory unchanged and requires no `PYTHONPATH` or `sys.path` modification.
 
 ## Setup and Check Modes
 
@@ -36,9 +39,10 @@ creates a cache, lock, staging directory, report, or checkout.
 ## Output, Failure, and Testing
 
 Success is deterministic line-oriented stdout. Expected failures produce one
-`error[category]: message` line on stderr and exit `1`; invalid usage is argparse exit `2`. No
-expected failure emits a traceback or partial success output. Diagnostics contain recovery guidance
-but exclude credentials, Git commands/status, descendant filenames, and source-derived content.
+`error[category]: reason=...; path="..."; recovery=...` line on stderr and exit `1`; the JSON-escaped
+`path` field is omitted when no configured or current-run-owned path applies. Invalid usage is
+argparse exit `2`. No expected failure emits a traceback or partial success output. Diagnostics
+exclude credentials, raw Git commands/status, descendant filenames, and source-derived content.
 
 Verify both interfaces with:
 

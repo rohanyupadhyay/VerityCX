@@ -42,10 +42,14 @@ jobs:
           version: "0.12.5"
       - name: Record environment and require Git 2.34
         env:
-          IMAGE_OS: ${{ runner.os }}
-          IMAGE_VERSION: ${{ runner.arch }}
+          MATRIX_RUNNER: ${{ matrix.runner }}
+          RUNNER_ARCH: ${{ runner.arch }}
+          RUNNER_NAME: ${{ runner.name }}
+          RUNNER_OS: ${{ runner.os }}
         run: |
-          printf 'runner=%s architecture=%s\n' "$IMAGE_OS" "$IMAGE_VERSION"
+          : "${ImageOS:?GitHub-hosted ImageOS is unavailable}"
+          : "${ImageVersion:?GitHub-hosted ImageVersion is unavailable}"
+          printf 'matrix_runner=%s runner_name=%s runner_os=%s runner_arch=%s image_os=%s image_version=%s\n' "$MATRIX_RUNNER" "$RUNNER_NAME" "$RUNNER_OS" "$RUNNER_ARCH" "$ImageOS" "$ImageVersion"
           python --version
           git --version
           uv --version
@@ -55,8 +59,30 @@ jobs:
           uv lock --check
           uv sync --locked
       - name: Record network-independent first-acquisition duration
-        run: uv run pytest tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout
-          --durations=1 --durations-min=0
+        timeout-minutes: 11
+        run: |
+          uv run python - <<'PY'
+          import subprocess
+          import sys
+          import time
+          command = [
+              sys.executable,
+              "-m",
+              "pytest",
+              "tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout",
+              "--durations=1",
+              "--durations-min=0",
+          ]
+          started = time.monotonic()
+          result = subprocess.run(command, check=False)
+          elapsed_seconds = time.monotonic() - started
+          print(f"first_acquisition_seconds={elapsed_seconds:.3f}")
+          if result.returncode != 0:
+              raise SystemExit(result.returncode)
+          if elapsed_seconds >= 600:
+              print("first acquisition must complete in under 600 seconds", file=sys.stderr)
+              raise SystemExit(1)
+          PY
       - name: Run Python quality gates
         run: |
           uv run ruff format --check src scripts tests
@@ -69,5 +95,6 @@ jobs:
           uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
           uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
           uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+          uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
       - name: Check workflow formatting
         run: uv run yamlfix --check ../.github/workflows/quality.yml

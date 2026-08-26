@@ -239,6 +239,7 @@ uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/d
 uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
 uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
 uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
 uv run yamlfix --check ../.github/workflows/quality.yml
 uv run mypy --strict src scripts tests
 uv run pytest tests/data_sources/test_tau3.py
@@ -255,7 +256,7 @@ uv run python scripts/setup_tau3_data.py
 
 The four verification commands supplied in the feature input are preserved verbatim. Lock verification, Python formatting, explicit maintained-Markdown formatting, workflow-YAML formatting, and strict typing are additional constitution gates. The explicit Markdown list prevents recursive formatting of `.agents/`, `.specify/`, generated, vendored, or unrelated files.
 
-The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with `verity-cx` as the working directory. The workflow pins uv 0.12.5, requires Git 2.34 or newer, records the runner image and Python/Git/uv versions, and records the first-acquisition duration. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
+The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with `verity-cx` as the working directory. The workflow pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails when the monotonic first-acquisition duration is 600 seconds or more. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
 
 ## Post-Design Constitution Check
 

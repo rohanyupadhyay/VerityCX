@@ -13,6 +13,8 @@ No other production options are planned. Argparse help and usage remain availabl
 
 Both forms resolve the project root from the script location and therefore have the same behavior when launched from any current working directory. Git 2.34 or newer and uv 0.12.5 are the supported command baseline.
 
+When the caller is outside the project root, the equivalent absolute-path form is `uv run --project <absolute-project-root> --locked python <absolute-project-root>/scripts/setup_tau3_data.py [--check]`. The explicit uv project selection supplies the same locked package environment without changing the caller's working directory or modifying `PYTHONPATH`/`sys.path`.
+
 ## Exit Codes and Streams
 
 | Code | Meaning |
@@ -22,6 +24,8 @@ Both forms resolve the project root from the script location and therefore have 
 | `2` | Command-line usage error produced by argparse. |
 
 Successful summaries go to stdout. Expected diagnostics go to stderr without a traceback. The command MUST NOT print document bodies, database records, task contents, checkout-status filenames, or raw subprocess commands.
+
+Expected diagnostics use `error[category]: reason=...; path="..."; recovery=...`. The JSON-escaped `path` field is omitted only when no configured or current-run-owned path applies.
 
 ## Mode Matrix
 
@@ -71,7 +75,7 @@ The same validator runs for staged, existing, check-only, and inspection flows.
 1. Target absence is rechecked after lock acquisition.
 1. `tempfile.mkdtemp(prefix="tau3-bench-staging-", dir=cache_root)` creates one current-run-owned absolute parent. Git clones into its nonexistent `checkout/` child.
 1. Complete Git and banking validation succeeds before promotion.
-1. Cleanliness and destination absence are rechecked immediately before a same-filesystem `os.rename`/`Path.rename` operation that does not request replacement.
+1. Cleanliness and destination absence are rechecked immediately before a same-filesystem platform-native exclusive rename: Windows `os.rename`, Linux `renameat2(..., RENAME_NOREPLACE)`, or macOS `renamex_np(..., RENAME_EXCL)`. Unsupported exclusive-rename behavior fails closed.
 1. The final checkout is validated before success is reported.
 1. `finally` removes only the exact owned staging parent and lock. It never globs, deletes stale state, repairs a checkout, or deletes/replaces the final target.
 1. A detected failure after promotion preserves the promoted checkout for manual review and reports the failure without rollback, repair, or replacement.

@@ -11,6 +11,7 @@ from veritycx.data_sources.tau3 import (
     InspectionSummary,
     Tau3Config,
     Tau3OperationError,
+    format_tau3_diagnostic,
     inspect_tau3_data,
 )
 
@@ -65,7 +66,7 @@ def main(
     try:
         summary = inspect_tau3_data(root, config=config)
     except Tau3OperationError as error:
-        print(f"error[{error.category}]: {error.message}", file=sys.stderr)
+        print(format_tau3_diagnostic(error), file=sys.stderr)
         return 1
     print(_format_summary(summary))
     return 0
