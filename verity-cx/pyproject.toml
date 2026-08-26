@@ -1,0 +1,63 @@
+# Defines the reproducible Python package and quality-tool configuration.
+[project]
+name = "veritycx"
+version = "0.1.0"
+description = "Reproducible external-data tooling for VerityCX"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "mdformat==1.0.0",
+  "mypy>=1.17,<2",
+  "pytest>=8.4,<10",
+  "ruff>=0.12,<1",
+  "yamlfix>=1.18,<2",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["ANN", "B", "D", "E", "F", "I", "N", "RUF", "S", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "scripts", "tests"]
+show_error_codes = true
+warn_unreachable = true
+
+[tool.mdformat]
+wrap = 100
+number = false
+
+[tool.yamlfix]
+allow_duplicate_keys = false
+explicit_start = true
+line_length = 100
+none_representation = "null"
+preserve_quotes = true
+sequence_style = "block_style"

@@ -1,4 +1,5 @@
 <!-- Defines the reviewed TOML configuration contract for Feature 001. -->
+
 # Contract: τ³-Banking Configuration
 
 ## Location and Authority

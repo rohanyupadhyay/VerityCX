@@ -1,4 +1,5 @@
 <!-- Defines the default-deny application and evaluation data boundary for Feature 001. -->
+
 # Contract: τ³-Banking Data-Use Policy
 
 ## Governing Rule
@@ -19,12 +20,12 @@ All content acquired beneath `.cache/tau3-bench/` is denied to VerityCX applicat
 ## Enforcement Invariants
 
 1. No generic function may expose an arbitrary path beneath the upstream checkout to application code.
-2. Application-safe checks require both lexical containment and resolved containment, with symbolic links, junctions, and special files rejected.
-3. Setup may prove task-file readability but MUST NOT JSON-decode task files or include filenames/status entries in public errors.
-4. Inspection may emit only the total task-file count. It MUST NOT emit task filenames, sizes, fields, values, samples, or parse errors derived from task bodies.
-5. Inspection may emit top-level database collection names, JSON kinds, and direct array/object counts. It MUST NOT emit nested keys, record identifiers, scalar values, samples, or raw JSON errors containing source text.
-6. Success objects, exception messages, logs, stdout, stderr, `repr`, and any supported serialization MUST follow the same non-disclosure boundary.
-7. Future features that consume application-safe data MUST re-enforce this allow-list; they may not infer safety from mere membership in the checkout.
+1. Application-safe checks require both lexical containment and resolved containment, with symbolic links, junctions, and special files rejected.
+1. Setup may prove task-file readability but MUST NOT JSON-decode task files or include filenames/status entries in public errors.
+1. Inspection may emit only the total task-file count. It MUST NOT emit task filenames, sizes, fields, values, samples, or parse errors derived from task bodies.
+1. Inspection may emit top-level database collection names, JSON kinds, and direct array/object counts. It MUST NOT emit nested keys, record identifiers, scalar values, samples, or raw JSON errors containing source text.
+1. Success objects, exception messages, logs, stdout, stderr, `repr`, and any supported serialization MUST follow the same non-disclosure boundary.
+1. Future features that consume application-safe data MUST re-enforce this allow-list; they may not infer safety from mere membership in the checkout.
 
 ## Test Contract
 

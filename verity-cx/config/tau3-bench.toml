@@ -1,0 +1,14 @@
+# Pins the external tau3-Banking repository and required data paths.
+schema_version = 1
+
+[upstream]
+repository_url = "https://github.com/sierra-research/tau2-bench.git"
+license = "MIT"
+tag = "v1.0.1"
+commit_sha = "fc0055dc4e0a316c3f83133267fbd6faaa770992"
+
+[paths]
+checkout = ".cache/tau3-bench/"
+documents = ".cache/tau3-bench/data/tau2/domains/banking_knowledge/documents/"
+database = ".cache/tau3-bench/data/tau2/domains/banking_knowledge/db.json"
+tasks = ".cache/tau3-bench/data/tau2/domains/banking_knowledge/tasks/"

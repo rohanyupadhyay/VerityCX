@@ -1,0 +1,73 @@
+---
+# Runs locked, network-independent VerityCX quality gates on every supported host.
+name: quality
+on:
+  push:
+    paths:
+      - ".github/workflows/**"
+      - "verity-cx/**"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "verity-cx/**"
+  workflow_dispatch: null
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+    working-directory: verity-cx
+jobs:
+  verify:
+    name: verify (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Set up uv 0.12.5
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          version: "0.12.5"
+      - name: Record environment and require Git 2.34
+        env:
+          IMAGE_OS: ${{ runner.os }}
+          IMAGE_VERSION: ${{ runner.arch }}
+        run: |
+          printf 'runner=%s architecture=%s\n' "$IMAGE_OS" "$IMAGE_VERSION"
+          python --version
+          git --version
+          uv --version
+          python -c "import re, subprocess, sys; text = subprocess.check_output(['git', '--version'], text=True); match = re.search(r'(\\d+)\\.(\\d+)', text); sys.exit(0 if match and tuple(map(int, match.groups())) >= (2, 34) else 1)"
+      - name: Verify lock and synchronize
+        run: |
+          uv lock --check
+          uv sync --locked
+      - name: Record network-independent first-acquisition duration
+        run: uv run pytest tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout
+          --durations=1 --durations-min=0
+      - name: Run Python quality gates
+        run: |
+          uv run ruff format --check src scripts tests
+          uv run ruff check src/veritycx/data_sources/tau3.py scripts/setup_tau3_data.py scripts/inspect_tau3_banking_data.py tests/data_sources/test_tau3.py
+          uv run mypy --strict src scripts tests
+          uv run pytest tests/data_sources/test_tau3.py
+      - name: Check maintained Markdown
+        run: |
+          uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/data/tau3-banking.md
+          uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
+          uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
+          uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+      - name: Check workflow formatting
+        run: uv run yamlfix --check ../.github/workflows/quality.yml

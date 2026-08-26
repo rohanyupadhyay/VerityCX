@@ -1,0 +1,23 @@
+# Excludes generated Python artifacts and external tau3 runtime state.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# External dependency checkout and setup-owned transient state.
+.cache/tau3-bench/
+.cache/tau3-bench-staging-*/
+.cache/tau3-bench.setup.lock/
+
+# Universal local editor and operating-system artifacts.
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
