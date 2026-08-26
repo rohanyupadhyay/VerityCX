@@ -1,4 +1,5 @@
 <!-- Defines the safe human-readable inspection output for Feature 001. -->
+
 # Contract: τ³-Banking Inspection CLI
 
 ## Command
@@ -11,7 +12,7 @@ The command has no production source/path override and performs no clone, fetch,
 
 ## Preconditions
 
-Inspection loads the reviewed config and invokes the same non-mutating validator used by setup `--check`. The checkout must have the exact origin, `HEAD`, tag binding, clean status, and valid banking paths before any summary is emitted.
+Inspection loads the reviewed config and invokes the same non-mutating validator used by setup `--check`. The checkout must have the exact origin, `HEAD`, tag binding, clean status, and valid banking paths. Inspection derives a buffered summary, repeats identity, cleanliness, required-path, count, and database-shape validation, and emits the summary only when both observations agree. A missing, invalid, dirty, unreadable, or detectably changing checkout fails with no partial stdout and no mutation.
 
 ## Exit Codes and Streams
 
@@ -22,6 +23,8 @@ Inspection loads the reviewed config and invokes the same non-mutating validator
 | `2` | Command-line usage error. |
 
 Success is written to stdout. Categorized diagnostics are written to stderr. Expected failures do not print tracebacks or partial summaries.
+
+A detected difference between initial and final validation is `checkout-changed` with exit code `1`. Final validation does not claim to detect an actor that changes state and restores the identical validated state entirely between observations.
 
 ## Output Shape
 

@@ -10,69 +10,71 @@
 
 ## Requirement Completeness
 
-- [ ] CHK001 Are requirements documented for every acquisition state: missing target, valid existing checkout, invalid existing content, interrupted acquisition, and a target created concurrently? [Completeness, Spec §User Stories 1–2, Plan §Setup Workflow]
-- [ ] CHK002 Does the specification define the read-only `--check` command contract, including its permitted state changes and missing-target result, rather than leaving that externally observable behavior only in the plan? [Gap, Spec §FR-011–FR-012, Plan §Setup Workflow]
-- [ ] CHK003 Are cleanup and recovery requirements complete for current-run staging directories, cooperative locks, stale locks, and failures occurring before or after promotion? [Completeness, Spec §Edge Cases, Plan §Setup Workflow]
-- [ ] CHK004 Are all required documentation artifacts and their content owners explicitly mapped to FR-017–FR-021 and the constitution's module-documentation obligations? [Completeness, Spec §FR-017–FR-021, Spec §Affected Modules and Public Contracts, Plan §Documentation and Attribution]
-- [ ] CHK005 Does the data-use policy define a default-deny classification for new, renamed, or otherwise unclassified upstream artifacts? [Gap, Spec §FR-018–FR-021]
+- [x] CHK001 Are requirements documented for every acquisition state: missing target, valid existing checkout, invalid existing content, interrupted acquisition, and a target created concurrently? [Completeness, Spec §User Stories 1–2, Plan §Setup Workflow]
+- [x] CHK002 Does the specification define the read-only `--check` command contract, including its permitted state changes and missing-target result, rather than leaving that externally observable behavior only in the plan? [Gap, Spec §FR-011–FR-012, Plan §Setup Workflow]
+- [x] CHK003 Are cleanup and recovery requirements complete for current-run staging directories, cooperative locks, stale locks, and failures occurring before or after promotion? [Completeness, Spec §Edge Cases, Plan §Setup Workflow]
+- [x] CHK004 Are all required documentation artifacts and their content owners explicitly mapped to FR-017–FR-021 and the constitution's module-documentation obligations? [Completeness, Spec §FR-017–FR-021, Spec §Affected Modules and Public Contracts, Plan §Documentation and Attribution]
+- [x] CHK005 Does the data-use policy define a default-deny classification for new, renamed, or otherwise unclassified upstream artifacts? [Gap, Spec §FR-018–FR-021]
 
 ## Requirement Clarity
 
-- [ ] CHK006 Is "readable" defined with objective, cross-platform criteria for directories, regular files, recursive descendants, and JSON content? [Ambiguity, Spec §FR-006–FR-008, Spec §Assumptions, Plan §Validation Rules]
-- [ ] CHK007 Are "clear diagnostic," "distinct actionable failure," and "unambiguous result" specified through required error categories, message fields, and exit-code semantics? [Clarity, Spec §FR-010–FR-011, Spec §SC-004, Plan §Phase 0: Research Decisions]
-- [ ] CHK008 Is the "same documented command contract" across Windows, Linux, and macOS precise about shell syntax, prerequisites, working-directory independence, and allowed platform-specific output differences? [Clarity, Spec §FR-001, Spec §FR-015, Spec §Edge Cases]
-- [ ] CHK009 Are "value kinds," "record counts where meaningful," and "complete top-level database shape" defined for objects, arrays, scalars, empty collections, and null values? [Ambiguity, Spec §FR-013, Spec §SC-006, Spec §Assumptions]
-- [ ] CHK010 Are "equivalent evaluation artifacts" and "all other upstream files" defined precisely enough for reviewers to classify every current and future upstream path without subjective interpretation? [Clarity, Spec §FR-019–FR-021]
+- [x] CHK006 Is "readable" defined with objective, cross-platform criteria for directories, regular files, recursive descendants, and JSON content? [Ambiguity, Spec §FR-006–FR-008, Spec §Assumptions, Plan §Validation Rules]
+- [x] CHK007 Are "clear diagnostic," "distinct actionable failure," and "unambiguous result" specified through required error categories, message fields, and exit-code semantics? [Clarity, Spec §FR-010–FR-011, Spec §SC-004, Plan §Phase 0: Research Decisions]
+- [x] CHK008 Is the "same documented command contract" across Windows, Linux, and macOS precise about shell syntax, prerequisites, working-directory independence, and allowed platform-specific output differences? [Clarity, Spec §FR-001, Spec §FR-015, Spec §Edge Cases]
+- [x] CHK009 Are "value kinds," "record counts where meaningful," and "complete top-level database shape" defined for objects, arrays, scalars, empty collections, and null values? [Ambiguity, Spec §FR-013, Spec §SC-006, Spec §Assumptions]
+- [x] CHK010 Are "equivalent evaluation artifacts" and "all other upstream files" defined precisely enough for reviewers to classify every current and future upstream path without subjective interpretation? [Clarity, Spec §FR-019–FR-021]
 
 ## Requirement Consistency
 
-- [ ] CHK011 Is the canonical upstream URL reconciled between the specification's URL without `.git` and the plan's byte-for-byte requirement for the `.git` form? [Conflict, Spec §FR-002, Spec §User Story 2, Plan §Validation Rules]
-- [ ] CHK012 Is interrupted-acquisition recovery reconciled between the specification's preserved incomplete target and manual recovery direction and the plan's current-run staging cleanup with an absent final target? [Conflict, Spec §Edge Cases, Plan §Setup Workflow]
-- [ ] CHK013 Is "exactly one documented setup command" consistent with the plan's default acquisition form plus the externally observable `--check` form, and are both terms classified unambiguously? [Consistency, Spec §FR-001, Plan §Setup Workflow]
-- [ ] CHK014 Are FR-020's obligations for later runtime agents, prompt builders, indexes, and loaders consistent with FR-022 and the plan's exclusion of those components from this feature? [Consistency, Spec §FR-020, Spec §FR-022, Plan §Technical Context]
-- [ ] CHK015 Are prohibited disclosure fields consistent between the specification and the plan, including filenames, nested database keys, reference actions, grading data, error text, report representations, and serialized reports? [Consistency, Spec §FR-014, Spec §SC-006, Plan §Safe Inspection, Plan §Network-Independent Test Strategy]
+- [x] CHK011 Is the canonical upstream URL reconciled between the specification's URL without `.git` and the plan's byte-for-byte requirement for the `.git` form? [Conflict, Spec §FR-002, Spec §User Story 2, Plan §Validation Rules]
+- [x] CHK012 Is interrupted-acquisition recovery reconciled between the specification's preserved incomplete target and manual recovery direction and the plan's current-run staging cleanup with an absent final target? [Conflict, Spec §Edge Cases, Plan §Setup Workflow]
+- [x] CHK013 Is "exactly one documented setup command" consistent with the plan's default acquisition form plus the externally observable `--check` form, and are both terms classified unambiguously? [Consistency, Spec §FR-001, Plan §Setup Workflow]
+- [x] CHK014 Are FR-020's obligations for later runtime agents, prompt builders, indexes, and loaders consistent with FR-022 and the plan's exclusion of those components from this feature? [Consistency, Spec §FR-020, Spec §FR-022, Plan §Technical Context]
+- [x] CHK015 Are prohibited disclosure fields consistent between the specification and the plan, including filenames, nested database keys, reference actions, grading data, error text, report representations, and serialized reports? [Consistency, Spec §FR-014, Spec §SC-006, Plan §Safe Inspection, Plan §Network-Independent Test Strategy]
 
 ## Acceptance Criteria Quality
 
-- [ ] CHK016 Is SC-001 measurable through a defined timing boundary, hardware or environment baseline, attempt count, and method for excluding upstream network throughput? [Measurability, Spec §SC-001]
-- [ ] CHK017 Does SC-002 enumerate the "stated prerequisites" and define the supported operating-system matrix and evidence needed to substantiate a 100% success rate? [Acceptance Criteria, Spec §SC-002, Spec §Assumptions]
-- [ ] CHK018 Does SC-004 define whether "all pre-existing target bytes unchanged" also covers metadata, permissions, links, Git administrative state, and neighboring cache content? [Ambiguity, Spec §SC-004, Plan §Network-Independent Test Strategy]
-- [ ] CHK019 Does SC-006 establish an authoritative expected dataset shape and a repeatable non-disclosure review method for proving exact counts, complete shape, and zero sensitive output? [Measurability, Spec §SC-006, Plan §Safe Inspection]
+- [x] CHK016 Is SC-001 measurable through a defined timing boundary, hardware or environment baseline, attempt count, and method for excluding upstream network throughput? [Measurability, Spec §SC-001]
+- [x] CHK017 Does SC-002 enumerate the "stated prerequisites" and define the supported operating-system matrix and evidence needed to substantiate a 100% success rate? [Acceptance Criteria, Spec §SC-002, Spec §Assumptions]
+- [x] CHK018 Does SC-004 define whether "all pre-existing target bytes unchanged" also covers metadata, permissions, links, Git administrative state, and neighboring cache content? [Ambiguity, Spec §SC-004, Plan §Network-Independent Test Strategy]
+- [x] CHK019 Does SC-006 establish an authoritative expected dataset shape and a repeatable non-disclosure review method for proving exact counts, complete shape, and zero sensitive output? [Measurability, Spec §SC-006, Plan §Safe Inspection]
 
 ## Scenario Coverage
 
-- [ ] CHK020 Are exception requirements defined for missing or unsupported Git and uv, malformed or missing configuration, unavailable upstream service, and authentication prompts? [Coverage, Gap, Spec §FR-016, Spec §Assumptions, Plan §Technical Context]
-- [ ] CHK021 Are concurrent acquisition scenarios specified for two setup processes, a pre-existing lock, and a destination appearing during the controlled setup window? [Coverage, Gap, Plan §Setup Workflow]
-- [ ] CHK022 Are recovery outcomes defined separately for failures before promotion, during promotion, and after promotion but before final validation succeeds? [Coverage, Recovery Flow, Spec §Edge Cases, Plan §Setup Workflow]
-- [ ] CHK023 Are inspection requirements complete for a missing, invalid, dirty, unreadable, or concurrently changing checkout, including the required failure signal and non-mutation guarantee? [Coverage, Exception Flow, Spec §FR-012–FR-014, Plan §Safe Inspection]
-- [ ] CHK024 Do offline re-run requirements cover both the valid-checkout success path and invalid-checkout failure paths without contacting or depending on the remote? [Coverage, Spec §FR-009–FR-010, Spec §SC-003]
+- [x] CHK020 Are exception requirements defined for missing or unsupported Git and uv, malformed or missing configuration, unavailable upstream service, and authentication prompts? [Coverage, Gap, Spec §FR-016, Spec §Assumptions, Plan §Technical Context]
+- [x] CHK021 Are concurrent acquisition scenarios specified for two setup processes, a pre-existing lock, and a destination appearing during the controlled setup window? [Coverage, Gap, Plan §Setup Workflow]
+- [x] CHK022 Are recovery outcomes defined separately for failures before promotion, during promotion, and after promotion but before final validation succeeds? [Coverage, Recovery Flow, Spec §Edge Cases, Plan §Setup Workflow]
+- [x] CHK023 Are inspection requirements complete for a missing, invalid, dirty, unreadable, or concurrently changing checkout, including the required failure signal and non-mutation guarantee? [Coverage, Exception Flow, Spec §FR-012–FR-014, Plan §Safe Inspection]
+- [x] CHK024 Do offline re-run requirements cover both the valid-checkout success path and invalid-checkout failure paths without contacting or depending on the remote? [Coverage, Spec §FR-009–FR-010, Spec §SC-003]
 
 ## Edge Case Coverage
 
-- [ ] CHK025 Are requirements defined for unexpected states of the `.cache/` parent itself, not only `.cache/tau3-bench/`, including files, links, junctions, unreadable directories, and escaping paths? [Gap, Spec §Edge Cases, Plan §Validation Rules]
-- [ ] CHK026 Are cross-platform requirements for symbolic links, junctions, special files, path containment, case sensitivity, and link-following behavior explicit and consistent? [Coverage, Spec §FR-015, Spec §Edge Cases, Plan §Validation Rules]
-- [ ] CHK027 Are malformed, empty, non-object, scalar-valued, and structurally valid but non-countable database cases addressed with unambiguous inspection outcomes? [Coverage, Edge Case, Spec §FR-007, Spec §FR-013, Spec §Edge Cases, Plan §Validation Rules]
-- [ ] CHK028 Does the specification define the expected outcome when files, permissions, or checkout state change between initial validation, counting, and final reporting? [Gap, Recovery Flow, Spec §FR-006–FR-014, Plan §Setup Workflow]
+- [x] CHK025 Are requirements defined for unexpected states of the `.cache/` parent itself, not only `.cache/tau3-bench/`, including files, links, junctions, unreadable directories, and escaping paths? [Gap, Spec §Edge Cases, Plan §Validation Rules]
+- [x] CHK026 Are cross-platform requirements for symbolic links, junctions, special files, path containment, case sensitivity, and link-following behavior explicit and consistent? [Coverage, Spec §FR-015, Spec §Edge Cases, Plan §Validation Rules]
+- [x] CHK027 Are malformed, empty, non-object, scalar-valued, and structurally valid but non-countable database cases addressed with unambiguous inspection outcomes? [Coverage, Edge Case, Spec §FR-007, Spec §FR-013, Spec §Edge Cases, Plan §Validation Rules]
+- [x] CHK028 Does the specification define the expected outcome when files, permissions, or checkout state change between initial validation, counting, and final reporting? [Gap, Recovery Flow, Spec §FR-006–FR-014, Plan §Setup Workflow]
 
 ## Non-Functional Requirements
 
-- [ ] CHK029 Should the plan's five-second performance targets for existing-checkout validation and inspection be promoted to measurable specification requirements with a defined dataset and machine baseline? [Gap, Plan §Technical Context]
-- [ ] CHK030 Are portability requirements complete enough to identify supported Git and uv versions, filesystem capabilities, path-length expectations, permission models, and locale or encoding assumptions? [Completeness, Spec §FR-015, Spec §Assumptions, Plan §Technical Context]
-- [ ] CHK031 Are security requirements explicit for credential-bearing remotes, URL rewrites, terminal prompting, command argument handling, path escape, and untrusted upstream filenames? [Coverage, Gap, Spec §FR-002, Spec §FR-016, Plan §Validation Rules]
-- [ ] CHK032 Does the non-disclosure requirement cover every observable channel, including standard output, standard error, diagnostics, exception text, logs, object representations, and serialized results? [Completeness, Spec §FR-008, Spec §FR-014, Spec §FR-020, Plan §Network-Independent Test Strategy]
+- [x] CHK029 Should the plan's five-second performance targets for existing-checkout validation and inspection be promoted to measurable specification requirements with a defined dataset and machine baseline? [Gap, Plan §Technical Context]
+- [x] CHK030 Are portability requirements complete enough to identify supported Git and uv versions, filesystem capabilities, path-length expectations, permission models, and locale or encoding assumptions? [Completeness, Spec §FR-015, Spec §Assumptions, Plan §Technical Context]
+- [x] CHK031 Are security requirements explicit for credential-bearing remotes, URL rewrites, terminal prompting, command argument handling, path escape, and untrusted upstream filenames? [Coverage, Gap, Spec §FR-002, Spec §FR-016, Plan §Validation Rules]
+- [x] CHK032 Does the non-disclosure requirement cover every observable channel, including standard output, standard error, diagnostics, exception text, logs, object representations, and serialized results? [Completeness, Spec §FR-008, Spec §FR-014, Spec §FR-020, Plan §Network-Independent Test Strategy]
 
 ## Dependencies & Assumptions
 
-- [ ] CHK033 Are assumptions about GitHub availability, unauthenticated clone behavior, tag reachability, tag mutability, and exact remote-URL representation documented and assigned a failure policy? [Assumption, Spec §FR-002–FR-003, Spec §FR-016, Spec §Assumptions]
-- [ ] CHK034 Are the same-filesystem rename, atomic lock claim, filesystem snapshot, and cleanup-ownership assumptions documented for every supported operating system? [Assumption, Plan §Setup Workflow, Plan §Network-Independent Test Strategy]
-- [ ] CHK035 Is ownership for enforcing FR-018–FR-021 in later features documented with a traceable review or acceptance gate rather than relying only on a forward-looking assumption? [Dependency, Spec §FR-018–FR-021, Spec §Assumptions]
+- [x] CHK033 Are assumptions about GitHub availability, unauthenticated clone behavior, tag reachability, tag mutability, and exact remote-URL representation documented and assigned a failure policy? [Assumption, Spec §FR-002–FR-003, Spec §FR-016, Spec §Assumptions]
+- [x] CHK034 Are the same-filesystem rename, atomic lock claim, filesystem snapshot, and cleanup-ownership assumptions documented for every supported operating system? [Assumption, Plan §Setup Workflow, Plan §Network-Independent Test Strategy]
+- [x] CHK035 Is ownership for enforcing FR-018–FR-021 in later features documented with a traceable review or acceptance gate rather than relying only on a forward-looking assumption? [Dependency, Spec §FR-018–FR-021, Spec §Assumptions]
 
 ## Ambiguities & Conflicts
 
-- [ ] CHK036 Is the authoritative source and precedence rule specified for pin, path, command, and policy values duplicated across `spec.md`, TOML configuration, contracts, README content, and third-party notices? [Ambiguity, Spec §FR-002–FR-003, Spec §FR-017–FR-019, Plan §Configuration and Pin, Plan §Documentation and Attribution]
+- [x] CHK036 Is the authoritative source and precedence rule specified for pin, path, command, and policy values duplicated across `spec.md`, TOML configuration, contracts, README content, and third-party notices? [Ambiguity, Spec §FR-002–FR-003, Spec §FR-017–FR-019, Plan §Configuration and Pin, Plan §Documentation and Attribution]
 
 ## Notes
 
+- Review completed 2026-08-26 after the specification, plan, CLI contracts, quickstart, and task coverage were remediated against CHK001–CHK036.
+- CHK029 is satisfied by the documented decision not to impose the former machine-dependent five-second targets; only the network-independent ten-minute acquisition gate is normative.
 - Mark items `[x]` only after review confirms the requirement-quality criterion is satisfied
 - Leave items unchecked when they still require clarification, correction, or reviewer evaluation
 - `$speckit-implement` reads checklist checkbox state as a gate and must not modify markers

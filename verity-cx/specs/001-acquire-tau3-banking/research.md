@@ -1,9 +1,10 @@
 <!-- Records Phase 0 decisions and alternatives for Feature 001. -->
+
 # Phase 0 Research: Acquire τ³-Banking Data
 
 ## Decision 1: Minimal Python 3.12 and uv Project
 
-**Decision**: Create a packaged `src` layout using Python 3.12, `.python-version`, `pyproject.toml`, a committed `uv.lock`, and uv's `uv_build` backend. Keep runtime dependencies empty; place pytest, Ruff, and mypy in the development dependency group.
+**Decision**: Create a packaged `src` layout using Python 3.12, `.python-version`, `pyproject.toml`, a committed `uv.lock`, and uv 0.12.5 with the `uv_build` backend. Keep runtime dependencies empty; place pytest, Ruff, mypy, mdformat, and yamlfix in the development dependency group.
 
 **Rationale**: A declared build system lets `uv run python scripts/...` import `veritycx` without shell-specific `PYTHONPATH` or source-path mutation. The Python pin prevents the host's default interpreter from changing behavior, while the lock makes developer environments reproducible across Windows, Linux, and macOS. See the official uv documentation for [projects](https://docs.astral.sh/uv/concepts/projects/config/), [running commands](https://docs.astral.sh/uv/concepts/projects/run/), and [locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/).
 
@@ -38,7 +39,7 @@
 
 ## Decision 4: Typed, Non-Shell Git Boundary
 
-**Decision**: Centralize Git execution behind a typed runner using `subprocess.run()` with an argument sequence, explicit `shell=False`, captured UTF-8 text, `check=False`, and `GIT_TERMINAL_PROMPT=0`. Validation uses `--no-optional-locks`/`GIT_OPTIONAL_LOCKS=0` so status checks do not refresh index metadata.
+**Decision**: Require Git 2.34 or newer and centralize Git execution behind a typed runner using `subprocess.run()` with an argument sequence, explicit `shell=False`, captured UTF-8 text, `check=False`, and `GIT_TERMINAL_PROMPT=0`. Validation uses `--no-optional-locks`/`GIT_OPTIONAL_LOCKS=0` so status checks do not refresh index metadata.
 
 **Rationale**: Argument sequences are the portable Python subprocess form and avoid shell interpretation. Git documents that status may refresh the index unless optional locks are disabled, which matters for read-only `--check` and byte-stable idempotency. See [Python `subprocess`](https://docs.python.org/3.12/library/subprocess.html), [Git status](https://git-scm.com/docs/git-status.html), and [Git environment behavior](https://git-scm.com/docs/git).
 
@@ -75,7 +76,7 @@
 
 ## Decision 7: Minimal Data Validation and Safe Inspection
 
-**Decision**: Validate document and task directories by non-following recursive enumeration, regular-file checks, non-empty counts, and minimal readability opens. Parse only the application-safe `db.json`, requiring a non-empty top-level JSON object. Inspection reports tag, SHA, counts, and sorted top-level collection name/kind/direct-count values only.
+**Decision**: Validate document and task directories by non-following recursive enumeration, regular-file checks, non-empty counts, and minimal readability opens. Parse only the application-safe `db.json`, requiring a non-empty top-level JSON object. Inspection derives a safe summary, repeats checkout identity, cleanliness, required-path, count, and database-shape validation, and reports tag, SHA, counts, and sorted top-level collection name/kind/direct-count values only when both observations agree.
 
 **Rationale**: The pinned Git identity authenticates evaluation tasks; decoding their contents provides no setup value and expands the leakage surface. Database parsing is required to detect malformed JSON and produce the requested high-level structure, but nested records never enter the report. Python 3.12 link and junction checks support safe traversal; see [Python `pathlib`](https://docs.python.org/3.12/library/pathlib.html).
 
@@ -87,7 +88,7 @@
 
 ## Decision 8: Stable CLI Results and Errors
 
-**Decision**: Return `0` for success, `1` for expected operational errors, and argparse's `2` for usage errors. Success summaries go to stdout; categorized diagnostics go to stderr without tracebacks, checkout status entries, raw JSON, or evaluation content.
+**Decision**: Return `0` for success, `1` for expected operational errors, and argparse's `2` for usage errors. Success summaries go to stdout; exactly one categorized diagnostic goes to stderr with safe context and recovery guidance, without tracebacks, checkout status entries, raw JSON, arbitrary exception text, or evaluation content. A changed observation during inspection uses `checkout-changed` and emits no partial stdout.
 
 **Rationale**: The conventional three-code model is cross-platform and easy for developers and automation to consume; stable error categories provide detail without proliferating exit codes.
 
@@ -99,7 +100,7 @@
 
 ## Decision 9: Local-Git Test Fixtures and Canary-Based Non-Disclosure
 
-**Decision**: Build temporary local repositories and bare remotes during pytest, inject dynamic test config and SHAs into the reusable library, and use unique canaries in document, database, prompt, expected-answer, reference-action, and grading fields. Assert canaries are absent from stdout, stderr, report representations, and serialized summaries.
+**Decision**: Build temporary local repositories and bare remotes during pytest, inject dynamic test config and SHAs into the reusable library, and use unique canaries in document, database, prompt, expected-answer, reference-action, and grading fields. Assert canaries are absent from result fields, stdout, stderr, diagnostics, exception text, report representations, and serialized summaries. Conflict tests snapshot bytes, object/link identity, exposed permissions, Git state, and neighboring cache entries while excluding access timestamps.
 
 **Rationale**: Local Git exercises real clone, tag, revision, origin, and cleanliness behavior without network access. Canary assertions directly prove that evaluation-only and record-level data cannot escape through success or error paths.
 

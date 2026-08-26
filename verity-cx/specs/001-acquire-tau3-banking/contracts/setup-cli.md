@@ -1,4 +1,5 @@
 <!-- Defines the public setup and read-only validation command behavior for Feature 001. -->
+
 # Contract: τ³-Banking Setup CLI
 
 ## Commands
@@ -9,6 +10,8 @@ uv run python scripts/setup_tau3_data.py --check
 ```
 
 No other production options are planned. Argparse help and usage remain available through standard `-h`/`--help` behavior.
+
+Both forms resolve the project root from the script location and therefore have the same behavior when launched from any current working directory. Git 2.34 or newer and uv 0.12.5 are the supported command baseline.
 
 ## Exit Codes and Streams
 
@@ -29,6 +32,8 @@ Successful summaries go to stdout. Expected diagnostics go to stderr without a t
 | Invalid or unexpected | Fail with precise category; preserve unchanged | Fail with precise category; preserve unchanged |
 | Concurrent supported setup | One process owns lock; other fails `setup-locked` without cleanup of owner's state | Not applicable because check mode creates no lock |
 
+Every existing-target row is offline: neither form contacts the remote, and both preserve target/cache bytes, object/link identity, exposed permissions, Git administrative/worktree state, and neighboring cache entries. Access timestamps caused by required reads are outside the preservation snapshot.
+
 ## Required Git Invocations
 
 All invocations use argument arrays and `shell=False`. Validation commands execute with the checkout as `cwd` and with optional locks disabled.
@@ -48,27 +53,28 @@ git --no-optional-locks status --porcelain=v1 --untracked-files=all
 ## Validation Order
 
 1. Classify checkout path without following it; reject missing in validation mode, files, links, junctions, special objects, and unreadable directories.
-2. Require `rev-parse --show-toplevel` to refer to the checkout itself, not an ancestor repository.
-3. Require exactly one local `remote.origin.url` and exact equality with the configured `.git` URL.
-4. Require `git rev-parse HEAD` to equal `fc0055dc4e0a316c3f83133267fbd6faaa770992`.
-5. Require the peeled `v1.0.1` tag to resolve to the same SHA.
-6. Require empty no-optional-locks porcelain output.
-7. Require the exact configured documents directory, database file, and tasks directory to be contained, correct-kind, readable, and non-empty where applicable.
-8. Require `db.json` to decode as UTF-8 JSON with a non-empty object at the top level.
+1. Require `rev-parse --show-toplevel` to refer to the checkout itself, not an ancestor repository.
+1. Require exactly one local `remote.origin.url` and exact equality with the configured `.git` URL.
+1. Require `git rev-parse HEAD` to equal `fc0055dc4e0a316c3f83133267fbd6faaa770992`.
+1. Require the peeled `v1.0.1` tag to resolve to the same SHA.
+1. Require empty no-optional-locks porcelain output.
+1. Require the exact configured documents directory, database file, and tasks directory to be contained, correct-kind, readable, and non-empty where applicable.
+1. Require `db.json` to decode as UTF-8 JSON with a non-empty object at the top level.
 
 The same validator runs for staged, existing, check-only, and inspection flows.
 
 ## Installation Transaction
 
 1. Existing-target classification and validation occur before cache creation.
-2. A first install creates or validates the real `.cache/` directory.
-3. Atomic directory creation claims `.cache/tau3-bench.setup.lock/`; only the creator records ownership.
-4. Target absence is rechecked after lock acquisition.
-5. `tempfile.mkdtemp(prefix="tau3-bench-staging-", dir=cache_root)` creates one current-run-owned absolute parent. Git clones into its nonexistent `checkout/` child.
-6. Complete Git and banking validation succeeds before promotion.
-7. Cleanliness and destination absence are rechecked immediately before a same-filesystem `os.rename`/`Path.rename` operation that does not request replacement.
-8. The final checkout is validated before success is reported.
-9. `finally` removes only the exact owned staging parent and lock. It never globs, deletes stale state, repairs a checkout, or deletes/replaces the final target.
+1. A first install creates or validates the real `.cache/` directory.
+1. Atomic directory creation claims `.cache/tau3-bench.setup.lock/`; only the creator records ownership.
+1. Target absence is rechecked after lock acquisition.
+1. `tempfile.mkdtemp(prefix="tau3-bench-staging-", dir=cache_root)` creates one current-run-owned absolute parent. Git clones into its nonexistent `checkout/` child.
+1. Complete Git and banking validation succeeds before promotion.
+1. Cleanliness and destination absence are rechecked immediately before a same-filesystem `os.rename`/`Path.rename` operation that does not request replacement.
+1. The final checkout is validated before success is reported.
+1. `finally` removes only the exact owned staging parent and lock. It never globs, deletes stale state, repairs a checkout, or deletes/replaces the final target.
+1. A detected failure after promotion preserves the promoted checkout for manual review and reports the failure without rollback, repair, or replacement.
 
 ## Success Output
 
@@ -88,6 +94,7 @@ No file counts or data samples are required from setup; those belong to inspecti
 
 | Category | Required information |
 |---|---|
+| `configuration-invalid` | Fixed configuration path, schema/field category, and correction action without echoing secrets or arbitrary values. |
 | `git-unavailable` | Git prerequisite and recovery action. |
 | `checkout-missing` | Expected checkout and command to run without `--check`. |
 | `unexpected-target` | Configured target and detected kind; no automatic action. |
@@ -101,4 +108,7 @@ No file counts or data samples are required from setup; those belong to inspecti
 | `setup-locked` | Lock location and manual-review guidance; never remove it automatically. |
 | `clone-failed` | Git exit code and sanitized concise stderr. |
 | `destination-conflict` | Final target appeared and was preserved. |
+| `checkout-changed` | Validation observations disagreed; no partial success output and manual retry/review guidance. |
 | `staging-cleanup-failed` | Exact current-run staging path retained for manual cleanup. |
+
+Every expected diagnostic uses exit code `1`, contains exactly one category, and includes only the configured/current-run-owned path, safe expected/detected metadata, and non-destructive recovery action applicable to that category. Diagnostics, exception text, logs, stdout/stderr, object representations, and supported serialization share the non-disclosure boundary.

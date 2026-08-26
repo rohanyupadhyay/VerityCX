@@ -1,4 +1,5 @@
 <!-- Defines the typed configuration, state, and report models for Feature 001. -->
+
 # Data Model: Acquire τ³-Banking Data
 
 Feature 001 persists only the reviewed TOML configuration and the external Git checkout. The Python models below are immutable in-memory boundary objects; they do not introduce an application database.
@@ -108,6 +109,8 @@ The complete public inspection result.
 
 **Serialization rule**: `repr`, formatting, and any mapping conversion expose only these fields.
 
+**Consistency rule**: An `InspectionSummary` remains buffered until a second checkout identity, cleanliness, required-path, count, and database-shape observation matches the first. A detected difference produces `checkout-changed`; no summary is returned, serialized, or printed.
+
 ## Entity: `Tau3OperationError`
 
 A typed expected failure suitable for CLI translation.
@@ -147,10 +150,12 @@ TARGET_UNKNOWN
             ├── validation fails ──────> FAILED_CLEAN_OWNED_STAGING
             └── VALIDATED_STAGING
                 ├── target appeared ──> FAILED_PRESERVE_TARGET
-                └── PROMOTED ─────────> READY_INSTALLED
+                └── PROMOTED
+                    ├── final validation succeeds ──> READY_INSTALLED
+                    └── final validation fails ─────> FAILED_PROMOTED_PRESERVED
 ```
 
-`FAILED_*` cleanup is limited to `staging_parent` and the lock whose ownership flags belong to this execution. Existing checkout, stale staging, stale locks, and unrelated cache content are never automatically removed.
+`FAILED_*` cleanup is limited to `staging_parent` and the lock whose ownership flags belong to this execution. `FAILED_PROMOTED_PRESERVED` retains the promoted checkout for manual review. Existing checkout, stale staging, stale locks, and unrelated cache content are never automatically removed.
 
 ## Relationships and Data-Use Boundary
 

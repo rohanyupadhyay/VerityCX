@@ -1,4 +1,5 @@
 <!-- Defines the implementation design and quality gates for Feature 001. -->
+
 # Implementation Plan: Acquire τ³-Banking Data
 
 **Branch**: `001-acquire-tau3-banking` | **Date**: 2026-08-25 | **Spec**: [spec.md](spec.md)
@@ -13,7 +14,7 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
 
 **Language/Version**: Python 3.12 only (`requires-python = ">=3.12,<3.13"` and `.python-version` set to `3.12`)
 
-**Primary Dependencies**: Python standard library (`argparse`, `dataclasses`, `json`, `pathlib`, `subprocess`, `tempfile`, `tomllib`); Git CLI; uv with `uv_build`; development-only pytest, Ruff, mypy, mdformat, and yamlfix
+**Primary Dependencies**: Python standard library (`argparse`, `dataclasses`, `json`, `pathlib`, `subprocess`, `tempfile`, `tomllib`); Git CLI 2.34 or newer; uv 0.12.5 with `uv_build`; development-only pytest, Ruff, mypy, mdformat, and yamlfix
 
 **Storage**: Read-only TOML configuration, an external Git working tree under `.cache/`, and upstream JSON files; no application database or import
 
@@ -25,7 +26,7 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
 
 **Performance Goals**: The network-independent local-remote first-acquisition test completes within 10 minutes on every required runner, measured from setup-process start through successful exit. Existing-checkout validation and inspection durations are recorded diagnostically but have no separate machine-dependent threshold in Feature 001
 
-**Constraints**: No API keys; no `shell=True`; no current-working-directory path resolution; no fetch/reset/repair of an existing checkout; no automatic deletion or overwrite of `.cache/tau3-bench/`; no document, customer-record, or evaluation-content output; setup stages on the same filesystem as the target; `--check` performs no download or intentional filesystem mutation
+**Constraints**: No API keys; no `shell=True`; no current-working-directory path resolution; no fetch/reset/repair of an existing checkout; no automatic deletion or overwrite of `.cache/tau3-bench/`; no document, customer-record, or evaluation-content output through any result/error channel; setup stages on the same filesystem as the target; `--check` performs no download or intentional filesystem mutation; inspection buffers output until a repeated final validation proves the checkout and approved shape are unchanged
 
 **Scale/Scope**: One pinned public repository, one banking domain, one local checkout, and hundreds of small data files; no chunking, embeddings, database import, agents, APIs, containers, or evaluation execution
 
@@ -35,9 +36,10 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
   `.github/workflows/`.
 - **Project root**: The nested `VerityCX/verity-cx/` directory containing
   `pyproject.toml`, `src/`, `scripts/`, `config/`, `specs/`, and `.cache/`.
-- Developer and verification commands run from the project root. Production
-  paths resolve from the project root derived from each script's `__file__`.
-  Git-root CI steps set `verity-cx` as their working directory.
+- Documented developer and verification examples run from the project root, while
+  both public scripts behave identically from any current working directory.
+  Production paths resolve from the project root derived from each script's
+  `__file__`. Git-root CI steps set `verity-cx` as their working directory.
 
 ## Constitution Check
 
@@ -127,14 +129,14 @@ Generated, ignored runtime state beneath the project root:
 Research is consolidated in [research.md](research.md). All planning unknowns are resolved:
 
 1. Use uv's packaged application layout with `uv_build`, a Python 3.12 pin, an empty runtime dependency list, and a locked development group containing pytest, Ruff, mypy, mdformat, and yamlfix.
-2. Parse `config/tau3-bench.toml` with `tomllib` into immutable typed configuration objects; production scripts accept no source, revision, destination, or config overrides.
-3. Derive the project root from each script's `__file__`, pass it explicitly into library functions, and reject absolute or escaping configured paths.
-4. Run every Git process with an argument list, `shell=False`, captured text output, disabled terminal prompting, and optional locks disabled during validation.
-5. Validate checkout identity in a fixed order: real directory, standalone worktree root, exact origin, exact `HEAD`, tag-to-commit binding, empty porcelain status, then required banking data.
-6. Use a unique current-run-owned staging parent plus a cooperative setup lock; validate fully before same-filesystem promotion and never fetch, reset, repair, replace, or clean a pre-existing target.
-7. Parse only the application-safe `db.json` as JSON during validation. Count and prove readability of document and task files without decoding or displaying evaluation tasks.
-8. Expose deterministic human-readable CLI summaries with stable error categories and conventional exit codes `0`, `1`, and `2`.
-9. Test entirely against temporary local Git repositories and synthetic canary content, including offline idempotency and output non-disclosure.
+1. Parse `config/tau3-bench.toml` with `tomllib` into immutable typed configuration objects; production scripts accept no source, revision, destination, or config overrides.
+1. Derive the project root from each script's `__file__`, pass it explicitly into library functions, and reject absolute or escaping configured paths.
+1. Run every Git process with an argument list, `shell=False`, captured text output, disabled terminal prompting, and optional locks disabled during validation.
+1. Validate checkout identity in a fixed order: real directory, standalone worktree root, exact origin, exact `HEAD`, tag-to-commit binding, empty porcelain status, then required banking data.
+1. Use a unique current-run-owned staging parent plus a cooperative setup lock; validate fully before same-filesystem promotion and never fetch, reset, repair, replace, or clean a pre-existing target.
+1. Parse only the application-safe `db.json` as JSON during validation. Count and prove readability of document and task files without decoding or displaying evaluation tasks.
+1. Expose deterministic human-readable CLI summaries with stable error categories and conventional exit codes `0`, `1`, and `2`.
+1. Test entirely against temporary local Git repositories and synthetic canary content, including offline idempotency and output non-disclosure.
 
 ## Phase 1: Design and Contracts
 
@@ -147,9 +149,9 @@ Research is consolidated in [research.md](research.md). All planning unknowns ar
 `src/veritycx/data_sources/tau3.py` contains four deliberately separated layers:
 
 1. **Typed configuration and path resolution**: Load the fixed TOML file, reject missing/unknown/malformed fields, validate the 40-character lowercase hexadecimal SHA, and resolve paths from the explicit VerityCX project root with containment checks.
-2. **Git boundary**: Execute Git with `subprocess.run()` argument lists and no shell; translate missing Git and nonzero exits into typed, sanitized errors; validate origin, revision, tag binding, and cleanliness without optional index locks.
-3. **Banking-data boundary**: Verify required path kinds, containment, non-empty recursive file sets, and actual readability without following symbolic links or junctions; decode only `db.json`, require a non-empty top-level object, and derive collection shapes without retaining record values in report objects.
-4. **Orchestration and inspection**: Validate an existing target without mutation, create and own staging state for first acquisition, promote only a fully valid checkout, and return narrow immutable setup/inspection summaries.
+1. **Git boundary**: Execute Git with `subprocess.run()` argument lists and no shell; translate missing Git and nonzero exits into typed, sanitized errors; validate origin, revision, tag binding, and cleanliness without optional index locks.
+1. **Banking-data boundary**: Verify required path kinds, containment, non-empty recursive file sets, and actual readability without following symbolic links or junctions; decode only `db.json`, require a non-empty top-level object, and derive collection shapes without retaining record values in report objects.
+1. **Orchestration and inspection**: Validate an existing target without mutation, create and own staging state for first acquisition, promote only a fully valid checkout, and return narrow immutable setup/inspection summaries.
 
 The module MUST NOT provide a generic upstream file reader. Public results contain identifiers, counts, kinds, and error categories only.
 
@@ -158,18 +160,19 @@ The module MUST NOT provide a generic upstream file reader. Public results conta
 The default setup contract is `uv run python scripts/setup_tau3_data.py`; read-only validation is `uv run python scripts/setup_tau3_data.py --check`. Detailed states and outputs are defined in [setup-cli.md](contracts/setup-cli.md).
 
 1. The script derives the VerityCX project root from `scripts/setup_tau3_data.py`, loads the fixed config, and resolves every configured path from that root rather than from the caller's current directory.
-2. Before creating `.cache/`, it classifies `.cache/tau3-bench/` without following links or junctions.
-3. If the target exists, it validates the target in place. A valid target exits successfully without acquiring a lock or contacting the remote. Any invalid target produces a precise error and remains unchanged.
-4. If `--check` is present and the target is missing, setup returns a missing-checkout error without creating `.cache/`, a lock, or staging state.
-5. For first acquisition, setup verifies Git availability, creates `.cache/` only if absent and safe, then atomically claims `.cache/tau3-bench.setup.lock/`. A pre-existing lock is preserved and reported with manual recovery guidance.
-6. After taking the lock, setup rechecks that the final target is absent, then creates a unique absolute staging parent using prefix `tau3-bench-staging-` beneath `.cache/`; it clones into the parent's initially nonexistent `checkout/` child.
-7. Clone uses the configured URL and tag with a single-branch argument-list invocation. Terminal prompting is disabled, so the public repository cannot unexpectedly request credentials.
-8. In the staged checkout, setup requires one exact `origin` URL, verifies `git rev-parse HEAD` equals `fc0055dc4e0a316c3f83133267fbd6faaa770992`, verifies the peeled `v1.0.1` tag resolves to that SHA, and requires empty no-optional-locks porcelain status.
-9. Setup validates the three configured banking paths, recursively counts and opens regular document/task files without following links, and parses `db.json` as a non-empty top-level JSON object.
-10. Setup repeats the clean check and final-target absence check immediately before promotion, then renames the staged checkout within `.cache/`; it never uses replace semantics.
-11. Setup validates the promoted checkout before reporting success. On any failure before promotion, `finally` removes only the exact staging parent and cooperative lock created and recorded by the current invocation. It never searches for or removes other staging directories, stale locks, or the final target.
-12. If the destination appears during the controlled setup window, setup preserves it, aborts promotion, removes only its own staging state, and reports the conflict.
-13. A handled failure removes only staging and lock paths recorded as owned by the current invocation. State surviving abrupt termination or cleanup failure is unowned by later invocations: a surviving lock blocks setup and is reported with manual recovery guidance, while unrelated stale staging directories remain untouched. The final target is never partially populated.
+1. Before creating `.cache/`, it classifies `.cache/tau3-bench/` without following links or junctions.
+1. If the target exists, it validates the target in place. A valid target exits successfully without acquiring a lock or contacting the remote. Any invalid target produces a precise error and remains unchanged.
+1. If `--check` is present and the target is missing, setup returns a missing-checkout error without creating `.cache/`, a lock, or staging state.
+1. For first acquisition, setup verifies Git availability, creates `.cache/` only if absent and safe, then atomically claims `.cache/tau3-bench.setup.lock/`. A pre-existing lock is preserved and reported with manual recovery guidance.
+1. After taking the lock, setup rechecks that the final target is absent, then creates a unique absolute staging parent using prefix `tau3-bench-staging-` beneath `.cache/`; it clones into the parent's initially nonexistent `checkout/` child.
+1. Clone uses the configured URL and tag with a single-branch argument-list invocation. Terminal prompting is disabled, so the public repository cannot unexpectedly request credentials.
+1. In the staged checkout, setup requires one exact `origin` URL, verifies `git rev-parse HEAD` equals `fc0055dc4e0a316c3f83133267fbd6faaa770992`, verifies the peeled `v1.0.1` tag resolves to that SHA, and requires empty no-optional-locks porcelain status.
+1. Setup validates the three configured banking paths, recursively counts and opens regular document/task files without following links, and parses `db.json` as a non-empty top-level JSON object.
+1. Setup repeats the clean check and final-target absence check immediately before promotion, then renames the staged checkout within `.cache/`; it never uses replace semantics.
+1. Setup validates the promoted checkout before reporting success. On any failure before promotion, `finally` removes only the exact staging parent and cooperative lock created and recorded by the current invocation. It never searches for or removes other staging directories, stale locks, or the final target.
+1. If the destination appears during the controlled setup window, setup preserves it, aborts promotion, removes only its own staging state, and reports the conflict.
+1. A handled failure removes only staging and lock paths recorded as owned by the current invocation. State surviving abrupt termination or cleanup failure is unowned by later invocations: a surviving lock blocks setup and is reported with manual recovery guidance, while unrelated stale staging directories remain untouched. The final target is never partially populated.
+1. If validation fails after promotion, setup preserves the promoted checkout for manual review, removes only its owned lock and now-empty staging parent, and reports the categorized failure without rollback, repair, or replacement.
 
 ### Validation Rules
 
@@ -180,10 +183,12 @@ The default setup contract is `uv run python scripts/setup_tau3_data.py`; read-o
 - Use `git --no-optional-locks status --porcelain=v1 --untracked-files=all`; do not print porcelain entries or filenames in errors.
 - Directory validation rejects links, junctions, special files, unreadable files, escaping descendants, and empty file sets. It counts recursive regular files without printing names.
 - Database validation decodes UTF-8 `db.json`, rejects malformed JSON, a non-object root, or an empty object, and reports syntax line/column without echoing source text.
+- Git 2.34 or newer and uv 0.12.5 form the supported tool baseline. Commands record versions in CI, treat filenames as opaque, use locale-independent project-owned fields/categories, and fail safely when host path-length or permission rules prevent access.
+- Configuration failures, missing tools, credential-bearing or rewritten origins, terminal-prompt attempts, escaping paths, and untrusted filenames terminate at typed boundaries before unsafe state is exposed or promoted.
 
 ### Safe Inspection
 
-`uv run python scripts/inspect_tau3_banking_data.py` first performs the same non-mutating checkout and banking validation, then prints only the verified tag, exact SHA, recursive document count, recursive task count, and sorted top-level database collection name/kind/direct-count tuples. It never prints nested database keys, database values, document bodies or names, task names or contents, prompts, evaluation criteria, reference actions, grading data, or expected answers. See [inspection-cli.md](contracts/inspection-cli.md) and [data-use-policy.md](contracts/data-use-policy.md).
+`uv run python scripts/inspect_tau3_banking_data.py` performs the same non-mutating checkout and banking validation, derives an approved summary, then repeats identity, cleanliness, required-path, count, and database-shape validation before printing. A detected difference fails as `checkout-changed` with no stdout. Successful output contains only the verified tag, exact SHA, recursive document count, recursive task count, and sorted top-level database collection name/kind/direct-count tuples. It never prints nested database keys, database values, document bodies or names, task names or contents, prompts, evaluation criteria, reference actions, grading data, or expected answers. See [inspection-cli.md](contracts/inspection-cli.md) and [data-use-policy.md](contracts/data-use-policy.md).
 
 ### Network-Independent Test Strategy
 
@@ -207,6 +212,8 @@ Required coverage:
 | Unexpected filesystem targets | Cover regular file and symbolic-link targets everywhere, plus junction behavior where supported; assert rejection without following or changing them. |
 | Root independence | Invoke from a different current directory; assert all paths still resolve beneath the explicit temporary project root. |
 | Safe inspection output | Place unique canaries in a document body, nested synthetic record, task prompt, expected answer, reference action, and grading criteria; assert none occurs in stdout, stderr, report `repr`, or serialized report while counts/shapes remain correct. |
+| Concurrent inspection change | Inject a state/count/shape change between the initial and final validation; assert `checkout-changed`, empty stdout, no traceback, and no filesystem mutation by inspection. |
+| Preservation evidence | Snapshot file bytes, links/object identity, exposed permissions, Git references/index/worktree state, and sibling cache entries before every conflict case; exclude access timestamps and inject permission failures when host privileges are nondeterministic. |
 
 Permission failures use injected file operations or monkeypatching to raise `PermissionError`, ensuring deterministic coverage on Windows and POSIX without relying on host privilege behavior.
 
@@ -223,6 +230,8 @@ Permission failures use injected file operations or monkeypatching to raise `Per
 Run from the VerityCX project root after implementation:
 
 ```text
+git --version
+uv --version
 uv lock --check
 uv sync --locked
 uv run ruff format --check src scripts tests
@@ -246,7 +255,7 @@ uv run python scripts/setup_tau3_data.py
 
 The four verification commands supplied in the feature input are preserved verbatim. Lock verification, Python formatting, explicit maintained-Markdown formatting, workflow-YAML formatting, and strict typing are additional constitution gates. The explicit Markdown list prevents recursive formatting of `.agents/`, `.specify/`, generated, vendored, or unrelated files.
 
-The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with `verity-cx` as the working directory. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
+The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with `verity-cx` as the working directory. The workflow pins uv 0.12.5, requires Git 2.34 or newer, records the runner image and Python/Git/uv versions, and records the first-acquisition duration. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
 
 ## Post-Design Constitution Check
 

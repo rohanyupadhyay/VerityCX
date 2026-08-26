@@ -1,17 +1,20 @@
 <!-- Provides end-to-end implementation validation steps for Feature 001. -->
+
 # Quickstart: Validate τ³-Banking Acquisition
 
 This guide describes the expected developer workflow after Feature 001 is implemented. Run commands from the nested VerityCX project root (`verity-cx/`) unless a scenario explicitly changes the current directory to prove root independence. The outer directory containing `.git` is the Git root and owns `.github/workflows/`.
 
 ## Prerequisites
 
-- Git is installed and available on `PATH`.
-- uv is installed.
+- Git 2.34 or newer is installed and available on `PATH`.
+- uv 0.12.5 is installed; required CI pins this exact version.
 - Internet access is available for the first official acquisition only.
 - No API key, `.env` secret, or paid service is required.
 - The required verification matrix uses Python 3.12 on `ubuntu-latest`, `windows-latest`, and `macos-latest` GitHub-hosted runners.
 
 Python does not need to be preselected in the invoking shell: `.python-version` and `pyproject.toml` direct uv to Python 3.12.
+
+Record `git --version` and `uv --version` before verification. The repository path must be representable and accessible to Python and Git under the host's path-length, filesystem, and permission rules.
 
 ## 1. Prepare the Locked Development Environment
 
@@ -93,7 +96,9 @@ The suite proves:
 - failed-clone cleanup limited to current-run staging;
 - interrupted-run recovery that preserves surviving lock and stale staging state and reports manual recovery guidance;
 - safe handling of files, symbolic links, junctions where supported, stale state, and changed current directories;
-- absence of document, customer-record, and evaluation canaries from every inspection output channel.
+- preservation of bytes, object/link identity, exposed permissions, Git state, and neighboring cache entries in conflict cases;
+- final inspection revalidation rejects a detected concurrent state/count/shape change without partial stdout;
+- absence of document, customer-record, and evaluation canaries from every result, error, representation, and serialization channel.
 
 ## 6. Run Required Lint Verification
 
@@ -119,7 +124,7 @@ Expected result: deterministic Python, maintained-Markdown, and workflow-YAML fo
 
 ## 8. Verify the Required CI Matrix
 
-The Git-root `.github/workflows/quality.yml`, addressed as `../.github/workflows/quality.yml` from the project root, must set `verity-cx` as the working directory and run required Python 3.12 jobs on `ubuntu-latest`, `windows-latest`, and `macos-latest`. Each job runs lock verification, locked synchronization, Ruff format and lint checks, mdformat, yamlfix, strict mypy, and the network-independent pytest suite. CI must not acquire the live upstream repository, and every matrix job must pass before merge.
+The Git-root `.github/workflows/quality.yml`, addressed as `../.github/workflows/quality.yml` from the project root, must set `verity-cx` as the working directory and run required Python 3.12 jobs on `ubuntu-latest`, `windows-latest`, and `macos-latest`. Each job pins uv 0.12.5, requires Git 2.34 or newer, records the runner image and Python/Git/uv versions, records the first-acquisition duration, and runs lock verification, locked synchronization, Ruff format and lint checks, mdformat, yamlfix, strict mypy, and the network-independent pytest suite. CI must not acquire the live upstream repository, and every matrix job must pass before merge.
 
 ## 9. Confirm Version-Control Isolation
 

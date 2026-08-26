@@ -1,4 +1,5 @@
 <!-- Defines the dependency-ordered implementation tasks for Feature 001. -->
+
 # Tasks: Acquire τ³-Banking Data
 
 **Input**: Design documents from `specs/001-acquire-tau3-banking/`
@@ -17,7 +18,7 @@
 
 ## Global Constraints
 
-- Use Python `>=3.12,<3.13`, uv with `uv_build`, standard-library runtime dependencies only, and development-only pytest, Ruff, mypy, mdformat, and yamlfix configuration in `pyproject.toml`.
+- Use Python `>=3.12,<3.13`, uv 0.12.5 with `uv_build`, Git 2.34 or newer, standard-library runtime dependencies only, and development-only pytest, Ruff, mypy, mdformat, and yamlfix configuration in `pyproject.toml`.
 - Resolve the project root and all production paths from each script's `__file__`, never the caller's current working directory; production source, revision, destination, and config overrides are forbidden.
 - Invoke Git with argument sequences, explicit `shell=False`, captured text, `GIT_TERMINAL_PROMPT=0`, and optional locks disabled during validation.
 - Never fetch, reset, repair, delete, move, replace, or clean a pre-existing `.cache/tau3-bench/`; clean up only staging and lock paths proven to be owned by the current invocation.
@@ -39,13 +40,13 @@
 | `README.md`, module `README.md` files, `docs/data/tau3-banking.md`, `THIRD_PARTY_NOTICES.md` | Commands, contracts, provenance, operating constraints, tests, and data-use policy |
 | `.gitignore` | Precise external-cache, setup-lock, and staging-state isolation without ignoring unrelated cache content |
 
----
+______________________________________________________________________
 
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Create the minimal packaged Python project and project-root runtime-state boundaries.
 
-- [ ] T001 Create `pyproject.toml` with `uv_build`, Python `>=3.12,<3.13`, no runtime dependencies, a locked development group for pytest/Ruff/mypy/mdformat/yamlfix, strict mypy coverage of `src`, `scripts`, and `tests`, deterministic Ruff/pytest configuration including documentation rules for maintained Python interfaces, and deterministic mdformat/yamlfix configuration for the explicit maintained-Markdown set and Git-root workflow YAML
+- [ ] T001 Create `pyproject.toml` with `uv_build`, Python `>=3.12,<3.13`, no runtime dependencies, a locked development group for pytest/Ruff/mypy/mdformat/yamlfix, strict mypy coverage of `src`, `scripts`, and `tests`, deterministic Ruff/pytest configuration including documentation rules for maintained Python interfaces, deterministic mdformat/yamlfix configuration for the explicit maintained-Markdown set and Git-root workflow YAML, and documented verification compatibility with uv 0.12.5
 - [ ] T002 [P] Pin Python `3.12` in `.python-version`
 - [ ] T003 [P] Create documented package markers and explicit exports in `src/veritycx/__init__.py` and `src/veritycx/data_sources/__init__.py`
 - [ ] T004 [P] Generate and commit the deterministic dependency resolution in `uv.lock` from `pyproject.toml`
@@ -53,7 +54,7 @@
 
 **Checkpoint**: `uv lock --check` can validate the project metadata, package imports resolve under `uv run`, and all generated τ³ runtime state has an explicit version-control boundary.
 
----
+______________________________________________________________________
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
@@ -65,12 +66,12 @@
 - [ ] T007 [P] Build typed pytest helpers in `tests/data_sources/test_tau3.py` that create temporary working and bare Git repositories, synthesize required banking paths and unique disclosure canaries at runtime, inject `Tau3Config`, capture filesystem byte snapshots, and never access GitHub
 - [ ] T008 Add failing schema and path-boundary tests in `tests/data_sources/test_tau3.py` for missing/unknown/duplicate/wrong-type TOML fields, boolean schema versions, malformed or non-production pins, absolute/drive/UNC/parent-traversal paths, resolved escapes, checkout-child relationships, and current-directory independence
 - [ ] T009 Implement frozen, strictly typed `Tau3UpstreamConfig`, `Tau3PathConfig`, `Tau3Config`, `ResolvedTau3Paths`, `Tau3OperationError`, `load_tau3_config()`, and `resolve_tau3_paths()` in `src/veritycx/data_sources/tau3.py` until the T008 tests pass before any Git or cache mutation is possible
-- [ ] T010 Add failing subprocess and data-boundary tests in `tests/data_sources/test_tau3.py` for argument-list Git execution, prompt/optional-lock environment controls, sanitized nonzero/missing-Git failures, non-following file traversal, link/junction/special-file rejection, unreadable files, UTF-8 JSON errors, and safe top-level collection shapes
+- [ ] T010 Add failing subprocess and data-boundary tests in `tests/data_sources/test_tau3.py` for argument-list Git execution, Git 2.34 minimum enforcement, prompt/optional-lock environment controls, sanitized nonzero/missing-Git failures, non-following file traversal, link/junction/special-file rejection, unreadable files, UTF-8 JSON errors, and safe top-level collection shapes
 - [ ] T011 Implement the typed Git runner, non-following filesystem classifier/traverser, minimal task-file readability checks, `db.json` parser, JSON-kind mapper, and sanitized boundary errors in `src/veritycx/data_sources/tau3.py` until the T010 tests pass without retaining record or evaluation values
 
 **Checkpoint**: Configuration and untyped TOML/JSON/subprocess/filesystem inputs enter the application only through documented strict-typing boundaries, and the local-Git test harness is ready for story tests.
 
----
+______________________________________________________________________
 
 ## Phase 3: User Story 1 - Acquire a Verified Dataset (Priority: P1) 🎯 MVP
 
@@ -82,7 +83,7 @@
 
 - [ ] T012 [US1] Add failing first-install tests in `tests/data_sources/test_tau3.py` for Git availability, single-branch staged clone, exact origin/HEAD/peeled-tag/cleanliness validation, complete banking-data validation, same-filesystem non-replacing promotion, final revalidation, and cleanup of only current-run-owned state
 - [ ] T013 [US1] Add failing required-data and root-independence tests in `tests/data_sources/test_tau3.py` covering each missing, empty, wrong-kind, unreadable, linked, junction, special, escaping, malformed-JSON, non-object, and empty-object variant while asserting no document, record, task, or raw Git-status content is disclosed
-- [ ] T014 [US1] Add failing setup-CLI tests in `tests/data_sources/test_tau3.py` for invocation from another current directory, success code `0`, deterministic `status/mode/checkout/tag/commit` stdout, expected-error code `1` on first-install failure, argparse code `2`, stderr routing, no traceback, and no API-key or environment override
+- [ ] T014 [US1] Add failing setup-CLI tests in `tests/data_sources/test_tau3.py` for invocation from another current directory, success code `0`, deterministic `status/mode/checkout/tag/commit` stdout, expected-error code `1` on first-install failure, argparse code `2`, stderr routing, exactly one stable diagnostic category with safe fields/recovery, no partial output or traceback, and no API-key or environment override
 
 ### Implementation for User Story 1
 
@@ -96,7 +97,7 @@
 
 **Checkpoint**: User Story 1 is a locally demonstrable MVP: a fresh local fixture installs through staging, the exact approved source and banking paths validate, the public CLI contract passes, and existing upstream bytes never enter version control. Cross-platform acceptance scenario 4 and SC-002 remain pending until T042, T047, and T048 pass on all three required runners; this checkpoint is not Feature 001 release completion.
 
----
+______________________________________________________________________
 
 ## Phase 4: User Story 2 - Re-run Setup Safely (Priority: P2)
 
@@ -106,14 +107,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [US2] Add failing offline-idempotency and `--check` tests in `tests/data_sources/test_tau3.py` for valid existing mode, no clone/network/lock, identical pre/post checkout snapshots, valid check mode, missing-checkout failure, and zero cache/lock/staging creation when check mode starts without `.cache/`
+- [ ] T022 [US2] Add failing offline-idempotency and `--check` tests in `tests/data_sources/test_tau3.py` for valid and invalid existing modes, no clone/remote/network/lock, identical pre/post preservation snapshots, valid check mode, missing-checkout failure, and zero cache/lock/staging/report creation when check mode starts without `.cache/`
 - [ ] T023 [US2] Add failing preserved-conflict tests in `tests/data_sources/test_tau3.py` for incomplete checkout, non-repository, wrong or multiple origins, wrong SHA, wrong or absent tag binding, tracked edits, and untracked files; assert distinct categories, assert that `origin-mismatch` reports the expected URL and a credential-redacted detected origin, assert that `revision-mismatch` reports the expected and detected full SHAs, and assert no download, secret disclosure, or target mutation
-- [ ] T024 [US2] Add failing transaction-safety tests in `tests/data_sources/test_tau3.py` for file/link/junction/unreadable target and cache paths, pre-existing setup lock, simulated abrupt termination with surviving lock and staging state, failed clone, validation failure, destination appearance before promotion, cleanup failure, unrelated/stale staging preservation, and deterministic injected permission failures on Windows and POSIX
+- [ ] T024 [US2] Add failing transaction-safety tests in `tests/data_sources/test_tau3.py` for file/link/junction/unreadable target and cache paths, escaping and case-sensitive containment, pre-existing setup lock, two concurrent supported setups, simulated abrupt termination with surviving lock and staging state, failures before/during/after promotion, destination appearance before promotion, cleanup failure, unrelated/stale staging preservation, and deterministic injected permission failures on Windows and POSIX; compare bytes, object/link identity, exposed permissions, Git references/index/worktree state, and sibling cache entries while excluding access timestamps
 
 ### Implementation for User Story 2
 
 - [ ] T025 [US2] Implement target classification before cache creation, valid-existing fast path, missing-target check mode, no-optional-locks read-only validation, and offline-safe `existing`/`check` results in `src/veritycx/data_sources/tau3.py` until T022 passes
-- [ ] T026 [US2] Complete precise `git-unavailable`, `checkout-missing`, `unexpected-target`, `not-standalone-repository`, `origin-mismatch`, `revision-mismatch`, `tag-mismatch`, `dirty-checkout`, `banking-data-invalid`, and `malformed-database` diagnostics in `src/veritycx/data_sources/tau3.py`; report the expected URL and a credential-redacted detected-origin summary for `origin-mismatch`, report the expected and detected full commit SHAs for `revision-mismatch`, and never disclose filenames, porcelain entries, source snippets, credentials, or raw commands
+- [ ] T026 [US2] Complete precise `configuration-invalid`, `git-unavailable`, `checkout-missing`, `unexpected-target`, `not-standalone-repository`, `origin-mismatch`, `revision-mismatch`, `tag-mismatch`, `dirty-checkout`, `banking-data-invalid`, `malformed-database`, and `checkout-changed` diagnostics in `src/veritycx/data_sources/tau3.py`; emit exactly one category with the configured/owned path, safe expected/detected fields, and non-destructive recovery; report the expected URL and a credential-redacted detected-origin summary for `origin-mismatch`, report the expected and detected full commit SHAs for `revision-mismatch`, and never disclose filenames, porcelain entries, source snippets, credentials, raw commands, or unclassified exception data
 - [ ] T027 [US2] Harden ownership and race handling for `setup-locked`, `clone-failed`, `destination-conflict`, and `staging-cleanup-failed` in `src/veritycx/data_sources/tau3.py`, preserving every unowned target, lock, staging directory, and local modification while removing only recorded current-run state
 - [ ] T028 [US2] Add the sole optional `--check` flag, `existing`/`check` success modes, argparse usage behavior, categorized recovery guidance, and no-traceback expected failures in `scripts/setup_tau3_data.py`
 - [ ] T029 [P] [US2] Document the setup/check mode matrix, validation order, stable outputs, diagnostic recovery, cooperative lock, staging ownership, and non-destructive guarantees in `scripts/README.md`
@@ -121,7 +122,7 @@
 
 **Checkpoint**: User Story 2 passes offline rerun and snapshot tests, `--check` is intentionally non-mutating, and all unsafe or concurrent states remain preserved with actionable sanitized diagnostics.
 
----
+______________________________________________________________________
 
 ## Phase 5: User Story 3 - Inspect and Use Data Responsibly (Priority: P3)
 
@@ -131,12 +132,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T031 [US3] Add failing inspection-summary tests in `tests/data_sources/test_tau3.py` for verified tag/SHA, recursive document/task counts, sorted top-level `object/array/string/number/boolean/null` kinds, direct counts only for objects/arrays, immutable safe result representations, and absence of every generated document/database/evaluation canary
-- [ ] T032 [US3] Add failing inspection-CLI tests in `tests/data_sources/test_tau3.py` for exact line-oriented stdout, success code `0`, usage code `2`, validation error code `1`, no partial summary or traceback on failure, malformed-database line/column sanitization, and identical filesystem snapshots proving no clone/fetch/repair/lock/staging/cache mutation
+- [ ] T031 [US3] Add failing inspection-summary tests in `tests/data_sources/test_tau3.py` for verified tag/SHA, recursive document/task counts, sorted top-level `object/array/string/number/boolean/null` kinds including empty collections, direct counts only for objects/arrays, independently derived expected counts/shapes, immutable safe result representations, and absence of every generated document/database/evaluation canary from all fields, errors, `repr`, and supported serialization
+- [ ] T032 [US3] Add failing inspection-CLI tests in `tests/data_sources/test_tau3.py` for exact line-oriented stdout, success code `0`, usage code `2`, validation error code `1`, `checkout-changed` on an injected state/count/shape change between initial and final validation, no partial summary or traceback on failure, malformed-database line/column sanitization, and identical preservation snapshots proving no clone/fetch/repair/lock/staging/cache/report mutation
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Implement immutable `DatabaseCollectionShape` and `InspectionSummary`, safe shape derivation, `inspect_tau3_data()`, and deterministic summary formatting in `src/veritycx/data_sources/tau3.py` without retaining nested keys, scalar values, filenames, record identifiers, task semantics, or raw source representations
+- [ ] T033 [US3] Implement immutable `DatabaseCollectionShape` and `InspectionSummary`, safe shape derivation, buffered initial and final identity/cleanliness/path/count/shape validation, `checkout-changed` comparison, `inspect_tau3_data()`, and deterministic summary formatting in `src/veritycx/data_sources/tau3.py` without retaining nested keys, scalar values, filenames, record identifiers, task semantics, or raw source representations
 - [ ] T034 [US3] Implement the no-option, project-root-resolving, validation-first inspection command with stable stdout/stderr and exit-code translation in `scripts/inspect_tau3_banking_data.py`
 - [ ] T035 [P] [US3] Document source, exact pin, all complete paths, setup/check/inspection commands, safe output fields, application-safe allow-list, evaluation-only deny-list, recovery rules, verification commands, and explicit Feature 001 exclusions in `docs/data/tau3-banking.md`
 - [ ] T036 [P] [US3] Attribute Sierra Research, the official repository, MIT licence, `v1.0.1`, exact SHA, local-download behavior, and untracked external-file boundary in `THIRD_PARTY_NOTICES.md`
@@ -147,24 +148,24 @@
 
 **Checkpoint**: User Story 3 reports only approved structural metadata, all canary channels remain clean, inspection is non-mutating, and documentation alone answers provenance, usage, and evaluation-isolation questions.
 
----
+______________________________________________________________________
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 **Purpose**: Apply constitutional documentation and strict-quality gates across the complete feature without expanding its scope.
 
 - [ ] T041 Audit and complete every Constitution-required documentation and typing obligation across Feature 001: verify that `README.md`, `config/README.md`, `scripts/README.md`, `src/veritycx/README.md`, `src/veritycx/data_sources/README.md`, and `tests/data_sources/README.md` each state the module's purpose, responsibilities, boundaries, directory structure, public interfaces, dependencies, configuration, usage, test instructions, operational constraints, and failure modes where applicable; complete module and callable docstrings, explicit types, rationale comments, and public exports in `src/veritycx/__init__.py`, `src/veritycx/data_sources/__init__.py`, `src/veritycx/data_sources/tau3.py`, `scripts/setup_tau3_data.py`, `scripts/inspect_tau3_banking_data.py`, and `tests/data_sources/test_tau3.py`; add conventional leading comments to the maintained supported files listed by this feature; and preserve the `.python-version` and `uv.lock` exemptions. The Git-root `.github/workflows/README.md` remains owned by T047.
-- [ ] T042 Add cross-platform parameterization for the required `ubuntu-latest`, `windows-latest`, and `macos-latest` Python 3.12 matrix, including capability-aware handling of Windows junctions, POSIX links, injected permission failures, and path syntax in `tests/data_sources/test_tau3.py` without weakening a shared safety assertion in `src/veritycx/data_sources/tau3.py`
+- [ ] T042 Add cross-platform parameterization for the required `ubuntu-latest`, `windows-latest`, and `macos-latest` Python 3.12 matrix, including Git 2.34-or-newer and uv 0.12.5 prerequisite checks, capability-aware handling of Windows junctions/reparse points, POSIX links, injected permission failures, case behavior, path syntax/length failures, UTF-8 and locale independence, and opaque untrusted filenames in `tests/data_sources/test_tau3.py` without weakening a shared safety assertion in `src/veritycx/data_sources/tau3.py`
 - [ ] T043 Run `uv lock --check` and `uv sync --locked` against `pyproject.toml` and `uv.lock`, correcting only deterministic project or lock metadata defects in those files
 - [ ] T044 Run `uv run ruff format --check src scripts tests` and the focused `uv run ruff check` command from `quickstart.md`, correcting formatting, documentation, and lint defects in `src/veritycx/data_sources/tau3.py`, both files under `scripts/`, and `tests/data_sources/test_tau3.py`
 - [ ] T045 Run `uv run mypy --strict src scripts tests` and correct every type error without `Any`, unchecked casts, ignored diagnostics, or untyped public boundaries in `src/veritycx/`, `scripts/`, and `tests/data_sources/`
 - [ ] T046 Run `uv run pytest tests/data_sources/test_tau3.py` and close every required acquisition, rerun, conflict, cleanup, inspection, platform, snapshot, and non-disclosure coverage gap in `tests/data_sources/test_tau3.py` and its owned implementation files
-- [ ] T047 Create the Git-root `.github/workflows/README.md` and `.github/workflows/quality.yml` with conventional leading comments; document the CI module's purpose, responsibilities, boundaries, directory structure, public status-check contract, dependencies, configuration, usage, tests, platform coverage, operational constraints, and failure modes; set `defaults.run.working-directory: verity-cx`; and define required `ubuntu-latest`, `windows-latest`, and `macos-latest` Python 3.12 jobs that use locked dependencies and run `uv lock --check`, `uv sync --locked`, Ruff format and lint checks, the explicit mdformat checks, `yamlfix --check ../.github/workflows/quality.yml`, `mypy --strict`, and the network-independent pytest suite without acquiring the live upstream repository
-- [ ] T048 Execute the complete workflow in `specs/001-acquire-tau3-banking/quickstart.md` after T047, including every local and CI-configuration quality gate, the required three-operating-system network-independent first-acquisition verification and under-10-minute measurement, a one-environment official-upstream smoke acquisition, recorded but non-normative existing/check/inspection durations, offline rerun, `scripts/setup_tau3_data.py --check`, `scripts/inspect_tau3_banking_data.py`, a repeat of the documented SC-007 audit against the final candidate, including its required evidence record, and a documentation-only SC-008 review, then correct only discrepancies in files owned by Feature 001
+- [ ] T047 Create the Git-root `.github/workflows/README.md` and `.github/workflows/quality.yml` with conventional leading comments; document the CI module's purpose, responsibilities, boundaries, directory structure, public status-check contract, dependencies, configuration, usage, tests, platform coverage, operational constraints, and failure modes; set `defaults.run.working-directory: verity-cx`; and define required `ubuntu-latest`, `windows-latest`, and `macos-latest` Python 3.12 jobs that pin uv 0.12.5, require Git 2.34 or newer, record the runner image and Python/Git/uv versions plus first-acquisition duration, use locked dependencies, and run `uv lock --check`, `uv sync --locked`, Ruff format and lint checks, the explicit mdformat checks, `yamlfix --check ../.github/workflows/quality.yml`, `mypy --strict`, and the network-independent pytest suite without acquiring the live upstream repository
+- [ ] T048 Execute the complete workflow in `specs/001-acquire-tau3-banking/quickstart.md` after T047, including every local and CI-configuration quality gate, one required clean-job attempt of the three-operating-system network-independent first-acquisition verification and under-10-minute measurement with retained runner/tool/version/command/result evidence, a one-environment official-upstream smoke acquisition with independent safe count/shape comparison, recorded but non-normative existing/check/inspection durations, offline valid and invalid reruns, `scripts/setup_tau3_data.py --check`, `scripts/inspect_tau3_banking_data.py`, a repeat of the documented SC-007 audit against the final candidate, including its required evidence record, and a documentation-only SC-008 review, then correct only discrepancies in files owned by Feature 001
 
 **Checkpoint**: All constitution gates, focused tests, documented CLI contracts, and the quickstart pass without exceptions or scope expansion.
 
----
+______________________________________________________________________
 
 ## Requirements Traceability
 
@@ -241,27 +242,27 @@ Task T040: Extend src/veritycx/data_sources/README.md
 ### MVP First (User Story 1 Only)
 
 1. Complete Phase 1: Setup.
-2. Complete Phase 2: Foundational.
-3. Complete Phase 3: User Story 1.
-4. Run the US1 focused tests plus its acquisition and version-control-isolation checks on the current development environment.
-5. Demonstrate the verified local-fixture acquisition workflow as a provisional MVP before adding rerun or inspection behavior.
-6. Do not mark User Story 1 release-complete until T042, T047, and T048 pass on all three required operating-system runners.
+1. Complete Phase 2: Foundational.
+1. Complete Phase 3: User Story 1.
+1. Run the US1 focused tests plus its acquisition and version-control-isolation checks on the current development environment.
+1. Demonstrate the verified local-fixture acquisition workflow as a provisional MVP before adding rerun or inspection behavior.
+1. Do not mark User Story 1 release-complete until T042, T047, and T048 pass on all three required operating-system runners.
 
 ### Incremental Delivery
 
 1. Deliver Setup + Foundational as the reproducible, typed project baseline.
-2. Deliver US1 as the verified-acquisition MVP.
-3. Deliver US2 as the offline, non-destructive rerun/check increment.
-4. Deliver US3 as the safe-inspection, provenance, and responsible-data-use increment.
-5. Run Phase 6 only for the stories included in the release, with all three required for Feature 001 completion.
+1. Deliver US1 as the verified-acquisition MVP.
+1. Deliver US2 as the offline, non-destructive rerun/check increment.
+1. Deliver US3 as the safe-inspection, provenance, and responsible-data-use increment.
+1. Run Phase 6 only for the stories included in the release, with all three required for Feature 001 completion.
 
 ### Suggested Commit Boundaries
 
 1. Project setup and fixed configuration: T001-T011.
-2. Verified acquisition MVP: T012-T021.
-3. Safe rerun and check behavior: T022-T030.
-4. Safe inspection and data-use documentation: T031-T040.
-5. Cross-cutting quality corrections and required CI: T041-T048.
+1. Verified acquisition MVP: T012-T021.
+1. Safe rerun and check behavior: T022-T030.
+1. Safe inspection and data-use documentation: T031-T040.
+1. Cross-cutting quality corrections and required CI: T041-T048.
 
 ## Notes
 
