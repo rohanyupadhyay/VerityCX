@@ -7,27 +7,37 @@
 
 ## Summary
 
-Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads a single reviewed TOML pin, acquires `https://github.com/sierra-research/tau2-bench.git` at tag `v1.0.1`, verifies exact commit `fc0055dc4e0a316c3f83133267fbd6faaa770992`, validates the required τ³-Banking paths, and promotes a validated staging checkout to `.cache/tau3-bench/` without altering any pre-existing target. Reusable typed logic lives in `src/veritycx/data_sources/tau3.py`; thin repository-root scripts provide setup, read-only checking, and safe inspection. Tests use temporary local Git repositories and synthetic canary data so the suite is network-independent and proves that evaluation-only content never enters output.
+Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads a single reviewed TOML pin, acquires `https://github.com/sierra-research/tau2-bench.git` at tag `v1.0.1`, verifies exact commit `fc0055dc4e0a316c3f83133267fbd6faaa770992`, validates the required τ³-Banking paths, and promotes a validated staging checkout to `.cache/tau3-bench/` without altering any pre-existing target. Reusable typed logic lives in `src/veritycx/data_sources/tau3.py`; thin project-root scripts provide setup, read-only checking, and safe inspection. Tests use temporary local Git repositories and synthetic canary data so the suite is network-independent and proves that evaluation-only content never enters output.
 
 ## Technical Context
 
 **Language/Version**: Python 3.12 only (`requires-python = ">=3.12,<3.13"` and `.python-version` set to `3.12`)
 
-**Primary Dependencies**: Python standard library (`argparse`, `dataclasses`, `json`, `pathlib`, `subprocess`, `tempfile`, `tomllib`); Git CLI; uv with `uv_build`; development-only pytest, Ruff, and mypy
+**Primary Dependencies**: Python standard library (`argparse`, `dataclasses`, `json`, `pathlib`, `subprocess`, `tempfile`, `tomllib`); Git CLI; uv with `uv_build`; development-only pytest, Ruff, mypy, mdformat, and yamlfix
 
 **Storage**: Read-only TOML configuration, an external Git working tree under `.cache/`, and upstream JSON files; no application database or import
 
 **Testing**: pytest with temporary local working and bare Git repositories, generated sample files, subprocess-boundary tests, filesystem snapshots, and stdout/stderr canaries
 
-**Target Platform**: Windows, Linux, and macOS developer environments with Git and uv installed
+**Target Platform**: Python 3.12 with Git and uv on the required `ubuntu-latest`, `windows-latest`, and `macos-latest` GitHub-hosted runner matrix; developers use the same command contract locally
 
-**Project Type**: Minimal packaged Python library plus repository-root command-line scripts
+**Project Type**: Minimal packaged Python library plus project-root command-line scripts and Git-root CI configuration
 
-**Performance Goals**: Initial setup completes within the specification's 10-minute target excluding upstream network throughput; validation of an existing checkout and safe inspection each complete within 5 seconds for the pinned dataset on a typical developer machine
+**Performance Goals**: The network-independent local-remote first-acquisition test completes within 10 minutes on every required runner, measured from setup-process start through successful exit. Existing-checkout validation and inspection durations are recorded diagnostically but have no separate machine-dependent threshold in Feature 001
 
 **Constraints**: No API keys; no `shell=True`; no current-working-directory path resolution; no fetch/reset/repair of an existing checkout; no automatic deletion or overwrite of `.cache/tau3-bench/`; no document, customer-record, or evaluation-content output; setup stages on the same filesystem as the target; `--check` performs no download or intentional filesystem mutation
 
 **Scale/Scope**: One pinned public repository, one banking domain, one local checkout, and hundreds of small data files; no chunking, embeddings, database import, agents, APIs, containers, or evaluation execution
+
+## Root Definitions
+
+- **Git root**: The outer `VerityCX/` directory containing `.git` and owning
+  `.github/workflows/`.
+- **Project root**: The nested `VerityCX/verity-cx/` directory containing
+  `pyproject.toml`, `src/`, `scripts/`, `config/`, `specs/`, and `.cache/`.
+- Developer and verification commands run from the project root. Production
+  paths resolve from the project root derived from each script's `__file__`.
+  Git-root CI steps set `verity-cx` as their working directory.
 
 ## Constitution Check
 
@@ -35,11 +45,11 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
 
 | Principle | Status | Planned evidence |
 |---|---|---|
-| I. Module Documentation Is Mandatory | PASS | Add the root `README.md` plus focused READMEs for `config/`, `src/veritycx/`, `src/veritycx/data_sources/`, `scripts/`, and `tests/data_sources/`; each documents purpose, boundaries, interfaces, dependencies, usage, tests, constraints, and failure modes. |
-| II. File-Level Documentation Is Mandatory | PASS | Every maintained Python file starts with a module docstring; Markdown starts with an HTML comment; TOML, `.gitignore`, and `.env.example` use leading native comments. Generated `uv.lock` and the tool-owned `.python-version` marker are exempt. |
+| I. Module Documentation Is Mandatory | PASS | Add the project-root `README.md`, the Git-root `.github/workflows/README.md`, and focused READMEs for `config/`, `src/veritycx/`, `src/veritycx/data_sources/`, `scripts/`, and `tests/data_sources/`; each documents purpose, boundaries, interfaces, dependencies, usage, tests, constraints, and failure modes. |
+| II. File-Level Documentation Is Mandatory | PASS | Every maintained Python file starts with a module docstring; Markdown starts with an HTML comment; YAML, TOML, and `.gitignore` use leading native comments. Generated `uv.lock` and the tool-owned `.python-version` marker are exempt. |
 | III. Code Interfaces and Decisions Are Documented | PASS | Every function, class, dataclass, and test has a typed signature and meaningful docstring. Safety-critical path containment, staging ownership, Git validation order, and evaluation-data denial receive rationale comments. |
 | IV. Strict Typing Is Non-Negotiable | PASS | Mypy strict mode covers `src`, `scripts`, and `tests`; TOML, JSON, subprocess results, and filesystem entries are validated at typed boundaries without public `Any`, ignored diagnostics, or unchecked casts. |
-| V. Formatting and Quality Gates Are Automated | PASS | Version-controlled Ruff, mypy, and pytest configuration; `ruff format --check`, `ruff check`, `mypy --strict`, lock verification, and focused tests are documented verification gates. |
+| V. Formatting and Quality Gates Are Automated | PASS | Add a Git-root `.github/workflows/quality.yml` matrix workflow with project working directory `verity-cx`; every required job runs lock verification, locked synchronization, Ruff formatting and lint, mdformat for the explicit maintained-Markdown set, yamlfix for workflow YAML, strict mypy, and network-independent pytest. |
 
 **Pre-design gate result**: PASS. No constitutional exception or complexity justification is required.
 
@@ -62,42 +72,46 @@ specs/001-acquire-tau3-banking/
 └── tasks.md                    # Created later by $speckit-tasks
 ```
 
-### Source Code (repository root)
+### Git and Project Structure
 
 ```text
-.
-├── .env.example
-├── .gitignore
-├── .python-version
-├── README.md
-├── THIRD_PARTY_NOTICES.md
-├── pyproject.toml
-├── uv.lock
-├── config/
-│   ├── README.md
-│   └── tau3-bench.toml
-├── docs/
-│   └── data/
-│       └── tau3-banking.md
-├── scripts/
-│   ├── README.md
-│   ├── inspect_tau3_banking_data.py
-│   └── setup_tau3_data.py
-├── src/
-│   └── veritycx/
-│       ├── __init__.py
+VerityCX/                              # Git root
+├── .github/
+│   └── workflows/
 │       ├── README.md
-│       └── data_sources/
-│           ├── __init__.py
-│           ├── README.md
-│           └── tau3.py
-└── tests/
-    └── data_sources/
-        ├── README.md
-        └── test_tau3.py
+│       └── quality.yml
+└── verity-cx/                         # Project root
+    ├── .gitignore
+    ├── .python-version
+    ├── README.md
+    ├── THIRD_PARTY_NOTICES.md
+    ├── pyproject.toml
+    ├── uv.lock
+    ├── config/
+    │   ├── README.md
+    │   └── tau3-bench.toml
+    ├── docs/
+    │   └── data/
+    │       └── tau3-banking.md
+    ├── scripts/
+    │   ├── README.md
+    │   ├── inspect_tau3_banking_data.py
+    │   └── setup_tau3_data.py
+    ├── src/
+    │   └── veritycx/
+    │       ├── __init__.py
+    │       ├── README.md
+    │       └── data_sources/
+    │           ├── __init__.py
+    │           ├── README.md
+    │           └── tau3.py
+    └── tests/
+        └── data_sources/
+            ├── README.md
+            └── test_tau3.py
 ```
 
-Generated, ignored runtime state:
+Generated, ignored runtime state beneath the project root:
 
 ```text
 .cache/
@@ -106,15 +120,15 @@ Generated, ignored runtime state:
 └── tau3-bench.setup.lock/              # Cooperative setup lock
 ```
 
-**Structure Decision**: Use one small `src`-layout package so both scripts import the same typed implementation under `uv run`, without `PYTHONPATH` or `sys.path` changes. Keep the requested implementation in one focused module while separating Git operations, banking-data validation/inspection, and setup orchestration through distinct typed functions and result models. Add only the package/tool configuration and documentation needed by Feature 001 and the constitution.
+**Structure Decision**: Use one small `src`-layout package so both scripts import the same typed implementation under `uv run`, without `PYTHONPATH` or `sys.path` changes. Keep the requested implementation in one focused module while separating Git operations, banking-data validation/inspection, and setup orchestration through distinct typed functions and result models. Keep GitHub Actions at the Git root and set `defaults.run.working-directory: verity-cx` so every quality command executes against the project. Add only the package/tool configuration and documentation needed by Feature 001 and the constitution.
 
 ## Phase 0: Research Decisions
 
 Research is consolidated in [research.md](research.md). All planning unknowns are resolved:
 
-1. Use uv's packaged application layout with `uv_build`, a Python 3.12 pin, an empty runtime dependency list, and a locked development group containing pytest, Ruff, and mypy.
+1. Use uv's packaged application layout with `uv_build`, a Python 3.12 pin, an empty runtime dependency list, and a locked development group containing pytest, Ruff, mypy, mdformat, and yamlfix.
 2. Parse `config/tau3-bench.toml` with `tomllib` into immutable typed configuration objects; production scripts accept no source, revision, destination, or config overrides.
-3. Derive the repository root from each script's `__file__`, pass it explicitly into library functions, and reject absolute or escaping configured paths.
+3. Derive the project root from each script's `__file__`, pass it explicitly into library functions, and reject absolute or escaping configured paths.
 4. Run every Git process with an argument list, `shell=False`, captured text output, disabled terminal prompting, and optional locks disabled during validation.
 5. Validate checkout identity in a fixed order: real directory, standalone worktree root, exact origin, exact `HEAD`, tag-to-commit binding, empty porcelain status, then required banking data.
 6. Use a unique current-run-owned staging parent plus a cooperative setup lock; validate fully before same-filesystem promotion and never fetch, reset, repair, replace, or clean a pre-existing target.
@@ -126,15 +140,13 @@ Research is consolidated in [research.md](research.md). All planning unknowns ar
 
 ### Configuration and Pin
 
-`config/tau3-bench.toml` is the only production source of truth. It records schema version, MIT licence identifier, exact HTTPS clone URL, tag, full SHA, final checkout path, and all three required banking-data paths. Paths use repository-root-relative forward-slash notation and are validated as descendants of the repository and the configured checkout. See [configuration.md](contracts/configuration.md).
-
-`.env.example` records `TAU2_DATA_DIR=.cache/tau3-bench/data` for later upstream-compatible consumers, but Feature 001 setup and inspection do not read it and do not allow environment variables to override the reviewed pin.
+`config/tau3-bench.toml` is the only production source of truth. It records schema version, MIT licence identifier, exact HTTPS clone URL, tag, full SHA, final checkout path, and all three required banking-data paths. Paths use project-root-relative forward-slash notation and are validated as descendants of the project root and the configured checkout. See [configuration.md](contracts/configuration.md).
 
 ### Reusable Module Responsibilities
 
 `src/veritycx/data_sources/tau3.py` contains four deliberately separated layers:
 
-1. **Typed configuration and path resolution**: Load the fixed TOML file, reject missing/unknown/malformed fields, validate the 40-character lowercase hexadecimal SHA, and resolve paths from the explicit VerityCX root with containment checks.
+1. **Typed configuration and path resolution**: Load the fixed TOML file, reject missing/unknown/malformed fields, validate the 40-character lowercase hexadecimal SHA, and resolve paths from the explicit VerityCX project root with containment checks.
 2. **Git boundary**: Execute Git with `subprocess.run()` argument lists and no shell; translate missing Git and nonzero exits into typed, sanitized errors; validate origin, revision, tag binding, and cleanliness without optional index locks.
 3. **Banking-data boundary**: Verify required path kinds, containment, non-empty recursive file sets, and actual readability without following symbolic links or junctions; decode only `db.json`, require a non-empty top-level object, and derive collection shapes without retaining record values in report objects.
 4. **Orchestration and inspection**: Validate an existing target without mutation, create and own staging state for first acquisition, promote only a fully valid checkout, and return narrow immutable setup/inspection summaries.
@@ -145,7 +157,7 @@ The module MUST NOT provide a generic upstream file reader. Public results conta
 
 The default setup contract is `uv run python scripts/setup_tau3_data.py`; read-only validation is `uv run python scripts/setup_tau3_data.py --check`. Detailed states and outputs are defined in [setup-cli.md](contracts/setup-cli.md).
 
-1. The script derives the VerityCX root from `scripts/setup_tau3_data.py`, loads the fixed config, and resolves every configured path from that root rather than from the caller's current directory.
+1. The script derives the VerityCX project root from `scripts/setup_tau3_data.py`, loads the fixed config, and resolves every configured path from that root rather than from the caller's current directory.
 2. Before creating `.cache/`, it classifies `.cache/tau3-bench/` without following links or junctions.
 3. If the target exists, it validates the target in place. A valid target exits successfully without acquiring a lock or contacting the remote. Any invalid target produces a precise error and remains unchanged.
 4. If `--check` is present and the target is missing, setup returns a missing-checkout error without creating `.cache/`, a lock, or staging state.
@@ -157,10 +169,11 @@ The default setup contract is `uv run python scripts/setup_tau3_data.py`; read-o
 10. Setup repeats the clean check and final-target absence check immediately before promotion, then renames the staged checkout within `.cache/`; it never uses replace semantics.
 11. Setup validates the promoted checkout before reporting success. On any failure before promotion, `finally` removes only the exact staging parent and cooperative lock created and recorded by the current invocation. It never searches for or removes other staging directories, stale locks, or the final target.
 12. If the destination appears during the controlled setup window, setup preserves it, aborts promotion, removes only its own staging state, and reports the conflict.
+13. A handled failure removes only staging and lock paths recorded as owned by the current invocation. State surviving abrupt termination or cleanup failure is unowned by later invocations: a surviving lock blocks setup and is reported with manual recovery guidance, while unrelated stale staging directories remain untouched. The final target is never partially populated.
 
 ### Validation Rules
 
-- Reject the target or `.cache/` when it is an unexpected file, symbolic link, junction, unreadable directory, or path outside the resolved repository root.
+- Reject the target or `.cache/` when it is an unexpected file, symbolic link, junction, unreadable directory, or path outside the resolved project root.
 - Require the Git top level to be the checkout itself so Git cannot walk upward and validate VerityCX by mistake.
 - Compare the sole configured `remote.origin.url` byte-for-byte with `https://github.com/sierra-research/tau2-bench.git`; do not accept SSH URLs, mirrors, URL rewrites, or credential-bearing variants.
 - Treat the full commit SHA as authoritative while independently requiring `refs/tags/v1.0.1^{commit}` to resolve to it.
@@ -190,15 +203,16 @@ Required coverage:
 | Incomplete banking data | Commit variants with each required path missing, empty, or the wrong kind; assert path-specific failures. |
 | Malformed required JSON | Commit invalid `db.json`, plus valid non-object and empty-object variants; assert sanitized database errors without source snippets. |
 | Failed staging clone | Use an unavailable local remote; assert `clone-failed`, final target absent, current staging removed, and unrelated pre-existing staging preserved. |
+| Abrupt termination recovery | Pre-create a setup lock and related stale staging state representing an interrupted invocation; assert a later run reports the lock, supplies recovery guidance, preserves every byte, and never promotes or removes the stale checkout. |
 | Unexpected filesystem targets | Cover regular file and symbolic-link targets everywhere, plus junction behavior where supported; assert rejection without following or changing them. |
-| Root independence | Invoke from a different current directory; assert all paths still resolve beneath the explicit temporary repository root. |
+| Root independence | Invoke from a different current directory; assert all paths still resolve beneath the explicit temporary project root. |
 | Safe inspection output | Place unique canaries in a document body, nested synthetic record, task prompt, expected answer, reference action, and grading criteria; assert none occurs in stdout, stderr, report `repr`, or serialized report while counts/shapes remain correct. |
 
 Permission failures use injected file operations or monkeypatching to raise `PermissionError`, ensuring deterministic coverage on Windows and POSIX without relying on host privilege behavior.
 
 ### Documentation and Attribution
 
-- Root `README.md` exposes the single setup command, `--check`, inspection, prerequisites, tests, and the external-cache boundary.
+- Project-root `README.md` exposes the single setup command, `--check`, inspection, prerequisites, tests, and the external-cache boundary.
 - `docs/data/tau3-banking.md` records source, MIT licence, tag, SHA, every complete relative path, commands, safe inspection fields, application-safe allow-list, evaluation-only deny-list, and out-of-scope future work.
 - `THIRD_PARTY_NOTICES.md` attributes Sierra Research, links the upstream repository and MIT licence, and states that upstream files are downloaded locally and never committed.
 - Module READMEs satisfy constitution requirements and document interfaces, invariants, failure modes, configuration, and test commands.
@@ -206,12 +220,17 @@ Permission failures use injected file operations or monkeypatching to raise `Per
 
 ## Verification Commands
 
-Run from the VerityCX repository root after implementation:
+Run from the VerityCX project root after implementation:
 
 ```text
 uv lock --check
 uv sync --locked
 uv run ruff format --check src scripts tests
+uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/data/tau3-banking.md
+uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
+uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
+uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+uv run yamlfix --check ../.github/workflows/quality.yml
 uv run mypy --strict src scripts tests
 uv run pytest tests/data_sources/test_tau3.py
 uv run ruff check src/veritycx/data_sources/tau3.py scripts/setup_tau3_data.py scripts/inspect_tau3_banking_data.py tests/data_sources/test_tau3.py
@@ -225,16 +244,18 @@ For a new clone, run the documented acquisition command before the final two liv
 uv run python scripts/setup_tau3_data.py
 ```
 
-The four verification commands supplied in the feature input are preserved verbatim. The lock, format, and strict-type commands are additional constitution gates.
+The four verification commands supplied in the feature input are preserved verbatim. Lock verification, Python formatting, explicit maintained-Markdown formatting, workflow-YAML formatting, and strict typing are additional constitution gates. The explicit Markdown list prevents recursive formatting of `.agents/`, `.specify/`, generated, vendored, or unrelated files.
+
+The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with `verity-cx` as the working directory. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
 
 ## Post-Design Constitution Check
 
 | Principle | Result after Phase 1 |
 |---|---|
-| Module documentation | PASS — every new responsibility-bounded package, config, script, and test area has an explicit README owner in the structure. |
+| Module documentation | PASS — every new responsibility-bounded package, Git-root CI workflow, project config, script, and test area has an explicit README owner in the structure. |
 | File-level and interface documentation | PASS — the design requires module comments/docstrings and documented typed callables in all maintained Python. |
 | Strict typing | PASS — typed immutable models, validated external boundaries, and strict mypy cover source, scripts, and tests. |
-| Automated quality | PASS — deterministic lock, format, lint, type, unit/integration, check, and inspection commands are defined. |
+| Automated quality | PASS — a required three-operating-system CI matrix runs deterministic lock, Python/Markdown/YAML format, lint, type, and network-independent unit/integration gates; check and inspection commands remain documented local verification steps. |
 | Scope discipline | PASS — no feature work extends into ingestion, agents, APIs, containers, or evaluation execution. |
 
 **Post-design gate result**: PASS. No constitution violations remain and no Complexity Tracking section is needed.

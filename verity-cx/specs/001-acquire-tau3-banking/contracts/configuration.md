@@ -37,16 +37,6 @@ tasks = ".cache/tau3-bench/data/tau2/domains/banking_knowledge/tasks/"
 - `documents`, `database`, and `tasks` MUST resolve beneath `checkout` at their exact declared locations.
 - Path resolution MUST use the explicit VerityCX root passed by the script/test, never the current working directory.
 
-## Environment Compatibility Marker
-
-`.env.example` contains:
-
-```text
-TAU2_DATA_DIR=.cache/tau3-bench/data
-```
-
-This marker documents the upstream data root for later features. Feature 001 setup and inspection MUST NOT load `.env`, require the variable, or treat it as an override.
-
 ## Test Injection
 
 Tests MAY construct `Tau3Config` objects directly with temporary repository URLs, tags, SHAs, and roots. This typed injection is internal to the test/library boundary and MUST NOT create a production CLI override.
