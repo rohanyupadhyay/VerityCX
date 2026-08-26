@@ -129,7 +129,7 @@ git check-ignore -v .cache/tau3-bench/
 git ls-files -- .cache/tau3-bench/
 ```
 
-Expected result: `git ls-files` prints nothing, the ignore rule resolves to `.cache/tau3-bench/`, and review of the Feature 001 tracked change set finds no file or file content copied from the acquired checkout. Setup staging and lock patterns are ignored separately without ignoring unrelated files.
+Expected result: `git ls-files` prints nothing and the ignore rule resolves to `.cache/tau3-bench/`. For the tracked-change audit, record the baseline and candidate commit SHAs, run `git diff --name-status BASELINE_COMMIT..CANDIDATE_COMMIT` after substituting those recorded SHAs, confirm every changed path is within the planned file responsibilities, and review every non-generated addition for upstream-derived source, data, or evaluation content. Record all reviewed paths, reviewer, date, and an explicit pass/fail result without reproducing upstream contents. Setup staging and lock patterns remain ignored separately without ignoring unrelated files.
 
 ## Required Verification Set
 
