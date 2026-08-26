@@ -136,6 +136,84 @@ git ls-files -- .cache/tau3-bench/
 
 Expected result: `git ls-files` prints nothing and the ignore rule resolves to `.cache/tau3-bench/`. For the tracked-change audit, record the baseline and candidate commit SHAs, run `git diff --name-status BASELINE_COMMIT..CANDIDATE_COMMIT` after substituting those recorded SHAs, confirm every changed path is within the planned file responsibilities, and review every non-generated addition for upstream-derived source, data, or evaluation content. Record all reviewed paths, reviewer, date, and an explicit pass/fail result without reproducing upstream contents. Setup staging and lock patterns remain ignored separately without ignoring unrelated files.
 
+## Verification Evidence: 2026-08-26
+
+### Local and Official Smoke
+
+- Reviewer/environment: Codex on Windows, Python 3.12.14 under uv, Git 2.51.2, uv
+  0.12.5.
+- Locked environment, Ruff format/lint, all maintained Markdown, workflow YAML, strict mypy,
+  and the network-independent test suite passed locally.
+- Test result: 60 passed and one capability-only symbolic-link test skipped because the Windows
+  account lacked link-creation privilege; shared injected reparse-point rejection passed.
+- Official first acquisition passed at the configured tag and SHA in 59.535 seconds.
+- Offline-proxy reruns passed: existing 2.011 seconds, check 2.005 seconds, and inspection 3.758
+  seconds. These three durations are diagnostic and non-normative.
+- Independent safe enumeration matched inspection at 698 document files, 97 task files, and all 17
+  reported top-level object shapes. No body, nested key/value, filename, or task semantic was
+  recorded.
+- The three GitHub-hosted operating-system jobs remain pending until this committed candidate is
+  pushed and the required workflow runs; local evidence does not substitute for SC-001/SC-002.
+
+### SC-007 Tracked-Content Audit
+
+- Baseline commit: `20cdf23afcd064ef4cdcfb9d58bfff8c462854f6`
+- Candidate commit: `21364d826bd5e45ef0a40783129662ab8bb0f3f7`
+- Reviewer: Codex
+- Review date: 2026-08-26
+- `git ls-files -- .cache/tau3-bench/`: zero paths.
+- `git check-ignore -v .cache/tau3-bench/`: resolved to
+  `verity-cx/.gitignore:13:.cache/tau3-bench/`.
+- Result: **PASS**. All 32 changed paths are project-owned and fall within the planned Feature 001
+  specification, implementation, tests, documentation, configuration, dependency-lock, or CI
+  responsibilities. Every non-generated addition was reviewed; `uv.lock` was reviewed as generated
+  dependency metadata. No acquired upstream source, data, or evaluation content occurs in the
+  tracked diff.
+
+Complete reviewed path set:
+
+```text
+.github/workflows/README.md
+.github/workflows/quality.yml
+verity-cx/.gitignore
+verity-cx/.python-version
+verity-cx/README.md
+verity-cx/THIRD_PARTY_NOTICES.md
+verity-cx/config/README.md
+verity-cx/config/tau3-bench.toml
+verity-cx/docs/data/tau3-banking.md
+verity-cx/pyproject.toml
+verity-cx/scripts/README.md
+verity-cx/scripts/inspect_tau3_banking_data.py
+verity-cx/scripts/setup_tau3_data.py
+verity-cx/specs/001-acquire-tau3-banking/checklists/comprehensive.md
+verity-cx/specs/001-acquire-tau3-banking/contracts/configuration.md
+verity-cx/specs/001-acquire-tau3-banking/contracts/data-use-policy.md
+verity-cx/specs/001-acquire-tau3-banking/contracts/inspection-cli.md
+verity-cx/specs/001-acquire-tau3-banking/contracts/setup-cli.md
+verity-cx/specs/001-acquire-tau3-banking/data-model.md
+verity-cx/specs/001-acquire-tau3-banking/plan.md
+verity-cx/specs/001-acquire-tau3-banking/quickstart.md
+verity-cx/specs/001-acquire-tau3-banking/research.md
+verity-cx/specs/001-acquire-tau3-banking/spec.md
+verity-cx/specs/001-acquire-tau3-banking/tasks.md
+verity-cx/src/veritycx/README.md
+verity-cx/src/veritycx/__init__.py
+verity-cx/src/veritycx/data_sources/README.md
+verity-cx/src/veritycx/data_sources/__init__.py
+verity-cx/src/veritycx/data_sources/tau3.py
+verity-cx/tests/data_sources/README.md
+verity-cx/tests/data_sources/test_tau3.py
+verity-cx/uv.lock
+```
+
+### SC-008 Documentation Review
+
+Result: **PASS**. Without implementation code, `README.md`, `docs/data/tau3-banking.md`, and
+`THIRD_PARTY_NOTICES.md` identify Sierra Research, the official URL, MIT licence, tag, SHA,
+setup/check/inspection usage, the documents and database allow-list, the task and unclassified-path
+deny-list, and the feature exclusions.
+
 ## Required Verification Set
 
 The implementation plan preserves these requested commands exactly:
