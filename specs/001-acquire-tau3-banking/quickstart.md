@@ -2,7 +2,7 @@
 
 # Quickstart: Validate τ³-Banking Acquisition
 
-This guide describes the expected developer workflow after Feature 001 is implemented. Run commands from the nested VerityCX project root (`verity-cx/`) unless a scenario explicitly changes the current directory to prove root independence. The outer directory containing `.git` is the Git root and owns `.github/workflows/`.
+Run every command in this guide from the Git repository root, which is also the sole project root. Python metadata, scripts, tests, `.specify/`, `.agents/skills/`, and `.github/workflows/` live there. Optional absolute-path scenarios prove caller-directory independence; no directory change is required for the normal workflow.
 
 ## Prerequisites
 
@@ -80,7 +80,7 @@ Expected output never contains document bodies or filenames, nested synthetic re
 ## 5. Run Network-Independent Tests
 
 ```text
-uv run pytest tests/data_sources/test_tau3.py
+uv run pytest tests
 ```
 
 Expected result: all tests use temporary local Git repositories and generated synthetic JSON/files. No test reaches GitHub, requires an API key, or commits upstream τ³ content.
@@ -103,7 +103,7 @@ The suite proves:
 ## 6. Run Required Lint Verification
 
 ```text
-uv run ruff check src/veritycx/data_sources/tau3.py scripts/setup_tau3_data.py scripts/inspect_tau3_banking_data.py tests/data_sources/test_tau3.py
+uv run ruff check src scripts tests
 ```
 
 Expected result: no diagnostics.
@@ -113,12 +113,13 @@ Expected result: no diagnostics.
 ```text
 uv run ruff format --check src scripts tests
 uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/data/tau3-banking.md
+uv run mdformat --check .specify/memory/constitution.md docs/README.md docs/project-vision.md tests/README.md
 uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
 uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
-uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md .github/workflows/README.md
 uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
-uv run yamlfix --check ../.github/workflows/quality.yml
-git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md ../.github/workflows/README.md ../.github/workflows/quality.yml
+uv run yamlfix --check .github/workflows/quality.yml
+git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md .github/workflows/README.md .github/workflows/quality.yml
 uv run mypy --strict src scripts tests
 ```
 
@@ -126,7 +127,7 @@ Expected result: deterministic Python, maintained-Markdown, and workflow-YAML fo
 
 ## 8. Verify the Required CI Matrix
 
-The Git-root `.github/workflows/quality.yml`, addressed as `../.github/workflows/quality.yml` from the project root, must set `verity-cx` as the working directory and run required Python 3.12 jobs on `ubuntu-latest`, `windows-latest`, and `macos-latest`. The Git-root `.gitattributes` must pin formatter-owned Markdown and YAML to LF, and each job must verify representative project and workflow paths resolve to that attribute before formatting. Each job pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails if the monotonic first-acquisition measurement is 600 seconds or more. It also runs lock verification, locked synchronization, Ruff format and lint checks, mdformat, yamlfix, strict mypy, and the network-independent pytest suite. CI must not acquire the live upstream repository, and every matrix job must pass before merge.
+The root `.github/workflows/quality.yml` must set `.` as the working directory and run required Python 3.12 jobs on `ubuntu-latest`, `windows-latest`, and `macos-latest`. The Git-root `.gitattributes` must pin formatter-owned Markdown and YAML to LF, and each job must verify representative project and workflow paths resolve to that attribute before formatting. Each job pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails if the monotonic first-acquisition measurement is 600 seconds or more. It also runs lock verification, locked synchronization, Ruff format and lint checks, mdformat, yamlfix, strict mypy, and the network-independent pytest suite. CI must not acquire the live upstream repository, and every matrix job must pass before merge.
 
 ## 9. Confirm Version-Control Isolation
 
@@ -137,6 +138,12 @@ git ls-files -- .cache/tau3-bench/
 ```
 
 Expected result: `git ls-files` prints nothing and the ignore rule resolves to `.cache/tau3-bench/`. For the tracked-change audit, record the baseline and candidate commit SHAs, run `git diff --name-status BASELINE_COMMIT..CANDIDATE_COMMIT` after substituting those recorded SHAs, confirm every changed path—including the Git-root `.gitattributes` quality control—is within the planned file responsibilities, and review every non-generated addition for upstream-derived source, data, or evaluation content. Record all reviewed paths, reviewer, date, and an explicit pass/fail result without reproducing upstream contents. Setup staging and lock patterns remain ignored separately without ignoring unrelated files.
+
+## Historical Evidence (Before Root Migration)
+
+The following dated records describe earlier candidates. Their `verity-cx/` paths identify files
+at those historical commits, not current paths or instructions. Current commands above and below
+use the single repository root.
 
 ## Verification Evidence: 2026-08-26
 
@@ -256,3 +263,83 @@ Application-safe inputs are limited to:
 - `.cache/tau3-bench/data/tau2/domains/banking_knowledge/db.json`
 
 Everything beneath `.cache/tau3-bench/data/tau2/domains/banking_knowledge/tasks/`, plus task aggregates and equivalent evaluation semantics elsewhere upstream, remains evaluation-only and must never enter prompts, indexes, runtime agents, application loaders, or APIs.
+
+## Repository-Root Migration Evidence: 2026-09-09
+
+This is local working-tree evidence for FR-023/FR-024 and SC-009, not final hosted CI or a
+commit-to-commit SC-007 acceptance record. The baseline is
+`7c5a92b18d33ae25fc2fe06ce47ca6b623a2cd83`; this migration has not been committed or pushed.
+
+### Layout and Data Preservation
+
+- The Git root now contains Python metadata, source, scripts, tests, config, documentation,
+  specifications, `.specify/`, and `.agents/skills/`. There are no forwarding wrappers or duplicate
+  Python projects. Both production scripts and all package implementation files moved unchanged.
+- The root `README.md` is the implementation guide. The former extensionless README is preserved
+  in `docs/project-vision.md`, explicitly labeled as future scope.
+- The existing cache moved intact. A sorted manifest of cache-relative paths and file SHA-256
+  hashes, including Git administrative files, contained 1,515 files before and after the move.
+  Its aggregate SHA-256 was identical:
+  `19AE17A84A638B23F0B920CE0D87B75F4EF8EFED32C68F56F7F2E30587DBB84A`.
+- The old generated environment and tool caches remain in ignored `.cache/root-migration-backup/`.
+  Root `uv sync --locked` created a fresh `.venv/` without changing `uv.lock`.
+- No source or user data was deleted. The execution policy rejected even the non-recursive removal
+  of the verified-empty old `verity-cx/` directory. It remains empty and is not a project root;
+  T063 remains open only for this local housekeeping step. Git does not track empty directories.
+- `git check-ignore -v` confirms the root cache, backup, and active environment are ignored;
+  `git ls-files -- .cache/` returns zero paths. A separate temporary review index identifies the
+  migration as renames plus scoped edits and passes `git diff --cached --check`; the user's actual
+  index was not staged or changed.
+
+### Root Commands and Automated Gates
+
+- `tests/test_repository_layout.py` failed all three cases before the move because scripts could
+  not be opened from Git's top level, then passed all three afterward.
+- Every root README command was exercised at the Git root. Lock verification, locked sync,
+  Ruff format/lint, strict mypy, and full pytest passed. All maintained Markdown checks, workflow
+  YAML checks, and the four representative LF attributes passed as well.
+- Full suite: **129 passed, 3 skipped** in 84.33 seconds on Windows/Python 3.12.14. The skips require
+  file-symlink privileges (`WinError 1314`); available junction and injected safety cases passed.
+- The full test run disabled global/system Git configuration. Before the fixture correction, the
+  focused linked-path cases produced 2 failures, 2 passes, and 2 capability skips; afterward the
+  full suite passed with cloned fixtures supplying their own local commit identity.
+- Root `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks`
+  resolves `specs/001-acquire-tau3-banking` under the Git root. Root
+  `.specify/scripts/powershell/resolve-template.ps1 constitution-template -Json` resolves the
+  installed template. No extension hooks are configured.
+- Main-cache setup, `--check`, and inspection each exit `1` with `dirty-checkout`, reporting 472
+  tracked-change entries under the application's isolated Git settings. This pre-existing cache
+  was not repaired. These are documented safety failures, not command-path failures.
+
+### Successful Clean-Root Smoke
+
+- An isolated Git root at `C:\Users\rohan\AppData\Local\Temp\vcxr-68299455` received the current
+  Python metadata, config, source, and scripts, with no nested project or pre-existing cache.
+- The exact root command `uv run python scripts/setup_tau3_data.py` installed the official pin
+  in 84.746 seconds and returned `mode: installed`, tag `v1.0.1`, and commit
+  `fc0055dc4e0a316c3f83133267fbd6faaa770992`. This networked duration is not the SC-001 CI metric.
+- With HTTP/HTTPS proxies pointing to an unavailable local endpoint, root existing setup,
+  `--check`, and inspection all returned `0` without a new download.
+- Independent PowerShell enumeration and top-level JSON-shape derivation matched inspection:
+  **698 documents, 97 tasks, 17 database collections**. No record values, bodies, task semantics,
+  or individual source filenames were recorded.
+- The temporary smoke root is retained for inspection; no cleanup or deletion was performed.
+
+### Spec Kit Consistency and Independent Review
+
+Read-only analysis covered 24 functional requirements, 9 success criteria, 65 tasks, and all six
+constitutional principles. Every requirement/success criterion has task coverage; no unmapped
+tasks, unresolved root-policy contradictions, or critical artifact issues were identified. The
+added requirements map to T062-T065; older acceptance work remains represented by its existing
+tasks. Historical paths are explicitly labeled and are not current instructions.
+
+An independent read-only reviewer found no blocking migration defects and confirmed root CLI
+parsers, Spec Kit feature/template resolution, package installation, ignore rules, relative links,
+and review-index whitespace checks. The maintained-document link check covered 24 Markdown files
+and 20 local links with no broken targets. This is local review, not a substitute for hosted CI.
+
+### Remaining Acceptance Gates
+
+T048, T057, T059, and T060 still require their recorded clean hosted three-OS evidence and final
+candidate-specific acceptance/audit. Local migration checks do not close those gates. T063's only
+remaining migration action is removal of the empty local directory when permitted.

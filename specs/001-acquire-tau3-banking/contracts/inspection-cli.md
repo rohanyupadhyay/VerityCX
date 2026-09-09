@@ -8,7 +8,7 @@
 uv run python scripts/inspect_tau3_banking_data.py
 ```
 
-The command has no production source/path override and performs no clone, fetch, repair, lock creation, staging creation, or cache mutation.
+Run this command from the Git repository root, which is the project root. The command has no production source/path override and performs no clone, fetch, repair, lock creation, staging creation, or cache mutation.
 
 When the caller is outside the project root, the equivalent absolute-path form is `uv run --project <absolute-project-root> --locked python <absolute-project-root>/scripts/inspect_tau3_banking_data.py`. The explicit uv project selection supplies the same locked package environment without changing the caller's working directory or modifying `PYTHONPATH`/`sys.path`.
 

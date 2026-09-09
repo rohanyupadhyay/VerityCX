@@ -2,23 +2,15 @@
 # Runs locked, network-independent VerityCX quality gates on every supported host.
 name: quality
 on:
-  push:
-    paths:
-      - ".gitattributes"
-      - ".github/workflows/**"
-      - "verity-cx/**"
-  pull_request:
-    paths:
-      - ".gitattributes"
-      - ".github/workflows/**"
-      - "verity-cx/**"
+  push: null
+  pull_request: null
   workflow_dispatch: null
 permissions:
   contents: read
 defaults:
   run:
     shell: bash
-    working-directory: verity-cx
+    working-directory: .
 jobs:
   verify:
     name: verify (${{ matrix.runner }})
@@ -35,7 +27,7 @@ jobs:
         uses: actions/checkout@v6
       - name: Verify formatter text normalization
         run: |
-          attribute_output="$(git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md ../.github/workflows/README.md ../.github/workflows/quality.yml)"
+          attribute_output="$(git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md .github/workflows/README.md .github/workflows/quality.yml)"
           printf '%s\n' "$attribute_output"
           test "$(printf '%s\n' "$attribute_output" | grep -c 'eol: lf$')" -eq 4
       - name: Set up Python 3.12
@@ -71,15 +63,16 @@ jobs:
       - name: Run Python quality gates
         run: |
           uv run ruff format --check src scripts tests
-          uv run ruff check src/veritycx/data_sources/tau3.py scripts/setup_tau3_data.py scripts/inspect_tau3_banking_data.py tests/data_sources/test_tau3.py
+          uv run ruff check src scripts tests
           uv run mypy --strict src scripts tests
-          uv run pytest tests/data_sources/test_tau3.py
+          uv run pytest tests
       - name: Check maintained Markdown
         run: |
           uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/data/tau3-banking.md
+          uv run mdformat --check .specify/memory/constitution.md docs/README.md docs/project-vision.md tests/README.md
           uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
           uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
-          uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+          uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md .github/workflows/README.md
           uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
       - name: Check workflow formatting
-        run: uv run yamlfix --check ../.github/workflows/quality.yml
+        run: uv run yamlfix --check .github/workflows/quality.yml

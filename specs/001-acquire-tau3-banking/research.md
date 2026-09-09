@@ -109,3 +109,24 @@
 - Cloning the official GitHub repository in tests: rejected because it is slow, network-dependent, and unsuitable for deterministic CI.
 - Mocking every Git command: rejected because it would not validate real Git behavior; narrow injection remains useful for deterministic permission and failure branches.
 - Committing sample upstream task content: rejected; tests generate synthetic data at runtime.
+
+## Decision 10: A Single Git, Python, and Spec Kit Root
+
+**Decision**: Move the existing project and Spec Kit to the Git root, with no forwarding wrapper.
+The current script-location anchor then naturally resolves the Git root. Preserve cache contents
+during the one-time migration and rebuild the virtual environment at the new location.
+
+**Rationale**: Constitution VI and the explicit user instruction require all project commands to
+work from the repository root. Moving the actual project removes the working-directory mismatch
+for uv, Python scripts, CI, and Spec Kit together. Existing data schemas and the upstream pin do
+not change.
+
+**Alternatives considered**:
+
+- Keep the nested project and document a directory change: violates the required single root.
+- Root wrappers or a second pyproject: retain two roots and introduce configuration drift.
+- Move the old virtual environment into active use: rejected because installed paths may retain
+  the old location; preserve it only as an ignored backup and synchronize a new environment.
+
+**Verification**: Real root-level CLI subprocess tests, root Spec Kit resolution, full quality
+gates, cache before/after hashes, and isolated clean-root live smoke evidence.

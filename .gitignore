@@ -14,6 +14,9 @@ dist/
 .cache/tau3-bench-staging-*/
 .cache/tau3-bench.setup.lock/
 
+# Preserves pre-migration generated environments without activating stale paths.
+.cache/root-migration-backup/
+
 # Universal local editor and operating-system artifacts.
 .DS_Store
 Thumbs.db

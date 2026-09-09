@@ -11,7 +11,7 @@ uv run python scripts/setup_tau3_data.py --check
 
 No other production options are planned. Argparse help and usage remain available through standard `-h`/`--help` behavior.
 
-Both forms resolve the project root from the script location and therefore have the same behavior when launched from any current working directory. Git 2.34 or newer and uv 0.12.5 are the supported command baseline.
+Run both forms above from the Git repository root, which is the project root. Paths resolve from the script location; use the explicit absolute-path form below when invoking elsewhere. Git 2.34 or newer and uv 0.12.5 are the supported command baseline.
 
 When the caller is outside the project root, the equivalent absolute-path form is `uv run --project <absolute-project-root> --locked python <absolute-project-root>/scripts/setup_tau3_data.py [--check]`. The explicit uv project selection supplies the same locked package environment without changing the caller's working directory or modifying `PYTHONPATH`/`sys.path`.
 
@@ -40,7 +40,7 @@ Every existing-target row is offline: neither form contacts the remote, and both
 
 ## Required Git Invocations
 
-All invocations use argument arrays and `shell=False`. Validation commands execute with the checkout as `cwd` and with optional locks disabled.
+The following are internal Git subprocess operations, not commands for developers to paste at the project root. All invocations use argument arrays and `shell=False`. Validation commands execute with the checkout as `cwd` and with optional locks disabled.
 
 ```text
 git --version

@@ -14,14 +14,15 @@
 
 - **[P]**: Can run in parallel because it changes different files and has no dependency on another incomplete task in the same phase
 - **[Story]**: Maps the task to User Story 1, 2, or 3 from `spec.md`
-- Paths are project-root-relative unless a task explicitly identifies a Git-root-relative path. Git-root paths include `.github/workflows/`.
+- All current paths are relative to the single Git/project root, including `.github/workflows/`.
+  Completed tasks in Phases 1-9 retain historical instructions; Phase 10 supersedes their old layout.
 
 ## Global Constraints
 
 - Use Python `>=3.12,<3.13`, uv 0.12.5 with `uv_build`, Git 2.34 or newer, standard-library runtime dependencies only, and development-only pytest, Ruff, mypy, mdformat, and yamlfix configuration in `pyproject.toml`.
 - Resolve the project root and all production paths from each script's `__file__`, never the caller's current working directory; production source, revision, destination, and config overrides are forbidden.
 - Invoke Git with argument sequences, explicit `shell=False`, captured text, `GIT_TERMINAL_PROMPT=0`, and optional locks disabled during validation.
-- Never fetch, reset, repair, delete, move, replace, or clean a pre-existing `.cache/tau3-bench/`; clean up only staging and lock paths proven to be owned by the current invocation.
+- Runtime commands never fetch, reset, repair, delete, move, replace, or clean a pre-existing `.cache/tau3-bench/`; clean up only staging and lock paths proven to be owned by the current invocation. The user-authorized one-time root migration preserves and relocates the entire cache under FR-024 without modifying its contents.
 - Feature 001 outputs, errors, reports, and inspection results must exclude evaluation-only material. Maintained documentation must classify later runtime consumers as default-deny and assign enforcement to the consuming feature.
 - Every maintained module needs an accurate `README.md`; every maintained Python file and supported text/config file needs a conventional leading comment or docstring; every callable and model must be strictly typed and documented.
 - Feature 001 ends at acquisition, pinning, validation, inspection, and documentation. Do not add chunking, embeddings, database import, agent workflows, web endpoints, containers, or benchmark evaluation.
@@ -30,7 +31,7 @@
 
 | Path | Responsibility |
 |---|---|
-| Git root: `.github/workflows/README.md`, `.github/workflows/quality.yml` | Documented three-operating-system CI module that runs against project root `verity-cx/` |
+| Git root: `.github/workflows/README.md`, `.github/workflows/quality.yml` | Documented three-operating-system CI module that runs against the Git/project root |
 | `pyproject.toml`, `.python-version`, `uv.lock` | Reproducible Python 3.12 package, development tools, and quality-gate configuration |
 | `config/tau3-bench.toml` | Sole production source of truth for the exact upstream pin and required paths |
 | `src/veritycx/data_sources/tau3.py` | Typed configuration, path, Git, data-validation, setup-transaction, and inspection logic |
@@ -175,6 +176,7 @@ ______________________________________________________________________
 | User Story 1: verified acquisition | FR-001-FR-008, FR-011; SC-001, SC-005 | T012-T021, T047-T048 |
 | User Story 2: safe rerun and check | FR-009-FR-011; SC-003-SC-005 | T022-T030 |
 | User Story 3: inspection, provenance, and data use | FR-012-FR-021; SC-006, SC-008 | T031-T040 |
+| Single-root workflow and preservation | FR-023-FR-024; SC-009; Constitution VI | T062-T065 |
 
 ## Dependencies & Execution Order
 
@@ -268,7 +270,7 @@ Task T040: Extend src/veritycx/data_sources/README.md
 
 - `[P]` denotes tasks that can run concurrently without writing the same file.
 - `[US1]`, `[US2]`, and `[US3]` provide direct traceability to `spec.md`.
-- Unqualified paths are relative to project root `verity-cx/`; `.github/workflows/` is relative to the outer Git root.
+- Unqualified paths are relative to the single Git/project root; historical nested-root instructions are superseded by Phase 10.
 - Test tasks precede implementation because the feature explicitly requires the network-independent test strategy.
 - The local-Git fixtures use synthetic runtime-generated content; no official τ³ data or evaluation task content is committed.
 - Stop at any checkpoint to validate the current increment independently.
@@ -294,3 +296,21 @@ Task T040: Extend src/veritycx/data_sources/README.md
 ## Phase 9: Convergence
 
 - [x] T061 Add the Git-root `.gitattributes` LF-normalization control to `plan.md` project structure and planned file responsibilities, document its Constitution V and SC-002 ownership in the CI guidance and quickstart, include it in the final SC-007 audit scope, and prove Windows-style checkout settings cannot create formatter-only Markdown or YAML failures per Constitution V and SC-002 (partial)
+
+## Phase 10: Convergence
+
+This user-approved migration supersedes historical nested-root instructions in Phases 1-9. All
+current task paths below are relative to the single Git/project root. Execute T062's failing tests
+before T063, then T064 and T065, followed by T062's final verification. Earlier hosted acceptance
+gates remain open and are not duplicated here.
+
+- [x] T062 CRITICAL Add `tests/test_repository_layout.py` and `tests/README.md` to exercise real setup, check, and inspection entry points from Git's top level; prove failures before migration and success afterward; run root quality gates, Spec Kit prerequisite/template resolution, and clean-root live smoke; record results and cache-preservation evidence in `specs/001-acquire-tau3-banking/quickstart.md` per Constitution VI and SC-009 (missing)
+- [ ] T063 CRITICAL Move Python metadata, `src/`, `scripts/`, `tests/`, `config/`, `docs/`, `specs/`, `.specify/`, and `.agents/skills/` from `verity-cx/` into the Git root without replacements; preserve the entire cache and its Git state, archive old generated environments under ignored `.cache/root-migration-backup/`, recreate root `.venv/`, and remove only the empty nested directory per Constitution VI and FR-023/FR-024 (contradicts)
+- [x] T064 CRITICAL Align the primary `README.md`, module documentation, Spec Kit artifacts, and `.github/workflows/quality.yml` with the single root; run CI on root changes with root-relative workflow paths and full-suite test/lint gates; preserve the original extensionless README as explicitly future scope in `docs/project-vision.md` with `docs/README.md` ownership per Constitution I/V/VI and FR-023/FR-024 (contradicts)
+- [x] T065 Configure local synthetic Git identity in cloned fixtures before commits in `tests/data_sources/test_tau3.py`, and verify the linked-path cases with global/system Git configuration unavailable so root CI is reproducible per FR-024 and plan: network-independent test strategy (partial)
+
+**Phase 10 status (2026-09-09)**: T062, T064, and T065 passed local verification and independent
+read-only review. T063's files, cache preservation, and environment recreation are complete; only
+removal of the verified-empty old directory remains blocked by execution policy. No nested project
+or wrapper remains. See `quickstart.md` for commands, results, and retained evidence. Historical
+hosted-acceptance tasks remain open; this migration does not claim Feature 001 release completion.

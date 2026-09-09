@@ -12,13 +12,14 @@
 
 ## Root Definitions
 
-- **Git root**: The outer `VerityCX/` directory containing `.git`.
-- **Project root**: The nested `VerityCX/verity-cx/` directory containing
-  `pyproject.toml`, `src/`, `scripts/`, `config/`, `specs/`, and `.cache/`.
-- Developer commands run from the project root. Production paths, including
-  `.cache/tau3-bench/`, resolve relative to the project root from each script's
-  location. Repository infrastructure such as `.github/workflows/` is relative
-  to the Git root.
+- **Git root and project root**: The same `VerityCX/` directory containing `.git`,
+  `pyproject.toml`, `src/`, `scripts/`, `tests/`, `config/`, `docs/`, `specs/`,
+  `.specify/`, project-local `.agents/skills/`, and `.github/workflows/`.
+- All documented project commands run from this single root. Production paths,
+  including `.cache/tau3-bench/`, resolve from each script's location, not the
+  caller's current working directory. No nested-project navigation is required.
+- Historical audit records retain paths that existed at their recorded commits;
+  those records are not current command instructions.
 
 ## Contract Authority and Precedence
 
@@ -114,7 +115,7 @@ As a developer, I want a safe inspection command and clear third-party documenta
 
 ### Functional Requirements
 
-- **FR-001**: The project MUST provide exactly one setup command entry point, `uv run python scripts/setup_tau3_data.py`, runnable from any current working directory. Its default mode acquires or validates the approved dependency; its sole operational flag, `--check`, selects read-only validation of the same command rather than defining a second setup command.
+- **FR-001**: The project MUST provide exactly one setup command entry point, `uv run python scripts/setup_tau3_data.py`, runnable from the Git repository root. An optional absolute-path invocation with explicit uv project selection MUST also work from another current directory. Its default mode acquires or validates the approved dependency; its sole operational flag, `--check`, selects read-only validation of the same command rather than defining a second setup command.
 - **FR-002**: Setup MUST use the official upstream repository `https://github.com/sierra-research/tau2-bench.git` and store its checkout only at `.cache/tau3-bench/` relative to the project root.
 - **FR-003**: The approved source pin MUST be recorded as MIT-licensed release tag `v1.0.1` at exact commit SHA `fc0055dc4e0a316c3f83133267fbd6faaa770992`; both tag and SHA MUST be verified for an acquired checkout.
 - **FR-004**: `.cache/tau3-bench/` and all of its descendants MUST be excluded from version control.
@@ -125,7 +126,7 @@ As a developer, I want a safe inspection command and clear third-party documenta
 - **FR-009**: Re-running setup with a complete, clean checkout at the approved upstream and revision MUST succeed without contacting or downloading from the remote and without modifying the checkout. Validation of any existing invalid checkout MUST also be offline and non-mutating.
 - **FR-010**: If the target or cache path contains an incomplete checkout, unexpected content, an incorrect upstream, an incorrect revision, local changes, a link or junction, an unsupported object, an ownership conflict, or a concurrently appearing destination, setup MUST fail with a categorized diagnostic and MUST NOT delete, reset, overwrite, move, repair, or intentionally modify pre-existing or unowned state. Preservation includes file bytes, link identity, permissions, Git administrative state, and neighboring cache entries; unavoidable access-time effects of read operations are excluded.
 - **FR-011**: Setup MUST use exit code `0` for success, `1` for an expected operational failure, and argparse exit code `2` for invalid usage. Success fields go only to stdout; one stable diagnostic category plus the required safe context and recovery action go only to stderr; expected failures emit no traceback or partial success summary.
-- **FR-012**: The project MUST provide one documented inspection command, `uv run python scripts/inspect_tau3_banking_data.py`, runnable from any current working directory. It MUST apply the same non-mutating checkout and banking validation to an already acquired checkout and MUST NOT clone, fetch, repair, lock, stage, create the cache, or emit a partial summary on failure.
+- **FR-012**: The project MUST provide one documented inspection command, `uv run python scripts/inspect_tau3_banking_data.py`, runnable from the Git repository root. An optional absolute-path invocation with explicit uv project selection MUST also work from another current directory. It MUST apply the same non-mutating checkout and banking validation to an already acquired checkout and MUST NOT clone, fetch, repair, lock, stage, create the cache, or emit a partial summary on failure.
 - **FR-013**: Inspection MUST report the recursive readable-regular-file count under `documents/`, the recursive readable-regular-file count under `tasks/`, and sorted top-level database entries. Each database entry reports one kind from `object`, `array`, `string`, `number`, `boolean`, or `null`; only objects and arrays report a direct, non-recursive entry or item count, including zero.
 - **FR-014**: Inspection results and every success or expected-error channel—including stdout, stderr, diagnostics, logs, exception text, `repr`, and supported serialization—MUST NOT reveal document or task filenames or bodies, nested database keys, record identifiers or values, task instructions, prompts, evaluation criteria, expected answers, reference or golden actions, grading or reward data, raw Git status, raw commands, or source-derived snippets.
 - **FR-015**: Setup and inspection MUST use the same `uv run python <script>` syntax and stable project-owned fields, modes, diagnostic categories, and exit codes on supported Windows, Linux, and macOS environments. Paths resolve from each script rather than the current directory; platform-native path separators or operating-system text may appear only in sanitized path and cause fields explicitly allowed by the command contracts.
@@ -135,7 +136,9 @@ As a developer, I want a safe inspection command and clear third-party documenta
 - **FR-019**: Maintained data-use documentation MUST classify `tasks/`, `tasks.json`, `tasks_voice.json`, task instructions, evaluation criteria, expected answers, golden actions, evaluation prompts, grading or reward data, reference actions, and semantically equivalent artifacts regardless of filename or location as evaluation-only.
 - **FR-020**: Inspection output MUST exclude all evaluation-only material. Maintained data-use documentation MUST define runtime agents, prompt builders, knowledge indexes, and application-facing data loaders as default-deny consumers. Every later consuming feature MUST trace each input to the FR-018 allow-list and include an acceptance gate proving that unclassified and evaluation-only inputs are rejected before any indexing, prompting, loading, API exposure, or agent use.
 - **FR-021**: Every new, renamed, moved, or otherwise unclassified upstream path—including source code, prompts, examples, simulations, and files not expressly allow-listed by FR-018—MUST remain default-denied external acquisition content and MUST NOT be treated as VerityCX application data.
-- **FR-022**: This feature MUST stop at acquisition, pinning, validation, inspection, and documentation; it MUST NOT add document chunking, embeddings, database import, agent workflows, web endpoints, container infrastructure, or benchmark evaluation.
+- **FR-022**: Apart from constitutional repository-layout and development-tooling maintenance, this feature MUST stop at acquisition, pinning, validation, inspection, and documentation; it MUST NOT add document chunking, embeddings, database import, agent workflows, web endpoints, container infrastructure, or benchmark evaluation.
+- **FR-023**: The Git repository root MUST be the sole project root for the Python package, dependency tools, scripts, tests, maintained documentation, CI, and Spec Kit. All documented project commands MUST execute there with their declared prerequisites; no nested root, forwarding wrapper, or required directory change is permitted.
+- **FR-024**: The one-time root migration MUST preserve existing user cache contents and Git state, recreate the virtual environment at its new location, retain the original platform vision as explicitly future work, and add network-independent regression coverage for root-level commands. Test fixtures MUST supply their own Git commit identity without relying on developer-global configuration.
 
 ### Normative Operational Definitions
 
@@ -202,7 +205,8 @@ The required maintained artifacts and requirement owners are:
 | Inspection and non-disclosure (FR-012–FR-016, FR-020) | `README.md`, `scripts/README.md`, `contracts/inspection-cli.md` |
 | Provenance and external-content boundary (FR-005, FR-017, FR-021) | `THIRD_PARTY_NOTICES.md`, `docs/data/tau3-banking.md` |
 | Allow-list, evaluation deny-list, and future enforcement (FR-018–FR-022) | `docs/data/tau3-banking.md`, `contracts/data-use-policy.md` |
-| Constitution-required module ownership | `README.md`, `.github/workflows/README.md`, and focused READMEs under `config/`, `scripts/`, `src/veritycx/`, `src/veritycx/data_sources/`, and `tests/data_sources/` |
+| Single-root workflow and migration (FR-023–FR-024) | `README.md`, `docs/README.md`, `docs/project-vision.md`, `tests/README.md`, `.github/workflows/README.md`, `quickstart.md` |
+| Constitution-required module ownership | `README.md`, `.github/workflows/README.md`, and focused READMEs under `config/`, `docs/`, `scripts/`, `src/veritycx/`, `src/veritycx/data_sources/`, `tests/`, and `tests/data_sources/` |
 
 ## Success Criteria *(mandatory)*
 
@@ -216,6 +220,7 @@ The required maintained artifacts and requirement owners are:
 - **SC-006**: Inspection reports the exact document and task file counts and complete top-level database shape in 100% of verification runs. Tests derive the expected counts and kinds independently from the synthetic fixture, include empty collections and every JSON scalar kind, and repeat validation before output. Unique canaries covering every FR-014 disclosure class occur zero times across result fields, stdout, stderr, diagnostics, exception text, `repr`, and supported serialization. The official smoke check independently enumerates counts and top-level shape from the exact pinned checkout without recording bodies, nested keys, record values, task semantics, or filenames.
 - **SC-007**: After setup, `git ls-files -- .cache/tau3-bench/` returns zero paths and `git check-ignore -v .cache/tau3-bench/` identifies the intended project ignore rule. A recorded review of the complete Feature 001 tracked diff from an identified baseline commit to the candidate commit MUST confirm that every changed path is project-owned and within the planned file responsibilities, every non-generated addition was reviewed for upstream-derived source, data, or evaluation content, and no acquired upstream file or content was copied into a tracked location. The review record MUST include the baseline and candidate commit SHAs, all reviewed paths, reviewer, review date, and explicit pass/fail result, and MUST NOT reproduce upstream contents.
 - **SC-008**: A reviewer using only the maintained documentation can correctly identify all runtime-eligible and evaluation-only τ³-Banking inputs, the five provenance fields, both developer commands, and the feature's exclusions without consulting implementation code.
+- **SC-009**: From the Git root, locked environment setup, all README verification commands, setup/check/inspection entry points, and Spec Kit prerequisite/template resolution MUST run against the root project. Automated tests MUST fail if commands again require a nested project. Live commands may return their documented non-destructive error when a pre-existing checkout is invalid; a clean isolated root must demonstrate successful setup, check, and inspection.
 
 ## Assumptions
 

@@ -7,6 +7,14 @@ VerityCX is a Python 3.12 project for reproducible customer-experience research 
 does not import that data into the application or build retrieval, agent, API, container, or
 evaluation behavior.
 
+## Repository Root
+
+The directory containing `.git` is the project root. Run **all commands below from this directory**;
+do not enter a nested project directory. Python metadata, scripts, tests, CI, and GitHub Spec Kit
+share this root.
+
+The broader [platform vision](docs/project-vision.md) describes future work, not implemented features.
+
 ## Prerequisites
 
 - Python 3.12, selected automatically by uv from `.python-version`
@@ -65,20 +73,25 @@ invocation cannot prove ownership.
 uv lock --check
 uv sync --locked
 uv run ruff format --check src scripts tests
-uv run ruff check src/veritycx/data_sources/tau3.py scripts/setup_tau3_data.py scripts/inspect_tau3_banking_data.py tests/data_sources/test_tau3.py
+uv run ruff check src scripts tests
 uv run mypy --strict src scripts tests
-uv run pytest tests/data_sources/test_tau3.py
+uv run pytest tests
 ```
 
 Tests create only temporary local Git repositories and runtime-generated synthetic canaries. They
-must never acquire the official upstream checkout or commit upstream content.
+must never acquire the official upstream checkout or commit upstream content. Root-command tests
+prevent reintroducing a nested project. The complete Markdown/YAML and CI verification commands
+are in the [Spec Kit quickstart](specs/001-acquire-tau3-banking/quickstart.md).
 
 ## Project Areas
 
 - `config/`: reviewed immutable dependency configuration
 - `scripts/`: thin project-root developer commands
 - `src/veritycx/`: reusable strictly typed implementation
-- `tests/data_sources/`: network-independent Git, filesystem, and disclosure tests
+- `tests/`: repository-root command checks and network-independent data-source safety tests
+- `docs/`: current data policy and explicitly future platform vision
+- `.specify/` and `.agents/skills/`: GitHub Spec Kit constitution, templates, workflow, and skills
+- `.github/workflows/`: root-level quality gates on Windows, Linux, and macOS
 - `specs/001-acquire-tau3-banking/`: specification, contracts, plan, tasks, and validation guide
 
 ## Safe Inspection and Data Use

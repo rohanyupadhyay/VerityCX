@@ -1849,6 +1849,10 @@ def test_public_flows_reject_linked_required_paths_without_following(
     _run_git("add", "-A", cwd=checkout)
     status = _run_git("status", "--porcelain=v1", cwd=checkout).stdout
     if status:
+        # Clones do not inherit their source repository's local author identity.
+        _run_git("config", "user.name", "VerityCX Tests", cwd=checkout)
+        _run_git("config", "user.email", "tests@veritycx.invalid", cwd=checkout)
+        _run_git("config", "commit.gpgsign", "false", cwd=checkout)
         _run_git("commit", "-m", f"Link synthetic {field}", cwd=checkout)
         _run_git("tag", "--force", TAG, cwd=checkout)
         linked_commit = _run_git("rev-parse", "HEAD", cwd=checkout).stdout.strip()

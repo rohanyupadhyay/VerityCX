@@ -2,7 +2,7 @@
 
 # Implementation Plan: Acquire τ³-Banking Data
 
-**Branch**: `001-acquire-tau3-banking` | **Date**: 2026-08-25 | **Spec**: [spec.md](spec.md)
+**Branch**: `001-acquire-tau3-banking` | **Date**: 2026-09-09 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `/specs/001-acquire-tau3-banking/spec.md` plus the Python 3.12, uv, component, workflow, test, and verification constraints supplied to `$speckit-plan`.
 
@@ -32,14 +32,11 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
 
 ## Root Definitions
 
-- **Git root**: The outer `VerityCX/` directory containing `.git` and owning
-  `.github/workflows/`.
-- **Project root**: The nested `VerityCX/verity-cx/` directory containing
-  `pyproject.toml`, `src/`, `scripts/`, `config/`, `specs/`, and `.cache/`.
-- Documented developer and verification examples run from the project root, while
-  both public scripts behave identically from any current working directory.
-  Production paths resolve from the project root derived from each script's
-  `__file__`. Git-root CI steps set `verity-cx` as their working directory.
+- **Git root and project root**: One `VerityCX/` directory containing `.git`,
+  Python metadata, source, scripts, tests, config, docs, specs, Spec Kit, and CI.
+- All documented project commands execute from this root. Script-location anchoring
+  remains unchanged and supports optional absolute-path invocation elsewhere.
+- CI uses `defaults.run.working-directory: .`; no wrapper or nested root is retained.
 
 ## Constitution Check
 
@@ -51,7 +48,8 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
 | II. File-Level Documentation Is Mandatory | PASS | Every maintained Python file starts with a module docstring; Markdown starts with an HTML comment; YAML, TOML, and `.gitignore` use leading native comments. Generated `uv.lock` and the tool-owned `.python-version` marker are exempt. |
 | III. Code Interfaces and Decisions Are Documented | PASS | Every function, class, dataclass, and test has a typed signature and meaningful docstring. Safety-critical path containment, staging ownership, Git validation order, and evaluation-data denial receive rationale comments. |
 | IV. Strict Typing Is Non-Negotiable | PASS | Mypy strict mode covers `src`, `scripts`, and `tests`; TOML, JSON, subprocess results, and filesystem entries are validated at typed boundaries without public `Any`, ignored diagnostics, or unchecked casts. |
-| V. Formatting and Quality Gates Are Automated | PASS | Add a Git-root `.github/workflows/quality.yml` matrix workflow with project working directory `verity-cx`; every required job runs lock verification, locked synchronization, Ruff formatting and lint, mdformat for the explicit maintained-Markdown set, yamlfix for workflow YAML, strict mypy, and network-independent pytest. |
+| V. Formatting and Quality Gates Are Automated | PASS | Add a Git-root `.github/workflows/quality.yml` matrix workflow with project working directory `.`; every required job runs lock verification, locked synchronization, Ruff formatting and lint, mdformat for the explicit maintained-Markdown set, yamlfix for workflow YAML, strict mypy, and network-independent pytest. |
+| VI. The Repository Root Is the Project Root | PASS (design) | Relocate Python and Spec Kit into the Git root; preserve cache bytes, recreate the environment, update commands/CI, and test root entry points under FR-023/FR-024 and SC-009. |
 
 **Pre-design gate result**: PASS. No constitutional exception or complexity justification is required.
 
@@ -83,41 +81,44 @@ specs/001-acquire-tau3-banking/
 ### Git and Project Structure
 
 ```text
-VerityCX/                              # Git root
-├── .gitattributes                     # Cross-platform formatter text normalization
-├── .github/
-│   └── workflows/
+VerityCX/                              # Git root AND project root
+├── .agents/skills/                    # Project-local Spec Kit commands
+├── .specify/                          # Constitution, templates, and workflow scripts
+├── .gitattributes
+├── .gitignore
+├── .github/workflows/
+│   ├── README.md
+│   └── quality.yml
+├── .python-version
+├── README.md
+├── THIRD_PARTY_NOTICES.md
+├── pyproject.toml
+├── uv.lock
+├── config/
+│   ├── README.md
+│   └── tau3-bench.toml
+├── docs/
+│   ├── README.md
+│   ├── project-vision.md              # Original vision, labeled future work
+│   └── data/tau3-banking.md
+├── scripts/
+│   ├── README.md
+│   ├── inspect_tau3_banking_data.py
+│   └── setup_tau3_data.py
+├── specs/001-acquire-tau3-banking/
+├── src/veritycx/
+│   ├── __init__.py
+│   ├── README.md
+│   └── data_sources/
+│       ├── __init__.py
 │       ├── README.md
-│       └── quality.yml
-└── verity-cx/                         # Project root
-    ├── .gitignore
-    ├── .python-version
+│       └── tau3.py
+└── tests/
     ├── README.md
-    ├── THIRD_PARTY_NOTICES.md
-    ├── pyproject.toml
-    ├── uv.lock
-    ├── config/
-    │   ├── README.md
-    │   └── tau3-bench.toml
-    ├── docs/
-    │   └── data/
-    │       └── tau3-banking.md
-    ├── scripts/
-    │   ├── README.md
-    │   ├── inspect_tau3_banking_data.py
-    │   └── setup_tau3_data.py
-    ├── src/
-    │   └── veritycx/
-    │       ├── __init__.py
-    │       ├── README.md
-    │       └── data_sources/
-    │           ├── __init__.py
-    │           ├── README.md
-    │           └── tau3.py
-    └── tests/
-        └── data_sources/
-            ├── README.md
-            └── test_tau3.py
+    ├── test_repository_layout.py
+    └── data_sources/
+        ├── README.md
+        └── test_tau3.py
 ```
 
 Generated, ignored runtime state beneath the project root:
@@ -129,7 +130,7 @@ Generated, ignored runtime state beneath the project root:
 └── tau3-bench.setup.lock/              # Cooperative setup lock
 ```
 
-**Structure Decision**: Use one small `src`-layout package so both scripts import the same typed implementation under `uv run`, without `PYTHONPATH` or `sys.path` changes. Keep the requested implementation in one focused module while separating Git operations, banking-data validation/inspection, and setup orchestration through distinct typed functions and result models. Keep GitHub Actions at the Git root and set `defaults.run.working-directory: verity-cx` so every quality command executes against the project. Add only the package/tool configuration and documentation needed by Feature 001 and the constitution.
+**Structure Decision**: Use one small `src`-layout package so both scripts import the same typed implementation under `uv run`, without `PYTHONPATH` or `sys.path` changes. Keep the requested implementation in one focused module while separating Git operations, banking-data validation/inspection, and setup orchestration through distinct typed functions and result models. Keep GitHub Actions at the Git root and set `defaults.run.working-directory: .` so every quality command executes against the project. Add only the package/tool configuration and documentation needed by Feature 001 and the constitution.
 
 ## Phase 0: Research Decisions
 
@@ -245,10 +246,10 @@ uv run ruff format --check src scripts tests
 uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/data/tau3-banking.md
 uv run mdformat --check scripts/README.md src/veritycx/README.md src/veritycx/data_sources/README.md tests/data_sources/README.md
 uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
-uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
+uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md .github/workflows/README.md
 uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
-uv run yamlfix --check ../.github/workflows/quality.yml
-git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md ../.github/workflows/README.md ../.github/workflows/quality.yml
+uv run yamlfix --check .github/workflows/quality.yml
+git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md .github/workflows/README.md .github/workflows/quality.yml
 uv run mypy --strict src scripts tests
 uv run pytest tests/data_sources/test_tau3.py
 uv run ruff check src/veritycx/data_sources/tau3.py scripts/setup_tau3_data.py scripts/inspect_tau3_banking_data.py tests/data_sources/test_tau3.py
@@ -264,7 +265,7 @@ uv run python scripts/setup_tau3_data.py
 
 The four verification commands supplied in the feature input are preserved verbatim. Lock verification, Python formatting, explicit maintained-Markdown formatting, workflow-YAML formatting, and strict typing are additional constitution gates. The explicit Markdown list prevents recursive formatting of `.agents/`, `.specify/`, generated, vendored, or unrelated files.
 
-The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with `verity-cx` as the working directory. The Git-root `.gitattributes` pins formatter-owned Markdown and YAML to LF, and each job verifies representative project and workflow paths resolve to that attribute before formatting. The workflow pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails when the monotonic first-acquisition duration is 600 seconds or more. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
+The same non-live-data quality commands run in the Git-root `.github/workflows/quality.yml` on all three required operating-system jobs with the Git root as the working directory. The Git-root `.gitattributes` pins formatter-owned Markdown and YAML to LF, and each job verifies representative project and workflow paths resolve to that attribute before formatting. The workflow pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails when the monotonic first-acquisition duration is 600 seconds or more. CI uses only the temporary local Git fixtures and MUST NOT acquire data from GitHub. Every matrix job is required before merge.
 
 ## Post-Design Constitution Check
 
@@ -275,5 +276,40 @@ The same non-live-data quality commands run in the Git-root `.github/workflows/q
 | Strict typing | PASS — typed immutable models, validated external boundaries, and strict mypy cover source, scripts, and tests. |
 | Automated quality | PASS — a required three-operating-system CI matrix runs deterministic lock, Python/Markdown/YAML format, lint, type, and network-independent unit/integration gates; check and inspection commands remain documented local verification steps. |
 | Scope discipline | PASS — no feature work extends into ingestion, agents, APIs, containers, or evaluation execution. |
+| Repository-root workflow | PASS (design) — root CLI regression tests, root Spec Kit resolution, unified CI paths, and migration preservation evidence enforce Principle VI. |
 
 **Post-design gate result**: PASS. No constitution violations remain and no Complexity Tracking section is needed.
+
+## Repository-Root Migration (2026-09-09)
+
+The user-approved layout change implements Constitution VI, FR-023/FR-024, and SC-009.
+Existing completed tasks describe earlier increments; Phase 10 supersedes their obsolete
+nested-root wording without regenerating or discarding the task history.
+
+1. Add failing root-command regression tests before moving files. The tests resolve Git's
+   top level and execute the real setup/check/inspection argument parsers there without
+   accessing the dataset or network.
+1. Validate all source and destination paths within the Git root. Move the nested Python
+   project, Spec Kit, and local agent skills into that root without replacing existing paths.
+1. Move the entire existing `.cache/` without repairing its checkout. Compare an aggregate
+   of relative file names and SHA-256 hashes before/after, including Git administrative files.
+   Preserve old generated environments/tool caches in ignored `.cache/root-migration-backup/`;
+   recreate the active root `.venv/` with `uv sync --locked`.
+1. Move the old extensionless root README into `docs/project-vision.md` and label it as future
+   scope; make the implementation README the single root `README.md`.
+1. Update maintained command examples, CI triggers/working directory, full-suite test/lint gates,
+   documentation ownership, and ignore rules. Configure commit identity locally in each synthetic
+   cloned test repository that creates commits; do not change global Git configuration.
+1. Run all root quality gates plus Spec Kit prerequisite/template resolution. Preserve historical
+   evidence paths as historical. Record actual live-command results; never repair user data to make
+   a verification pass. Exercise successful live flows in an isolated clean repository root.
+1. Run read-only Spec Kit analysis for artifact consistency. Hosted matrix acceptance remains a
+   separate open gate until executed on a committed candidate.
+
+Additional root-wide verification commands (the original focused commands above remain supported):
+
+```text
+uv run pytest tests
+uv run ruff check src scripts tests
+uv run mdformat --check .specify/memory/constitution.md docs/README.md docs/project-vision.md tests/README.md
+```

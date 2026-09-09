@@ -1,15 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: unratified template -> 1.0.0
-- Modified principles:
-  - Template principle slot 1 -> I. Module Documentation Is Mandatory
-  - Template principle slot 2 -> II. File-Level Documentation Is Mandatory
-  - Template principle slot 3 -> III. Code Interfaces and Decisions Are Documented
-  - Template principle slot 4 -> IV. Strict Typing Is Non-Negotiable
-  - Template principle slot 5 -> V. Formatting and Quality Gates Are Automated
+- Version change: 1.0.0 -> 1.1.0
+- Modified principles: none; Principles I-V are preserved
 - Added sections:
-  - Documentation and Code Quality Standards
-  - Development Workflow and Quality Gates
+  - VI. The Repository Root Is the Project Root
+- Expanded workflow: repository-root layout and command verification gate
+- Migration: move the nested Python project and Spec Kit into the Git root;
+  update feature artifacts, documentation, CI, and regression coverage together
 - Removed sections: none
 - Follow-up TODOs: none
 -->
@@ -74,6 +71,26 @@ documentation or lint checks. A change MUST NOT merge while any required quality
 fails. This rule makes style reproducible and turns documentation, typing, and formatting
 requirements into enforceable engineering controls.
 
+### VI. The Repository Root Is the Project Root
+
+The Git repository root MUST be the single project root. The primary `README.md`,
+`pyproject.toml`, dependency lockfile, Python version file, `src/`, `scripts/`, `tests/`,
+`config/`, `docs/`, `specs/`, `.specify/`, and project-local agent skills MUST be rooted
+there. A duplicate nested project root, forwarding wrapper, or directory-change workaround
+MUST NOT be required to build, run, test, inspect, or develop this project.
+
+Every documented project command, including commands in module READMEs, MUST be runnable
+from the Git root with its declared prerequisites satisfied. CI MUST run the same commands
+from that root. Spec Kit MUST resolve the constitution, templates, and active feature from
+that root. Relative paths in maintained documentation MUST use this one root unless they
+are explicitly links relative to the containing document.
+
+Layout changes MUST update specifications, plans, task lists, documentation, ignore rules,
+CI, and tests together. Verification MUST exercise the documented commands from the Git
+root and detect a reintroduced nested project. Existing user data MUST be preserved during
+migration; generated virtual environments MUST be recreated for their new location.
+This rule removes working-directory ambiguity and makes local and CI workflows identical.
+
 ## Documentation and Code Quality Standards
 
 - A maintained file is a project-owned file that contributors are expected to edit.
@@ -96,11 +113,12 @@ affected by the work. Before review, contributors MUST run the configured format
 type checker, documentation checks, and relevant tests. Pull-request review MUST verify that:
 
 1. Every new or changed module has an accurate `README.md`.
-2. Every new or changed applicable file has a meaningful file-level comment.
-3. Every new or changed function, method, and class has accurate documentation.
-4. Non-obvious logic and consequential decisions have explanatory inline or block comments.
-5. New and changed contracts are explicitly typed and untyped inputs are validated.
-6. Formatting, typing, documentation, lint, and test gates pass without manual exceptions.
+1. Every new or changed applicable file has a meaningful file-level comment.
+1. Every new or changed function, method, and class has accurate documentation.
+1. Non-obvious logic and consequential decisions have explanatory inline or block comments.
+1. New and changed contracts are explicitly typed and untyped inputs are validated.
+1. Formatting, typing, documentation, lint, and test gates pass without manual exceptions.
+1. The repository has one project root, and documented commands and Spec Kit checks pass there.
 
 Violations in code touched by a change MUST be corrected before merge. A temporary exception
 is permitted only when compliance is technically blocked: it MUST be narrowly scoped,
@@ -109,8 +127,8 @@ expiry date or tracked remediation issue.
 
 ## Governance
 
-This constitution is the authoritative source for VerityCX documentation, typing, and
-formatting policy. When another project document conflicts with it, this constitution takes
+This constitution is the authoritative source for VerityCX layout, documentation, typing,
+and formatting policy. When another project document conflicts with it, this constitution takes
 precedence. Amendments MUST be proposed in a reviewed change that states the rationale,
 compatibility impact, required migration, and semantic version change.
 
@@ -124,4 +142,4 @@ compliance with applicable principles. Reviewers MUST reject unexplained violati
 team MUST review this constitution when project tooling or development workflows change and
 at least once before each production release.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-25 | **Last Amended**: 2026-08-25
+**Version**: 1.1.0 | **Ratified**: 2026-08-25 | **Last Amended**: 2026-09-09
