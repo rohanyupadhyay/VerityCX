@@ -67,6 +67,11 @@ without a traceback. Setup never fetches, resets, repairs, replaces, or deletes 
 checkout. A surviving lock or staging directory is preserved for manual review because a later
 invocation cannot prove ownership.
 
+Git subprocesses use a fixed `core.autocrlf=input` policy: existing CRLF text and LF text are
+compared using Git's text normalization, while fresh clones are not converted to CRLF. Binary
+files and explicit `-text` attributes retain byte-sensitive checks. Real edits, staged changes,
+and untracked files still fail validation. No cache files or user Git settings are rewritten.
+
 ## Development Verification
 
 ```text

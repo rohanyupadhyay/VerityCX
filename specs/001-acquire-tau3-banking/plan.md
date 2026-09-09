@@ -59,7 +59,7 @@ Build a minimal Python 3.12 developer-tooling package, managed by uv, that reads
 
 | Path | Responsibility |
 |---|---|
-| `.gitattributes` | Normalize formatter-owned Markdown and YAML to LF so every supported CI host checks identical text bytes. |
+| `.gitattributes` | Normalize formatter-owned Python, Markdown, and YAML to LF so every supported CI host checks identical text bytes. |
 
 ### Documentation (this feature)
 
@@ -199,6 +199,13 @@ The default setup contract is `uv run python scripts/setup_tau3_data.py`; read-o
 `uv run python scripts/inspect_tau3_banking_data.py` performs the same non-mutating checkout and banking validation, derives an approved summary, then repeats identity, cleanliness, required-path, count, and database-shape validation before printing. A detected difference fails as `checkout-changed` with no stdout. Successful output contains only the verified tag, exact SHA, recursive document count, recursive task count, and sorted top-level database collection name/kind/direct-count tuples. It never prints nested database keys, database values, document bodies or names, task names or contents, prompts, evaluation criteria, reference actions, grading data, or expected answers. See [inspection-cli.md](contracts/inspection-cli.md) and [data-use-policy.md](contracts/data-use-policy.md).
 
 ### Network-Independent Test Strategy
+
+Git line-ending policy is fixed per subprocess to `core.autocrlf=input` for both cloning and
+validation. Existing CRLF text is compared using Git normalization; new clones do not gain CRLF
+conversion. Global/system configuration remains disabled and local autocrlf cannot change this
+policy. No existing checkout or configuration is rewritten. Regression cases cover all three
+public flows with LF/CRLF checkouts and prove that content, whitespace, binary, explicit `-text`,
+staged, and untracked changes remain rejected with byte-stable preservation snapshots.
 
 `tests/data_sources/test_tau3.py` uses pytest fixtures and helpers with complete type annotations and docstrings. A fixture creates a temporary source repository, configures local Git identity, writes synthetic required paths, commits them, tags the commit `v1.0.1`, creates a local bare remote, and builds an injected `Tau3Config` from the dynamic URL and SHA. No production constant is patched and no test reaches the internet.
 

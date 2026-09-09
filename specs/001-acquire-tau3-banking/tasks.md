@@ -314,3 +314,12 @@ read-only review. T063's files, cache preservation, and environment recreation a
 removal of the verified-empty old directory remains blocked by execution policy. No nested project
 or wrapper remains. See `quickstart.md` for commands, results, and retained evidence. Historical
 hosted-acceptance tasks remain open; this migration does not claim Feature 001 release completion.
+
+## Phase 11: Windows Line-Ending Correction
+
+- [x] T066 Fix the false dirty-checkout result for unchanged CRLF text by setting process-local `core.autocrlf=input` in the isolated Git runner; preserve global/system isolation and existing cache/config bytes; add LF/CRLF setup/check/inspection regressions plus rejection cases for real content, whitespace, binary, explicit `-text`, staged, and untracked changes; document the policy and rerun all nine root README commands without errors or warnings per FR-009, FR-015, FR-016, SC-003, SC-004, and Constitution V/VI.
+
+**T066 verification**: All nine README commands returned zero without errors or warnings;
+153 tests passed and three Windows file-symlink capability cases skipped. Cache bytes and Git
+metadata were unchanged. `.gitattributes` now also pins formatter-owned Python to LF, removing
+Git's LF-to-CRLF review warnings. See `quickstart.md` for evidence; hosted acceptance stays open.

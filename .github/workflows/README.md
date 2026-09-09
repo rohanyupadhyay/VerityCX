@@ -22,7 +22,7 @@ operation, then stops it only after validated promotion returns successfully; py
 collection, and fixture construction are outside the SC-001 interval.
 
 All run steps use `defaults.run.working-directory: .`; Git-root workflow files are addressed
-with `.github/workflows/`. The Git-root `.gitattributes` pins formatter-owned Markdown and YAML
+with `.github/workflows/`. The Git-root `.gitattributes` pins formatter-owned Python, Markdown, and YAML
 to LF so Windows, Linux, and macOS check identical text. The directory contains only this
 documentation and `quality.yml`.
 

@@ -51,6 +51,14 @@
 
 ## Decision 5: Independent Origin, Revision, Tag, and Cleanliness Checks
 
+**Line-ending correction (2026-09-09)**: Set `core.autocrlf=input` in every isolated Git subprocess.
+This keeps CRLF-to-LF text normalization available without enabling output conversion, independently
+of host or local autocrlf settings. Existing cache bytes and Git configuration remain untouched.
+Binary and explicit `-text` files retain their Git attribute semantics. See the official
+[Git configuration guidance](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration).
+Re-enabling host configuration is rejected because it also admits URL/credential controls;
+ignoring whitespace diffs is rejected because genuine edits must remain detectable.
+
 **Decision**: Validate that the checkout is its own Git top level, has exactly one `origin` equal to the configured `.git` URL, has `HEAD` equal to the configured 40-character SHA, has the peeled configured tag resolve to the same SHA, and has empty `git --no-optional-locks status --porcelain=v1 --untracked-files=all` output.
 
 **Rationale**: The SHA is the immutable content identity, while exact origin and tag binding independently prove provenance and release labeling. A stable porcelain format is intended for scripts and detects tracked and untracked changes without exposing filenames in diagnostics. See [Git clone](https://git-scm.com/docs/git-clone), [Git configuration](https://git-scm.com/docs/git-config), and [Git revision peeling](https://git-scm.com/docs/git-rev-parse).

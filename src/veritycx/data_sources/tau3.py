@@ -525,16 +525,21 @@ def _run_git(
         for name, value in os.environ.items()
         if not name.upper().startswith(("GIT_", "SSH_ASKPASS"))
     }
+    # Fix Git's text normalization independently of host/local autocrlf settings.
+    # "input" recognizes existing CRLF text but does not convert fresh clones to
+    # CRLF. Git still honors binary/-text attributes and detects substantive edits.
     environment.update(
         {
-            "GIT_CONFIG_COUNT": "2",
+            "GIT_CONFIG_COUNT": "3",
             "GIT_CONFIG_GLOBAL": os.devnull,
             "GIT_CONFIG_KEY_0": "credential.helper",
             "GIT_CONFIG_KEY_1": "core.askPass",
+            "GIT_CONFIG_KEY_2": "core.autocrlf",
             "GIT_CONFIG_NOSYSTEM": "1",
             "GIT_CONFIG_SYSTEM": os.devnull,
             "GIT_CONFIG_VALUE_0": "",
             "GIT_CONFIG_VALUE_1": "",
+            "GIT_CONFIG_VALUE_2": "input",
             "GIT_OPTIONAL_LOCKS": "0",
             "GIT_TERMINAL_PROMPT": "0",
         }

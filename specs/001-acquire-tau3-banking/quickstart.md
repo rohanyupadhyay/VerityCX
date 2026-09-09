@@ -343,3 +343,36 @@ and 20 local links with no broken targets. This is local review, not a substitut
 T048, T057, T059, and T060 still require their recorded clean hosted three-OS evidence and final
 candidate-specific acceptance/audit. Local migration checks do not close those gates. T063's only
 remaining migration action is removal of the empty local directory when permitted.
+
+## Line-Ending Fix Verification: 2026-09-09
+
+This local working-tree verification supersedes the main-cache dirty-checkout diagnosis above.
+Baseline: `e62a196`. No dataset repair, file conversion, reset, replacement, download, or user Git
+configuration change was used to obtain success.
+
+- Diagnosis: normal Git inherited system `core.autocrlf=true` and reported zero changes. Isolated
+  Git reported 472 tracked differences. A read-only diff ignoring CR at line ends was empty, and
+  the index had no staged changes. The mismatch was newline interpretation, not substantive edits.
+- Fix: every isolated Git subprocess receives process-local `core.autocrlf=input`. Global/system
+  configuration remains disabled, credential/prompt controls remain intact, optional locks remain
+  disabled, and ordinary porcelain status still enforces cleanliness.
+- Regression evidence: six initial clean fixture cases failed with `dirty-checkout` before the
+  fix. Clean LF/CRLF checkouts now pass across setup, check, and inspection. The complete 24-case
+  matrix also rejects content edits, significant whitespace, binary changes, explicit `-text`
+  changes, staged edits, and untracked files, with unchanged before/after fixture snapshots.
+- All nine root README commands returned **exit 0 with no errors or warnings**: setup, `--check`,
+  lock check, locked sync, Ruff format check, Ruff lint, strict mypy, full pytest, and inspection.
+  Existing setup reports `mode: existing`; check reports `mode: check`; inspection verifies the
+  exact pin and reports 698 documents, 97 tasks, and 17 top-level database collections.
+- The exact `uv run pytest tests` command finished with **153 passed, 3 skipped** in 114.16 seconds.
+  There were no failures or warnings. The three skips are existing Windows file-symlink privilege
+  limitations (`WinError 1314`), not skipped line-ending tests or suppressed failures.
+- Maintained Markdown, workflow YAML, strict typing, lint, and whitespace checks passed. Root
+  `.gitattributes` now includes Python's LF policy, so Git review emits no LF-to-CRLF warnings for
+  the formatter-owned Python files. No global Git setting was changed.
+- Before and after the live command checks, all 1,515 cache files, including Git metadata, retain
+  aggregate manifest SHA-256
+  `19AE17A84A638B23F0B920CE0D87B75F4EF8EFED32C68F56F7F2E30587DBB84A`.
+- Independent read-only review found no actionable defects. Spec Kit prerequisites and both
+  requirements checklists pass; no extension hooks are configured. Hosted three-OS acceptance
+  remains separate and is not claimed by this local fix.

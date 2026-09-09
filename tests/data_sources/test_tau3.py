@@ -215,7 +215,14 @@ def _create_local_fixture(
         ),
         encoding="utf-8",
     )
-    if variant == "missing-database":
+    if variant == "line-endings":
+        (documents / "guide.md").write_bytes(b"Synthetic guide\nSecond line\n")
+        (documents / "binary.dat").write_bytes(b"\x00Binary\r\nfixture\n")
+        (documents / "literal.txt").write_bytes(b"Literal\nnewlines\n")
+        (source_repository / ".gitattributes").write_text(
+            "*.txt -text\n", encoding="utf-8", newline="\n"
+        )
+    elif variant == "missing-database":
         (banking_root / "db.json").unlink()
     elif variant == "malformed-database":
         (banking_root / "db.json").write_text("{MALFORMED_DATABASE_CANARY", encoding="utf-8")
@@ -449,6 +456,71 @@ def test_config_and_paths_are_independent_of_current_directory(
     monkeypatch.chdir(project_root)
 
 
+@pytest.mark.parametrize("operation", ["setup", "check", "inspect"])
+@pytest.mark.parametrize(
+    "change",
+    ["clean-lf", "clean-crlf", "text", "whitespace", "binary", "literal", "untracked", "staged"],
+)
+def test_line_ending_policy_preserves_checkout_and_rejects_real_changes(
+    tmp_path: Path,
+    operation: str,
+    change: str,
+) -> None:
+    """Accept LF/CRLF text without masking edits, binary bytes, or explicit -text."""
+    fixture = _create_local_fixture(tmp_path, variant="line-endings")
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    checkout.parent.mkdir()
+    # Reproduce a cache made outside the isolated runner, independently of host defaults.
+    _run_git(
+        "-c",
+        "core.autocrlf=input" if change == "clean-lf" else "core.autocrlf=true",
+        "clone",
+        fixture.config.upstream.repository_url,
+        str(checkout),
+        cwd=tmp_path,
+    )
+    documents = checkout / "data/tau2/domains/banking_knowledge/documents"
+    guide = documents / "guide.md"
+    guide.write_bytes(
+        b"Synthetic guide\nSecond line\n"
+        if change == "clean-lf"
+        else b"Synthetic guide\r\nSecond line\r\n"
+    )
+    # A local false setting must not override the application's fixed process policy.
+    _run_git("config", "core.autocrlf", "false", cwd=checkout)
+    if change in {"text", "staged"}:
+        guide.write_bytes(b"Changed guide\r\nSecond line\r\n")
+        if change == "staged":
+            _run_git("-c", "core.autocrlf=input", "add", ".", cwd=checkout)
+    elif change == "whitespace":
+        guide.write_bytes(b"Synthetic guide \r\nSecond line\r\n")
+    elif change == "binary":
+        (documents / "binary.dat").write_bytes(b"\x00Binary\nfixture\n")
+    elif change == "literal":
+        (documents / "literal.txt").write_bytes(b"Literal\r\nnewlines\r\n")
+    elif change == "untracked":
+        (documents / "new.txt").write_bytes(b"untracked")
+    before = _snapshot_tree(fixture.project_root)
+    module = _tau3_module()
+
+    def invoke() -> None:
+        """Exercise a public operation against the controlled external checkout."""
+        if operation == "inspect":
+            module.inspect_tau3_data(fixture.project_root, config=fixture.config)
+        else:
+            module.setup_tau3_data(
+                fixture.project_root, config=fixture.config, check_only=operation == "check"
+            )
+
+    if change.startswith("clean-"):
+        invoke()
+    else:
+        with pytest.raises(Tau3OperationError) as raised:
+            invoke()
+        assert raised.value.category == "dirty-checkout"
+    assert _snapshot_tree(fixture.project_root) == before
+
+
 def test_git_runner_uses_argument_list_and_read_only_environment(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -516,14 +588,16 @@ def test_git_runner_uses_argument_list_and_read_only_environment(
         if name.startswith("GIT_") or name.startswith("SSH_ASKPASS")
     }
     assert git_controls == {
-        "GIT_CONFIG_COUNT": "2",
+        "GIT_CONFIG_COUNT": "3",
         "GIT_CONFIG_GLOBAL": os.devnull,
         "GIT_CONFIG_KEY_0": "credential.helper",
         "GIT_CONFIG_KEY_1": "core.askPass",
+        "GIT_CONFIG_KEY_2": "core.autocrlf",
         "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_CONFIG_SYSTEM": os.devnull,
         "GIT_CONFIG_VALUE_0": "",
         "GIT_CONFIG_VALUE_1": "",
+        "GIT_CONFIG_VALUE_2": "input",
         "GIT_OPTIONAL_LOCKS": "0",
         "GIT_TERMINAL_PROMPT": "0",
     }

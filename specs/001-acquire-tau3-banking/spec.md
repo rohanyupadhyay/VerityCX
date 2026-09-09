@@ -142,14 +142,21 @@ As a developer, I want a safe inspection command and clear third-party documenta
 
 ### Normative Operational Definitions
 
+- **Clean text checkout**: Git's normal text normalization MUST be consistent across acquisition
+  and validation, independent of host autocrlf settings. Unchanged LF or CRLF text checkouts MUST
+  validate without rewriting bytes or configuration. Binary and explicitly non-text paths remain
+  byte-sensitive; content, significant whitespace, staged, and untracked changes remain invalid.
+
 - **Readable directory**: The path is a real directory, not a symbolic link,
   junction/reparse point, or special object; it can be enumerated recursively without
   following links; every encountered descendant remains contained beneath the
   configured root; and every counted regular file can be opened for a minimal binary
   read. A permission or enumeration failure is unreadable.
+
 - **Readable regular file**: The path is a contained, non-link regular file that can be
   opened for a minimal binary read. `db.json` additionally must decode as UTF-8 and
   satisfy FR-007. `os.access()` alone is not proof of readability.
+
 - **Setup diagnostic contract**: The stable categories are `configuration-invalid`,
   `git-unavailable`, `checkout-missing`, `unexpected-target`,
   `not-standalone-repository`, `origin-mismatch`, `revision-mismatch`,
@@ -160,20 +167,24 @@ As a developer, I want a safe inspection command and clear third-party documenta
   safe expected/detected metadata where relevant, and a non-destructive recovery
   action. It never includes recursive filenames, credentials, raw source, or raw
   subprocess output.
+
 - **Read-only `--check` contract**: `--check` permits configuration reads, filesystem
   metadata inspection, minimal required-file opens, JSON parsing, and Git commands
   with optional locks disabled. It creates no cache, lock, staging state, checkout,
   log, or report file; contacts no remote; returns the same `check` success fields as
   the setup contract; and returns `checkout-missing` when the target is absent.
+
 - **Inspection consistency contract**: Inspection buffers its approved summary,
   repeats checkout identity, cleanliness, required-path, count, and database-shape
   validation immediately before output, and emits nothing to stdout unless both
   observations agree. A detected difference returns `checkout-changed` on stderr.
+
 - **Preservation evidence**: Automated tests compare pre/post file bytes, link/object
   identity, permission bits where the platform exposes them, Git references/index and
   worktree status, and sibling cache entries. Tests exclude access timestamps and use
   injected permission operations where host privileges would make a native result
   nondeterministic.
+
 - **Supported tool and filesystem baseline**: Python is exactly 3.12; Git is 2.34 or
   newer; uv is exactly 0.12.5 for the required verification workflow. The project
   path must be representable and accessible to Python and Git on the host. JSON and

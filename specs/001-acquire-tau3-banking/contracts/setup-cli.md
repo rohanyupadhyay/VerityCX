@@ -54,6 +54,13 @@ git --no-optional-locks status --porcelain=v1 --untracked-files=all
 
 `GIT_TERMINAL_PROMPT=0` is set for clone and Git validation. `GIT_OPTIONAL_LOCKS=0` is set for read-only validation as a belt-and-suspenders equivalent to the global option.
 
+Every Git subprocess also receives process-local `core.autocrlf=input`. This policy recognizes
+Git-normalized LF/CRLF text without enabling CRLF output conversion for fresh clones. It overrides
+host and local autocrlf settings, keeps global/system configuration isolated, and writes no user
+configuration or cache files. Git attributes retain authority over binary and explicit `-text`
+files. Content edits, significant whitespace edits, staged changes, and untracked files remain
+dirty; validation does not replace status checks with an ignore-whitespace diff.
+
 ## Validation Order
 
 1. Classify checkout path without following it; reject missing in validation mode, files, links, junctions, special objects, and unreadable directories.

@@ -19,6 +19,11 @@ timestamps. Assertions treat untrusted filenames as opaque and prohibit document
 answer, reference-action, and grading canaries in results, errors, representations, serialization,
 stdout, and stderr.
 
+Line-ending regressions exercise setup, check, and inspection against independently cloned LF
+and CRLF fixtures, including conflicting local autocrlf settings. They also verify rejection of
+content/whitespace edits, binary changes, changes to explicit `-text` files, untracked files, and
+staged changes. Every case compares complete before/after fixture snapshots to prove preservation.
+
 POSIX link and Windows junction/reparse behavior is capability-aware. Permission failures are injected
 through typed file operations so Windows and POSIX exercise the same safety assertion without relying
 on account privilege. Platform-native path failures must terminate safely; skips are permitted only

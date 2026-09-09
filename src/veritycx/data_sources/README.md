@@ -27,6 +27,13 @@ Public interfaces are the immutable `Tau3Config` family, `ResolvedTau3Paths`, `G
 Runtime dependencies are Python 3.12's standard library and Git 2.34 or newer. No API key, network
 SDK, alternate source, or application data loader is supported.
 
+The isolated Git environment fixes `core.autocrlf=input` for clone and validation, overriding
+host and repository-local autocrlf settings without writing configuration. This accepts unchanged
+CRLF text from a Windows checkout and avoids CRLF conversion in fresh clones. Git attributes still
+govern text/binary classification, so binary and explicit `-text` files remain byte-sensitive.
+Normal status checks still reject content edits, whitespace edits, staged changes, and untracked
+files; the validator does not use an ignore-whitespace diff fallback.
+
 ## Setup Transaction
 
 `setup_tau3_data()` classifies the destination before creating cache state. Valid existing and check
