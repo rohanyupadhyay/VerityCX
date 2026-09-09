@@ -455,32 +455,33 @@ def load_tau3_config(project_root: Path) -> Tau3Config:
 
 
 def resolve_tau3_paths(project_root: Path, config: Tau3Config) -> ResolvedTau3Paths:
-    """Resolve configured paths beneath one explicit project root.
+    """Build absolute lexical configured paths beneath one explicit project root.
 
     Args:
         project_root: Explicit trusted VerityCX project root.
         config: Previously validated configuration.
 
     Returns:
-        Absolute contained paths for cache and required banking data.
+        Absolute lexical paths for cache and required banking data.
 
     Raises:
-        Tau3OperationError: If filesystem resolution escapes the project or checkout.
+        Tau3OperationError: If lexical syntax escapes the project or checkout.
     """
     root = project_root.resolve()
     config_path = root / _CONFIG_RELATIVE_PATH
 
-    def resolve_relative(value: str, field: str) -> Path:
-        """Resolve one validated relative path and recheck containment."""
-        candidate = (root / Path(PurePosixPath(value))).resolve()
+    def lexical_relative(value: str, field: str) -> Path:
+        """Join one validated path without following any filesystem object."""
+        relative = _validate_relative_path(value, field, config_path)
+        candidate = root.joinpath(*relative.parts)
         if not candidate.is_relative_to(root):
-            raise _configuration_error(f"{field} resolved path escapes project root", config_path)
+            raise _configuration_error(f"{field} path escapes project root", config_path)
         return candidate
 
-    checkout = resolve_relative(config.paths.checkout, "checkout")
-    documents = resolve_relative(config.paths.documents, "documents")
-    database = resolve_relative(config.paths.database, "database")
-    tasks = resolve_relative(config.paths.tasks, "tasks")
+    checkout = lexical_relative(config.paths.checkout, "checkout")
+    documents = lexical_relative(config.paths.documents, "documents")
+    database = lexical_relative(config.paths.database, "database")
+    tasks = lexical_relative(config.paths.tasks, "tasks")
     for field, candidate in (("documents", documents), ("database", database), ("tasks", tasks)):
         if not candidate.is_relative_to(checkout):
             raise _configuration_error(f"{field} resolved path escapes checkout", config_path)
@@ -678,11 +679,33 @@ def _validate_contained_object(path: Path, containment_root: Path, label: str) -
         Tau3OperationError: If the object is missing, linked, unreadable, or escaping.
     """
     try:
-        path_stat = path.lstat()
-    except OSError:
-        raise _banking_data_error(f"{label} is missing or unreadable", path) from None
-    if stat.S_ISLNK(path_stat.st_mode) or _is_reparse_point(path_stat):
-        raise _banking_data_error(f"{label} must not be a link or junction", path)
+        relative = path.relative_to(containment_root)
+    except ValueError:
+        raise _banking_data_error(
+            f"{label} escapes its configured containment root",
+            path,
+        ) from None
+
+    # Classify the trusted boundary and every lexical descendant before resolution.
+    # Calling lstat only on the leaf would still follow a linked ancestor.
+    candidates = [containment_root]
+    current = containment_root
+    for part in relative.parts:
+        current /= part
+        candidates.append(current)
+    path_stat: os.stat_result | None = None
+    for index, candidate in enumerate(candidates):
+        try:
+            candidate_stat = candidate.lstat()
+        except OSError:
+            raise _banking_data_error(f"{label} is missing or unreadable", path) from None
+        if stat.S_ISLNK(candidate_stat.st_mode) or _is_reparse_point(candidate_stat):
+            raise _banking_data_error(f"{label} must not be a link or junction", path)
+        if index < len(candidates) - 1 and not stat.S_ISDIR(candidate_stat.st_mode):
+            raise _banking_data_error(f"{label} has a non-directory ancestor", path)
+        path_stat = candidate_stat
+    if path_stat is None:
+        raise _banking_data_error(f"{label} is missing or unreadable", path)
     try:
         resolved = path.resolve(strict=True)
         resolved_root = containment_root.resolve(strict=True)
@@ -888,10 +911,12 @@ def _checkout_paths(
         relative = PurePosixPath(configured).relative_to(checkout_config)
         return checkout.joinpath(*relative.parts)
 
+    root = project_root.resolve()
+    lexical_checkout = checkout if checkout.is_absolute() else root / checkout
     return ResolvedTau3Paths(
-        repository_root=project_root.resolve(),
-        cache_root=(project_root / ".cache").resolve(),
-        checkout=checkout.resolve(),
+        repository_root=root,
+        cache_root=root / ".cache",
+        checkout=lexical_checkout,
         documents=under_checkout(config.paths.documents),
         database=under_checkout(config.paths.database),
         tasks=under_checkout(config.paths.tasks),
@@ -933,23 +958,35 @@ def _require_real_directory(path: Path, containment_root: Path, label: str) -> N
     Raises:
         Tau3OperationError: If the path is unsafe, wrong-kind, unreadable, or escaping.
     """
-    path_stat = _path_lstat(path)
-    if path_stat is None:
-        raise Tau3OperationError(
-            "checkout-missing",
-            f"{label} is missing; run setup without --check",
-            path,
-        )
-    if (
-        not stat.S_ISDIR(path_stat.st_mode)
-        or stat.S_ISLNK(path_stat.st_mode)
-        or _is_reparse_point(path_stat)
-    ):
+    try:
+        relative = path.relative_to(containment_root)
+    except ValueError:
         raise Tau3OperationError(
             "unexpected-target",
-            f"Expected {label} to be a real directory; detected {_filesystem_kind(path_stat)}",
+            f"{label} escapes the project root and was preserved",
             path,
-        )
+        ) from None
+
+    current = containment_root
+    for part in relative.parts:
+        current /= part
+        path_stat = _path_lstat(current)
+        if path_stat is None:
+            raise Tau3OperationError(
+                "checkout-missing",
+                f"{label} is missing; run setup without --check",
+                path,
+            )
+        if (
+            not stat.S_ISDIR(path_stat.st_mode)
+            or stat.S_ISLNK(path_stat.st_mode)
+            or _is_reparse_point(path_stat)
+        ):
+            raise Tau3OperationError(
+                "unexpected-target",
+                f"Expected {label} to be a real directory; detected {_filesystem_kind(path_stat)}",
+                current,
+            )
     try:
         resolved = path.resolve(strict=True)
         root = containment_root.resolve(strict=True)
@@ -1280,7 +1317,10 @@ def setup_tau3_data(
     root = project_root.resolve()
     effective_config = config if config is not None else load_tau3_config(root)
     paths = resolve_tau3_paths(root, effective_config)
-    target_state = _path_lstat(paths.checkout)
+    cache_state = _path_lstat(paths.cache_root)
+    if cache_state is not None:
+        _require_real_directory(paths.cache_root, root, "cache root")
+    target_state = None if cache_state is None else _path_lstat(paths.checkout)
     if target_state is not None:
         _require_supported_git(root)
         _validate_checkout(root, effective_config, paths)
@@ -1293,7 +1333,6 @@ def setup_tau3_data(
         )
 
     _require_supported_git(root)
-    cache_state = _path_lstat(paths.cache_root)
     if cache_state is None:
         try:
             paths.cache_root.mkdir()
@@ -1408,6 +1447,14 @@ def inspect_tau3_data(
     root = project_root.resolve()
     effective_config = config if config is not None else load_tau3_config(root)
     paths = resolve_tau3_paths(root, effective_config)
+    cache_state = _path_lstat(paths.cache_root)
+    if cache_state is None:
+        raise Tau3OperationError(
+            "checkout-missing",
+            "Checkout is missing; run setup before inspection",
+            paths.checkout,
+        )
+    _require_real_directory(paths.cache_root, root, "cache root")
     if _path_lstat(paths.checkout) is None:
         raise Tau3OperationError(
             "checkout-missing",

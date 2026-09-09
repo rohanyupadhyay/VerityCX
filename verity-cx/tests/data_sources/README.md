@@ -31,8 +31,11 @@ run from any current directory through the explicit test project roots.
 
 ```text
 uv run pytest tests/data_sources/test_tau3.py
-uv run pytest tests/data_sources/test_tau3.py -k first_install --durations=1
+uv run pytest -q -s tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout
 ```
+
+The focused command emits `first_acquisition_seconds` from a monotonic clock started after local
+fixture construction and immediately before setup, then stopped after validated promotion returns.
 
 A failure indicates a contract regression or an unavailable declared prerequisite. Generated
 temporary repositories are pytest-owned and are not production configuration or acquisition state.

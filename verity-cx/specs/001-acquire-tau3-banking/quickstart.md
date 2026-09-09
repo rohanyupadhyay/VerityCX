@@ -118,14 +118,15 @@ uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire
 uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md ../.github/workflows/README.md
 uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
 uv run yamlfix --check ../.github/workflows/quality.yml
+git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md ../.github/workflows/README.md ../.github/workflows/quality.yml
 uv run mypy --strict src scripts tests
 ```
 
-Expected result: deterministic Python, maintained-Markdown, and workflow-YAML formatting plus strict typing pass. Ruff's configured docstring rules also check file-level and callable documentation. The explicit Markdown list avoids recursively formatting `.agents/`, `.specify/`, generated, vendored, or unrelated files.
+Expected result: deterministic Python, maintained-Markdown, and workflow-YAML formatting plus strict typing pass. The Git attribute command reports `eol: lf` for all four representative paths, proving formatter-owned project and Git-root text share one checkout representation on Windows, Linux, and macOS. Ruff's configured docstring rules also check file-level and callable documentation. The explicit Markdown list avoids recursively formatting `.agents/`, `.specify/`, generated, vendored, or unrelated files.
 
 ## 8. Verify the Required CI Matrix
 
-The Git-root `.github/workflows/quality.yml`, addressed as `../.github/workflows/quality.yml` from the project root, must set `verity-cx` as the working directory and run required Python 3.12 jobs on `ubuntu-latest`, `windows-latest`, and `macos-latest`. Each job pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails if the monotonic first-acquisition measurement is 600 seconds or more. It also runs lock verification, locked synchronization, Ruff format and lint checks, mdformat, yamlfix, strict mypy, and the network-independent pytest suite. CI must not acquire the live upstream repository, and every matrix job must pass before merge.
+The Git-root `.github/workflows/quality.yml`, addressed as `../.github/workflows/quality.yml` from the project root, must set `verity-cx` as the working directory and run required Python 3.12 jobs on `ubuntu-latest`, `windows-latest`, and `macos-latest`. The Git-root `.gitattributes` must pin formatter-owned Markdown and YAML to LF, and each job must verify representative project and workflow paths resolve to that attribute before formatting. Each job pins uv 0.12.5, requires Git 2.34 or newer, records the matrix label, runner name/OS/architecture, actual hosted `ImageOS`/`ImageVersion`, and Python/Git/uv versions, and fails if the monotonic first-acquisition measurement is 600 seconds or more. It also runs lock verification, locked synchronization, Ruff format and lint checks, mdformat, yamlfix, strict mypy, and the network-independent pytest suite. CI must not acquire the live upstream repository, and every matrix job must pass before merge.
 
 ## 9. Confirm Version-Control Isolation
 
@@ -135,7 +136,7 @@ git check-ignore -v .cache/tau3-bench/
 git ls-files -- .cache/tau3-bench/
 ```
 
-Expected result: `git ls-files` prints nothing and the ignore rule resolves to `.cache/tau3-bench/`. For the tracked-change audit, record the baseline and candidate commit SHAs, run `git diff --name-status BASELINE_COMMIT..CANDIDATE_COMMIT` after substituting those recorded SHAs, confirm every changed path is within the planned file responsibilities, and review every non-generated addition for upstream-derived source, data, or evaluation content. Record all reviewed paths, reviewer, date, and an explicit pass/fail result without reproducing upstream contents. Setup staging and lock patterns remain ignored separately without ignoring unrelated files.
+Expected result: `git ls-files` prints nothing and the ignore rule resolves to `.cache/tau3-bench/`. For the tracked-change audit, record the baseline and candidate commit SHAs, run `git diff --name-status BASELINE_COMMIT..CANDIDATE_COMMIT` after substituting those recorded SHAs, confirm every changed path—including the Git-root `.gitattributes` quality control—is within the planned file responsibilities, and review every non-generated addition for upstream-derived source, data, or evaluation content. Record all reviewed paths, reviewer, date, and an explicit pass/fail result without reproducing upstream contents. Setup staging and lock patterns remain ignored separately without ignoring unrelated files.
 
 ## Verification Evidence: 2026-08-26
 
@@ -214,6 +215,25 @@ Result: **PASS**. Without implementation code, `README.md`, `docs/data/tau3-bank
 `THIRD_PARTY_NOTICES.md` identify Sierra Research, the official URL, MIT licence, tag, SHA,
 setup/check/inspection usage, the documents and database allow-list, the task and unclassified-path
 deny-list, and the feature exclusions.
+
+## Pre-Commit Verification Evidence: 2026-09-02
+
+- Candidate state: uncommitted implementation of T058 and T059; this evidence is not final SC-002 or
+  SC-007 acceptance because no candidate commit SHA or hosted matrix run exists yet.
+- Environment: Windows, Python 3.12.14 under uv, Git 2.51.2, and uv 0.12.5.
+- Lock, locked sync, Ruff format/lint, maintained Markdown, workflow YAML, strict mypy, and Git LF
+  attribute checks passed locally.
+- Network-independent suite: 126 passed and three capability-only file-symbolic-link tests skipped;
+  real Windows junction/reparse end-to-end cases passed.
+- A process-owned clean temporary project exercised the current setup and inspection scripts against
+  the official pin. Installation passed in 36.000 seconds, then offline-proxy existing setup passed
+  in 1.922 seconds, `--check` in 1.906 seconds, and inspection in 3.672 seconds.
+- Independent safe enumeration matched inspection at 698 document files, 97 task files, and all 17
+  top-level database shapes. No body, nested key/value, filename, or task semantic was recorded.
+- The existing checkout in the development project was dirty and was preserved without repair or
+  replacement. Temporary smoke state was removed automatically after the comparison passed.
+- Final acceptance still requires a committed candidate, a repeated SC-007 audit naming that SHA,
+  and one clean passing hosted job on each required matrix runner with retained logs.
 
 ## Required Verification Set
 

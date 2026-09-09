@@ -1,0 +1,5 @@
+# Normalizes formatter-owned text so all supported CI hosts inspect identical bytes.
+.gitattributes text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

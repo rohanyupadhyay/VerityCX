@@ -11,6 +11,7 @@ import shutil
 import stat
 import subprocess
 import threading
+import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import FrozenInstanceError, asdict, dataclass
@@ -144,6 +145,34 @@ def _run_git(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
         text=True,
         encoding="utf-8",
     )
+
+
+def _create_filesystem_link_or_skip(
+    link: Path,
+    target: Path,
+    *,
+    is_directory: bool,
+) -> None:
+    """Create a real link or Windows junction for capability-aware boundary tests."""
+    try:
+        link.symlink_to(target, target_is_directory=is_directory)
+        return
+    except OSError as symlink_error:
+        if os.name != "nt" or not is_directory:
+            pytest.skip(f"filesystem links unavailable: {symlink_error}")
+
+    command = shutil.which("cmd.exe")
+    if command is None:
+        pytest.skip("Windows junction creation is unavailable")
+    completed = subprocess.run(  # noqa: S603 - fixed system shell runs only mklink in tests.
+        [command, "/d", "/c", "mklink", "/J", str(link), str(target)],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    if completed.returncode != 0:
+        pytest.skip("filesystem links and Windows junctions are unavailable")
 
 
 def _create_local_fixture(
@@ -356,13 +385,13 @@ def test_resolve_paths_rejects_required_paths_outside_checkout(tmp_path: Path) -
         _tau3_module().load_tau3_config(tmp_path)
 
 
-@pytest.mark.parametrize("escaping_field", ["checkout", "documents", "database", "tasks"])
-def test_resolve_paths_rejects_filesystem_resolved_escapes(
+@pytest.mark.parametrize("configured_field", ["checkout", "documents", "database", "tasks"])
+def test_resolve_paths_preserves_lexical_identity_before_classification(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    escaping_field: str,
+    configured_field: str,
 ) -> None:
-    """Recheck containment after filesystem resolution for every configured path."""
+    """Keep configured boundaries lexical until public flows classify each object."""
     project_root = tmp_path / "project"
     outside = tmp_path / "outside"
     project_root.mkdir()
@@ -386,17 +415,18 @@ def test_resolve_paths_rejects_filesystem_resolved_escapes(
     original_resolve = Path.resolve
 
     def resolve_with_escape(path: Path, strict: bool = False) -> Path:
-        """Resolve exactly one configured path outside its required containment."""
-        if path == configured[escaping_field]:
-            if escaping_field == "checkout":
+        """Expose any premature attempt to resolve a configured filesystem path."""
+        if path == configured[configured_field]:
+            if configured_field == "checkout":
                 return outside
             return project_root / "other" / path.name
         return original_resolve(path, strict=strict)
 
     monkeypatch.setattr(Path, "resolve", resolve_with_escape)
 
-    with pytest.raises(Tau3OperationError, match="escapes"):
-        _tau3_module().resolve_tau3_paths(project_root, config)
+    paths = _tau3_module().resolve_tau3_paths(project_root, config)
+
+    assert getattr(paths, configured_field) == configured[configured_field]
 
 
 def test_config_and_paths_are_independent_of_current_directory(
@@ -924,9 +954,13 @@ def test_first_install_promotes_only_a_fully_validated_checkout(tmp_path: Path) 
     fixture = _create_local_fixture(tmp_path)
     module = _tau3_module()
 
+    started = time.monotonic()
     result = module.setup_tau3_data(fixture.project_root, config=fixture.config)
+    elapsed_seconds = time.monotonic() - started
+    print(f"first_acquisition_seconds={elapsed_seconds:.3f}")
 
     checkout = fixture.project_root / ".cache" / "tau3-bench"
+    assert elapsed_seconds < 600, "first acquisition must complete in under 600 seconds"
     assert result.status == "valid"
     assert result.mode == "installed"
     assert result.tag == TAG
@@ -1726,6 +1760,130 @@ def test_reparse_classification_uses_the_shared_non_following_rejection(
 
     assert raised.value.category == "unexpected-target"
     assert checkout.is_dir()
+
+
+@pytest.mark.parametrize(
+    ("boundary", "operation"),
+    [
+        ("cache", "setup"),
+        ("cache", "check"),
+        ("checkout", "setup"),
+        ("checkout", "inspect"),
+    ],
+)
+def test_public_flows_reject_linked_cache_boundaries_without_following(
+    tmp_path: Path,
+    boundary: str,
+    operation: str,
+) -> None:
+    """Reject linked cache boundaries end to end while preserving their identity."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    module.setup_tau3_data(fixture.project_root, config=fixture.config)
+    cache = fixture.project_root / ".cache"
+    linked_path = cache if boundary == "cache" else cache / "tau3-bench"
+    real_path = (
+        fixture.project_root / "cache-real" if boundary == "cache" else cache / "tau3-bench-real"
+    )
+    linked_path.rename(real_path)
+    _create_filesystem_link_or_skip(linked_path, real_path, is_directory=True)
+    before = _snapshot_tree(fixture.project_root)
+
+    with pytest.raises(Tau3OperationError) as raised:
+        if operation == "setup":
+            module.setup_tau3_data(fixture.project_root, config=fixture.config)
+        elif operation == "check":
+            module.setup_tau3_data(
+                fixture.project_root,
+                config=fixture.config,
+                check_only=True,
+            )
+        else:
+            module.inspect_tau3_data(fixture.project_root, config=fixture.config)
+
+    assert raised.value.category == "unexpected-target"
+    assert raised.value.path == linked_path
+    assert _snapshot_tree(fixture.project_root) == before
+
+
+@pytest.mark.parametrize(
+    ("field", "operation", "target_location"),
+    [
+        ("documents", "setup", "in-project"),
+        ("database", "check", "in-project"),
+        ("tasks", "inspect", "in-project"),
+        ("documents", "inspect", "escaping"),
+        ("database", "setup", "escaping"),
+        ("tasks", "check", "escaping"),
+    ],
+)
+def test_public_flows_reject_linked_required_paths_without_following(
+    tmp_path: Path,
+    field: str,
+    operation: str,
+    target_location: str,
+) -> None:
+    """Reject configured banking links through every public validation flow."""
+    fixture = _create_local_fixture(tmp_path)
+    module = _tau3_module()
+    module.setup_tau3_data(fixture.project_root, config=fixture.config)
+    checkout = fixture.project_root / ".cache" / "tau3-bench"
+    banking_root = checkout / "data" / "tau2" / "domains" / "banking_knowledge"
+    configured_paths = {
+        "documents": banking_root / "documents",
+        "database": banking_root / "db.json",
+        "tasks": banking_root / "tasks",
+    }
+    linked_path = configured_paths[field]
+    is_directory = field != "database"
+    if target_location == "in-project":
+        real_path = banking_root / f"{field}-real"
+    else:
+        real_path = tmp_path / f"outside-{field}"
+    linked_path.rename(real_path)
+    _create_filesystem_link_or_skip(
+        linked_path,
+        real_path,
+        is_directory=is_directory,
+    )
+    _run_git("add", "-A", cwd=checkout)
+    status = _run_git("status", "--porcelain=v1", cwd=checkout).stdout
+    if status:
+        _run_git("commit", "-m", f"Link synthetic {field}", cwd=checkout)
+        _run_git("tag", "--force", TAG, cwd=checkout)
+        linked_commit = _run_git("rev-parse", "HEAD", cwd=checkout).stdout.strip()
+        linked_config = Tau3Config(
+            schema_version=fixture.config.schema_version,
+            upstream=Tau3UpstreamConfig(
+                repository_url=fixture.config.upstream.repository_url,
+                license_id=fixture.config.upstream.license_id,
+                tag=fixture.config.upstream.tag,
+                commit_sha=linked_commit,
+            ),
+            paths=fixture.config.paths,
+        )
+    else:
+        linked_config = fixture.config
+    before_project = _snapshot_tree(fixture.project_root)
+    before_target = _snapshot_tree(real_path) if is_directory else real_path.read_bytes()
+
+    with pytest.raises(Tau3OperationError) as raised:
+        if operation == "setup":
+            module.setup_tau3_data(fixture.project_root, config=linked_config)
+        elif operation == "check":
+            module.setup_tau3_data(
+                fixture.project_root,
+                config=linked_config,
+                check_only=True,
+            )
+        else:
+            module.inspect_tau3_data(fixture.project_root, config=linked_config)
+
+    assert raised.value.category == "banking-data-invalid"
+    assert raised.value.path == linked_path
+    assert _snapshot_tree(fixture.project_root) == before_project
+    after_target = _snapshot_tree(real_path) if is_directory else real_path.read_bytes()
+    assert after_target == before_target
 
 
 def test_unicode_and_opaque_names_are_counted_without_disclosure(tmp_path: Path) -> None:

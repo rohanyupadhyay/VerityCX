@@ -17,8 +17,9 @@ Public interfaces are the immutable `Tau3Config` family, `ResolvedTau3Paths`, `G
 
 1. The configuration layer accepts only the closed production schema or an explicitly constructed
    test configuration.
-1. The filesystem layer rejects absolute, escaping, linked, junction, special, and unreadable
-   objects without following or replacing them.
+1. The filesystem layer keeps configured paths lexical, classifies every boundary component with
+   non-following metadata, then checks resolved containment; it rejects absolute, escaping, linked,
+   junction, special, and unreadable objects without following or replacing them.
 1. The Git layer uses a resolved executable, argument sequences, `shell=False`, disabled prompts and
    optional locks, exact provenance checks, and sanitized failures.
 1. The banking layer counts readable regular files and retains only safe top-level JSON shapes.

@@ -4,10 +4,12 @@ name: quality
 on:
   push:
     paths:
+      - ".gitattributes"
       - ".github/workflows/**"
       - "verity-cx/**"
   pull_request:
     paths:
+      - ".gitattributes"
       - ".github/workflows/**"
       - "verity-cx/**"
   workflow_dispatch: null
@@ -31,6 +33,11 @@ jobs:
     steps:
       - name: Check out project
         uses: actions/checkout@v6
+      - name: Verify formatter text normalization
+        run: |
+          attribute_output="$(git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md ../.github/workflows/README.md ../.github/workflows/quality.yml)"
+          printf '%s\n' "$attribute_output"
+          test "$(printf '%s\n' "$attribute_output" | grep -c 'eol: lf$')" -eq 4
       - name: Set up Python 3.12
         uses: actions/setup-python@v6
         with:
@@ -60,29 +67,7 @@ jobs:
           uv sync --locked
       - name: Record network-independent first-acquisition duration
         timeout-minutes: 11
-        run: |
-          uv run python - <<'PY'
-          import subprocess
-          import sys
-          import time
-          command = [
-              sys.executable,
-              "-m",
-              "pytest",
-              "tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout",
-              "--durations=1",
-              "--durations-min=0",
-          ]
-          started = time.monotonic()
-          result = subprocess.run(command, check=False)
-          elapsed_seconds = time.monotonic() - started
-          print(f"first_acquisition_seconds={elapsed_seconds:.3f}")
-          if result.returncode != 0:
-              raise SystemExit(result.returncode)
-          if elapsed_seconds >= 600:
-              print("first acquisition must complete in under 600 seconds", file=sys.stderr)
-              raise SystemExit(1)
-          PY
+        run: uv run pytest -q -s tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout
       - name: Run Python quality gates
         run: |
           uv run ruff format --check src scripts tests
