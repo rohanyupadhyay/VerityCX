@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "provenance": "project-authored synthetic; not benchmark evaluation",
+  "cases": [
+    {
+      "id": "supported-01",
+      "question": "What is the Alder savings opening deposit?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Alder savings opening deposit is 50 synthetic dollars."
+      ],
+      "source_ids": [
+        "policy-01:0001"
+      ]
+    },
+    {
+      "id": "supported-02",
+      "question": "What is the Birch checking monthly fee?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Birch checking monthly fee is 5 synthetic dollars."
+      ],
+      "source_ids": [
+        "policy-02:0001"
+      ]
+    },
+    {
+      "id": "supported-03",
+      "question": "What is the Cedar card replacement fee?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+      ],
+      "source_ids": [
+        "policy-03:0001"
+      ]
+    },
+    {
+      "id": "supported-04",
+      "question": "What is the Dogwood ATM daily limit?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Dogwood ATM daily limit is 300 synthetic dollars."
+      ],
+      "source_ids": [
+        "policy-04:0001"
+      ]
+    },
+    {
+      "id": "supported-05",
+      "question": "What is the Elm wire transfer cutoff?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Elm wire transfer cutoff is 14:00 local time."
+      ],
+      "source_ids": [
+        "policy-05:0001"
+      ]
+    },
+    {
+      "id": "supported-06",
+      "question": "What is the Fir savings withdrawal notice?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Fir savings withdrawal notice is 2 business days."
+      ],
+      "source_ids": [
+        "policy-06:0001"
+      ]
+    },
+    {
+      "id": "supported-07",
+      "question": "What is the Grove statement delivery?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Grove statement delivery is monthly."
+      ],
+      "source_ids": [
+        "policy-07:0001"
+      ]
+    },
+    {
+      "id": "supported-08",
+      "question": "What is the Hazel card foreign fee?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Hazel card foreign fee is 2 percent."
+      ],
+      "source_ids": [
+        "policy-08:0001"
+      ]
+    },
+    {
+      "id": "supported-09",
+      "question": "What is the Iris overdraft grace period?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Iris overdraft grace period is 1 business day."
+      ],
+      "source_ids": [
+        "policy-09:0001"
+      ]
+    },
+    {
+      "id": "supported-10",
+      "question": "What is the Juniper check deposit hold?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Juniper check deposit hold is 3 business days."
+      ],
+      "source_ids": [
+        "policy-10:0001"
+      ]
+    },
+    {
+      "id": "supported-11",
+      "question": "What is the Kauri account closure fee?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Kauri account closure fee is 0 synthetic dollars."
+      ],
+      "source_ids": [
+        "policy-11:0001"
+      ]
+    },
+    {
+      "id": "supported-12",
+      "question": "What is the Larch mobile deposit limit?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Larch mobile deposit limit is 500 synthetic dollars."
+      ],
+      "source_ids": [
+        "policy-12:0001"
+      ]
+    },
+    {
+      "id": "supported-13",
+      "question": "What is the Maple payment reversal window?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Maple payment reversal window is 5 business days."
+      ],
+      "source_ids": [
+        "policy-13:0001"
+      ]
+    },
+    {
+      "id": "supported-14",
+      "question": "What is the Nutmeg address update processing?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Nutmeg address update processing is 2 business days."
+      ],
+      "source_ids": [
+        "policy-14:0001"
+      ]
+    },
+    {
+      "id": "supported-15",
+      "question": "What is the Oak dormant account notice?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Oak dormant account notice is 60 days."
+      ],
+      "source_ids": [
+        "policy-15:0001"
+      ]
+    },
+    {
+      "id": "supported-16",
+      "question": "What is the Pine debit activation period?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Pine debit activation period is 30 days."
+      ],
+      "source_ids": [
+        "policy-16:0001"
+      ]
+    },
+    {
+      "id": "supported-17",
+      "question": "What is the Quince savings interest posting?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Quince savings interest posting is monthly."
+      ],
+      "source_ids": [
+        "policy-17:0001"
+      ]
+    },
+    {
+      "id": "supported-18",
+      "question": "What is the Rowan transfer cancellation cutoff?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Rowan transfer cancellation cutoff is 12:00 local time."
+      ],
+      "source_ids": [
+        "policy-18:0001"
+      ]
+    },
+    {
+      "id": "supported-19",
+      "question": "What is the Spruce dispute notification window?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Spruce dispute notification window is 45 days."
+      ],
+      "source_ids": [
+        "policy-19:0001"
+      ]
+    },
+    {
+      "id": "supported-20",
+      "question": "What is the Willow beneficiary review period?",
+      "disposition": "answer",
+      "required_facts": [
+        "The synthetic Willow beneficiary review period is 4 business days."
+      ],
+      "source_ids": [
+        "policy-20:0001"
+      ]
+    },
+    {
+      "id": "unsupported-01",
+      "question": "What is the policy for unsupported lunar benefit 1?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-02",
+      "question": "What is the policy for unsupported lunar benefit 2?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-03",
+      "question": "What is the policy for unsupported lunar benefit 3?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-04",
+      "question": "What is the policy for unsupported lunar benefit 4?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-05",
+      "question": "What is the policy for unsupported lunar benefit 5?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-06",
+      "question": "What is the policy for unsupported lunar benefit 6?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-07",
+      "question": "What is the policy for unsupported lunar benefit 7?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-08",
+      "question": "What is the policy for unsupported lunar benefit 8?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-09",
+      "question": "What is the policy for unsupported lunar benefit 9?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "unsupported-10",
+      "question": "What is the policy for unsupported lunar benefit 10?",
+      "disposition": "abstain",
+      "required_facts": [],
+      "source_ids": []
+    },
+    {
+      "id": "ambiguous-01",
+      "question": "What is the Zephyr 1 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-01-a:0001",
+        "conflict-01-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-02",
+      "question": "What is the Zephyr 2 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-02-a:0001",
+        "conflict-02-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-03",
+      "question": "What is the Zephyr 3 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-03-a:0001",
+        "conflict-03-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-04",
+      "question": "What is the Zephyr 4 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-04-a:0001",
+        "conflict-04-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-05",
+      "question": "What is the Zephyr 5 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-05-a:0001",
+        "conflict-05-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-06",
+      "question": "What is the Zephyr 6 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-06-a:0001",
+        "conflict-06-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-07",
+      "question": "What is the Zephyr 7 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-07-a:0001",
+        "conflict-07-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-08",
+      "question": "What is the Zephyr 8 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-08-a:0001",
+        "conflict-08-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-09",
+      "question": "What is the Zephyr 9 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-09-a:0001",
+        "conflict-09-b:0001"
+      ]
+    },
+    {
+      "id": "ambiguous-10",
+      "question": "What is the Zephyr 10 review period?",
+      "disposition": "clarify",
+      "required_facts": [],
+      "source_ids": [
+        "conflict-10-a:0001",
+        "conflict-10-b:0001"
+      ]
+    }
+  ]
+}

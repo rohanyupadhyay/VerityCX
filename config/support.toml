@@ -1,0 +1,18 @@
+# Nonsecret local support defaults; runtime credentials come only from the environment.
+provider = "deterministic"
+model = "gpt-4.1-mini-2025-04-14"
+corpus_mode = "synthetic"
+bind = "127.0.0.1"
+port = 8000
+worker_concurrency = 10
+pool_max_size = 20
+lease_seconds = 30
+heartbeat_seconds = 5
+work_scan_seconds = 1
+processing_seconds = 60
+provider_attempts = 2
+message_chars = 8000
+conversation_messages = 100
+retention_days = 30
+purge_interval_seconds = 3600
+traces_enabled = false

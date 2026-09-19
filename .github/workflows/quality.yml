@@ -65,7 +65,7 @@ jobs:
           uv run ruff format --check src scripts tests
           uv run ruff check src scripts tests
           uv run mypy --strict src scripts tests
-          uv run pytest tests
+          uv run pytest tests -m "not support_db and not live"
       - name: Check maintained Markdown
         run: |
           uv run mdformat --check README.md THIRD_PARTY_NOTICES.md config/README.md docs/data/tau3-banking.md
@@ -74,5 +74,7 @@ jobs:
           uv run mdformat --check specs/001-acquire-tau3-banking/spec.md specs/001-acquire-tau3-banking/plan.md specs/001-acquire-tau3-banking/research.md specs/001-acquire-tau3-banking/data-model.md specs/001-acquire-tau3-banking/quickstart.md specs/001-acquire-tau3-banking/tasks.md
           uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md .github/workflows/README.md
           uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
+          uv run mdformat --check docs/platform-roadmap.md docs/platform-design.md docs/threat-model.md specs/002-durable-knowledge-support
+          uv run mdformat --check src scripts tests config docs
       - name: Check workflow formatting
-        run: uv run yamlfix --check .github/workflows/quality.yml
+        run: uv run yamlfix --check .github/workflows/quality.yml .github/workflows/support-integration.yml

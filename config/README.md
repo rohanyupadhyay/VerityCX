@@ -41,3 +41,15 @@ uv run pytest tests/data_sources/test_tau3.py
 
 Configuration changes require a reviewed specification and dependency-pin update. Never edit the
 pin merely to repair an existing local checkout.
+
+## Support Defaults
+
+`support.toml` contains closed, nonsecret Feature 002 settings. Load it using
+`veritycx.service.configuration.load_configuration` from root commands; unknown keys, public binds
+and invalid limits fail safely. Supply runtime DSN/auth path via `VERITYCX_DATABASE_URL` and
+`VERITYCX_AUTH_FILE`; credentials do not belong in TOML. Live provider/export settings require their
+explicit environment credentials. Test with `uv run pytest tests/support/unit/test_configuration.py`.
+
+## Feature 002 implementation
+
+Tracing is disabled by default, including inherited graph auto-tracing. Enabling `traces_enabled` requires an explicit project and key and sends only allow-listed metadata through the fixed LangSmith endpoint. The service defaults to loopback, ten jobs, a twenty-connection pool, 8,000-character messages, 100 customer turns and thirty-day retention.

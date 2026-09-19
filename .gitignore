@@ -24,3 +24,9 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
+
+# Durable support runtime, native database and local credentials.
+.cache/support/
+.env
+.env.*
+*.local.toml

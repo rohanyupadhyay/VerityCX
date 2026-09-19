@@ -51,3 +51,28 @@ uv run pytest tests/data_sources/test_tau3.py
 uv run ruff check scripts
 uv run mypy --strict scripts
 ```
+
+## Support Database Management
+
+`uv run python scripts/manage_support.py db migrate` applies checksummed application migrations
+and the pinned saver schema to a dedicated `veritycx_support` or `veritycx_support_test` database.
+It reads only `VERITYCX_MIGRATION_DATABASE_URL`, never the runtime DSN as fallback. Native
+PostgreSQL 18.6 and separate administrator/runtime roles are required; see Feature 002 quickstart.
+The command never drops a database. Expected failures print a safe category and return 1;
+success prints `migration_complete` and returns 0. Test via
+`uv run pytest tests/support/contract/test_management.py` and the marked migration integration test.
+
+`uv run python scripts/manage_support.py auth init-demo` provisions two synthetic identities under
+ignored `.cache/support/credentials/`, prints only the generated paths and refuses overwrite.
+Pass its `auth.json` path through `VERITYCX_AUTH_FILE`; keep the client token files local.
+
+Corpus management supports fixed synthetic/official modes and explicit unchanged-hash approval:
+`uv run python scripts/manage_support.py corpus prepare --mode synthetic` then
+`uv run python scripts/manage_support.py corpus approve --hash HASH`. No arbitrary source flag exists.
+`uv run python scripts/validate_support.py --suite offline` requires `VERITYCX_TEST_DATABASE_URL`
+for the dedicated database, launches only owned API/worker processes, runs support tests plus knowledge/handoff workflows
+and prints aggregate outcomes. Grounding/demo suites require explicit `--live`, credentials and
+dedicated test storage. Grounding returns nonzero with human review pending; structural results
+do not certify semantic correctness. The demo uses only a previously approved official corpus.
+`setup_support_ci.py` initializes a fresh CI-owned native cluster and separate database roles;
+it refuses use outside GitHub Actions and does not reset existing clusters.

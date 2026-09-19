@@ -14,6 +14,12 @@ do not enter a nested project directory. Python metadata, scripts, tests, CI, an
 share this root.
 
 The broader [platform vision](docs/project-vision.md) describes future work, not implemented features.
+The [roadmap](docs/platform-roadmap.md), [design](docs/platform-design.md), and
+[threat model](docs/threat-model.md) describe the proposed platform. Feature 002 implements
+[durable knowledge support](specs/002-durable-knowledge-support/quickstart.md): authenticated FastAPI,
+approved-document retrieval, LangGraph routing, PostgreSQL recovery, truthful escalation/resume
+and opt-in metadata tracing. Local deterministic checks are recorded in its quickstart; hosted
+and human-reviewed live acceptance remain open.
 
 ## Prerequisites
 
@@ -22,7 +28,9 @@ The broader [platform vision](docs/project-vision.md) describes future work, not
 - Git 2.34 or newer
 - Internet access for the first official acquisition only
 
-No API key, credential, paid service, or environment override is supported.
+Feature 001 acquisition needs no credentials. Feature 002 requires native PostgreSQL 18.6 and local
+demo authentication; its deterministic provider needs no paid account. OpenAI and LangSmith
+credentials are used only by explicitly enabled live execution/export.
 
 ## Acquire the Pinned Checkout
 
@@ -80,7 +88,7 @@ uv sync --locked
 uv run ruff format --check src scripts tests
 uv run ruff check src scripts tests
 uv run mypy --strict src scripts tests
-uv run pytest tests
+uv run pytest tests -m "not support_db and not live"
 ```
 
 Tests create only temporary local Git repositories and runtime-generated synthetic canaries. They

@@ -23,7 +23,7 @@ Synthetic repositories that create commits supply local author identity, not glo
 
 ```text
 uv sync --locked
-uv run pytest tests
+uv run pytest tests -m "not support_db and not live"
 uv run ruff check src scripts tests
 uv run mypy --strict src scripts tests
 ```
@@ -32,3 +32,13 @@ Missing Git, missing root scripts, or a broken package installation fails the ro
 Capability-only file-symlink cases may skip on Windows without link privileges; injected safety
 checks and available junction cases remain required. Full three-OS hosted acceptance is separate
 from a passing local suite.
+
+## Durable Support Tests
+
+`support/` contains synthetic unit/contract tests and marked native PostgreSQL integration tests.
+Run database-free coverage with `uv run pytest tests -m "not support_db and not live"`.
+Full offline coverage uses `uv run pytest tests -m "not live"` and requires explicit
+`VERITYCX_TEST_DATABASE_URL` and `VERITYCX_TEST_MIGRATION_DATABASE_URL` for the dedicated test database.
+Missing database configuration fails marked tests; it is not counted as a successful skip.
+See `support/README.md` for ownership and fixture boundaries. Package markers support typed imports
+of the shared test harness; tests are not runtime application interfaces.

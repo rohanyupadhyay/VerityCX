@@ -23,7 +23,9 @@ under uv's editable `src`-layout installation; they never modify `PYTHONPATH` or
 
 ## Dependencies and Configuration
 
-Runtime code uses only the Python 3.12 standard library and the Git 2.34-or-newer executable. The
+The existing acquisition module uses the Python 3.12 standard library and Git 2.34 or newer.
+Feature 002 adds pinned LangGraph, FastAPI, Pydantic, Psycopg, Uvicorn, LangSmith and OpenAI
+dependencies; its responsibility packages document implemented interfaces and remaining acceptance gates. The
 fixed τ³ pin and paths come from `config/tau3-bench.toml`; external TOML, JSON, subprocess, and
 filesystem values are validated before entering typed application state.
 
@@ -43,3 +45,10 @@ The package must not expose a generic upstream file reader, execute shell comman
 production paths from the current working directory, or return document, customer-record, or
 evaluation semantics. Expected failures use `Tau3OperationError` with a stable category and
 sanitized context; programming errors are not converted into successful results.
+
+## Durable Support Packages
+
+The `conversations`, `service`, `orchestration`, `knowledge`, `policy`, `providers`,
+`persistence` and `observability` packages implement the Feature 002 boundaries. Each has
+a responsibility README. Foundation configuration, typed contracts, authentication, migration and guarded persistence are
+implemented; the API/knowledge and durable escalation workflows are implemented with local tests. Acquisition behavior is unchanged.

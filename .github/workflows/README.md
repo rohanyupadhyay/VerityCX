@@ -9,6 +9,10 @@ It runs the complete network-independent Feature 001 quality suite on Python 3.1
 `ubuntu-latest`, `windows-latest`, and `macos-latest`. The workflow does not acquire the official
 upstream repository, use credentials, or modify production cache state.
 
+The Markdown gate also covers the proposed platform roadmap, design, threat model and the complete
+Feature 002 specification directory. These checks validate documentation formatting, not future
+runtime behavior or Feature 002 acceptance.
+
 ## Public Contract and Structure
 
 The required status is the `quality / verify (<runner>)` matrix. Each job checks out project code,
@@ -43,3 +47,7 @@ duration at or above ten minutes fails the corresponding job.
 
 The only manual networked validation is the separately documented one-environment official smoke
 test. It does not belong in this workflow.
+
+## Feature 002 implementation
+
+`quality.yml` runs database-free tests on Linux, Windows and macOS. `support-integration.yml` builds native PostgreSQL 18.6 on Ubuntu 24.04, creates separate admin/runtime roles, and runs the complete offline suite sequentially. No Docker or paid credentials are required. Workflow configuration is implemented; a hosted run has not been claimed.

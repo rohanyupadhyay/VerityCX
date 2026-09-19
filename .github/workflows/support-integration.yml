@@ -1,0 +1,58 @@
+---
+# Builds an exact native PostgreSQL version and runs offline durable support checks.
+name: support-integration
+on:
+  push: null
+  pull_request: null
+  workflow_dispatch: null
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+    working-directory: .
+jobs:
+  native-postgresql:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PG_PREFIX: /tmp/veritycx-postgresql-18.6
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: 0.12.5
+      - name: Build native PostgreSQL 18.6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libreadline-dev zlib1g-dev flex bison libicu-dev
+          curl --fail --location --output /tmp/postgresql.tar.bz2 https://ftp.postgresql.org/pub/source/v18.6/postgresql-18.6.tar.bz2
+          tar -xjf /tmp/postgresql.tar.bz2 -C /tmp
+          cd /tmp/postgresql-18.6
+          ./configure --prefix="$PG_PREFIX" --without-readline --without-icu
+          make -j2
+          make install
+      - name: Synchronize locked environment and initialize dedicated roles
+        run: |
+          uv sync --locked
+          uv run python scripts/setup_support_ci.py
+      - name: Record environment
+        run: |
+          printf 'image=%s version=%s runner=%s\n' "$ImageOS" "$ImageVersion" "$RUNNER_OS"
+          python --version
+          uv --version
+          git --version
+          "$PG_PREFIX/bin/postgres" --version
+      - name: Run all offline tests sequentially
+        run: uv run pytest tests -m "not live" -q --tb=short
+      - name: Run the offline validation command
+        run: uv run python scripts/validate_support.py --suite offline
+      - name: Stop only the owned native cluster
+        if: always()
+        run: |-
+          if test -f .cache/support/ci/data/postmaster.pid; then
+            "$PG_PREFIX/bin/pg_ctl" -D "$PWD/.cache/support/ci/data" -m fast -w stop
+          fi

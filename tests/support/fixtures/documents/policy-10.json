@@ -1,0 +1,5 @@
+{
+  "id": "policy-10",
+  "title": "Juniper check deposit hold",
+  "content": "The synthetic Juniper check deposit hold is 3 business days. This rule applies only to the fictional portfolio demonstration."
+}
