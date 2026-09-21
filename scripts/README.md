@@ -54,6 +54,24 @@ uv run mypy --strict scripts
 
 ## Support Database Management
 
+`uv run python scripts/setup_support_local.py` performs the one-command Linux/WSL bootstrap for
+the dedicated test database. It downloads and verifies PostgreSQL 18.6, builds it under ignored
+`.cache/support/postgresql/`, initializes an owned loopback-only cluster on port `55432`, creates
+separate administrator/runtime credentials and the `veritycx_support_test` database, applies all
+migrations, and writes shell exports to ignored `.cache/support/local/test.env`. Re-running the
+command reuses and validates its owned setup. It refuses an existing unmarked data directory and
+never resets or adopts another cluster. Use `--check` for read-only layout validation.
+
+After setup, load the generated environment only into the terminal running database-backed tests:
+
+```text
+source .cache/support/local/test.env
+output=$(uv run python scripts/manage_support.py corpus prepare --mode synthetic)
+hash=${output##*hash=}
+uv run python scripts/manage_support.py corpus approve --hash "$hash"
+uv run pytest tests -m "not live"
+```
+
 `uv run python scripts/manage_support.py db migrate` applies checksummed application migrations
 and the pinned saver schema to a dedicated `veritycx_support` or `veritycx_support_test` database.
 It reads only `VERITYCX_MIGRATION_DATABASE_URL`, never the runtime DSN as fallback. Native
@@ -74,5 +92,5 @@ for the dedicated database, launches only owned API/worker processes, runs suppo
 and prints aggregate outcomes. Grounding/demo suites require explicit `--live`, credentials and
 dedicated test storage. Grounding returns nonzero with human review pending; structural results
 do not certify semantic correctness. The demo uses only a previously approved official corpus.
-`setup_support_ci.py` initializes a fresh CI-owned native cluster and separate database roles;
-it refuses use outside GitHub Actions and does not reset existing clusters.
+`setup_support_ci.py` separately initializes a fresh CI-owned native cluster and database roles; it
+refuses use outside GitHub Actions and does not reset existing clusters.

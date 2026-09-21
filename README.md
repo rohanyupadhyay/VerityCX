@@ -91,6 +91,18 @@ uv run mypy --strict src scripts tests
 uv run pytest tests -m "not support_db and not live"
 ```
 
+For full offline Feature 002 coverage on Linux/WSL, bootstrap the ignored, project-owned PostgreSQL
+18.6 test cluster and load its generated environment in the current terminal:
+
+```text
+uv run python scripts/setup_support_local.py
+source .cache/support/local/test.env
+output=$(uv run python scripts/manage_support.py corpus prepare --mode synthetic)
+hash=${output##*hash=}
+uv run python scripts/manage_support.py corpus approve --hash "$hash"
+uv run pytest tests -m "not live"
+```
+
 Tests create only temporary local Git repositories and runtime-generated synthetic canaries. They
 must never acquire the official upstream checkout or commit upstream content. Root-command tests
 prevent reintroducing a nested project. The complete Markdown/YAML and CI verification commands

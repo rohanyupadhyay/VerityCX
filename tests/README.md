@@ -40,5 +40,17 @@ Run database-free coverage with `uv run pytest tests -m "not support_db and not 
 Full offline coverage uses `uv run pytest tests -m "not live"` and requires explicit
 `VERITYCX_TEST_DATABASE_URL` and `VERITYCX_TEST_MIGRATION_DATABASE_URL` for the dedicated test database.
 Missing database configuration fails marked tests; it is not counted as a successful skip.
+On Linux/WSL, create or reuse the guarded project-owned database and load its generated environment
+before running full offline coverage:
+
+```text
+uv run python scripts/setup_support_local.py
+source .cache/support/local/test.env
+output=$(uv run python scripts/manage_support.py corpus prepare --mode synthetic)
+hash=${output##*hash=}
+uv run python scripts/manage_support.py corpus approve --hash "$hash"
+uv run pytest tests -m "not live"
+```
+
 See `support/README.md` for ownership and fixture boundaries. Package markers support typed imports
 of the shared test harness; tests are not runtime application interfaces.
