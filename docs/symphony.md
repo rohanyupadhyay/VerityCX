@@ -33,6 +33,12 @@ Each issue uses `/home/rohan/code/symphony-workspaces/VerityCX/GH-<number>`, one
 `symphony/gh-<number>-<slug>`, and one directory named `specs/gh-<number>-<slug>`. Specify, clarify,
 plan, tasks, implementation, convergence, and PR revisions all reuse them.
 
+The workflow gives its Codex agents `danger-full-access` inside those dedicated issue workspaces.
+This is necessary because Codex's narrower `workspace-write` sandbox makes `.git` read-only and
+would prevent Symphony from creating the required issue branch or commits. Do not point
+`workspace.root` at this checkout or another developer working tree. This setting does not change
+the sandbox used by ordinary Codex sessions outside Symphony.
+
 Do not add the label to issue #1 while its work remains deferred. Use a separate issue when testing
 the integration.
 

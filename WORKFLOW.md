@@ -31,10 +31,11 @@ agent:
 codex:
   command: codex app-server
   approval_policy: never
-  thread_sandbox: workspace-write
+  # Symphony agents need to create issue branches and commits. workspace-write
+  # deliberately protects .git, so full access is scoped to isolated issue workspaces.
+  thread_sandbox: danger-full-access
   turn_sandbox_policy:
-    type: workspaceWrite
-    networkAccess: true
+    type: dangerFullAccess
 ---
 
 You are advancing GitHub issue `{{ issue.identifier }}` through VerityCX's durable Spec Kit
