@@ -17,15 +17,17 @@ mise exec -- mix setup
 ./scripts/run-github /home/rohan/code/VerityCX/WORKFLOW.md --port 4000
 ```
 
-Open `http://localhost:4000` for runtime status. The launcher supplies the `gh` token only to the
-Symphony host. Codex does not inherit it.
+Open `http://localhost:4000` for runtime status. The launcher supplies the `gh` token and
+Symphony's required engineering-preview acknowledgment flag to the host process. Codex does not
+inherit the token.
 
 ## Start, inspect, and stop work
 
 - Open with no `symphony` label: not started; Symphony ignores it.
 - Open with the `symphony` label: authorized to run or waiting at a checkpoint.
 - Remove the label: stop/cancel future execution.
-- Closed: terminal; Symphony removes the issue workspace during cleanup.
+- Closed: terminal; Symphony removes the issue workspace during cleanup. If cancellation removed
+  the label before the issue was closed, startup recovery performs this terminal cleanup.
 
 Each issue uses `/home/rohan/code/symphony-workspaces/VerityCX/GH-<number>`, one branch named
 `symphony/gh-<number>-<slug>`, and one directory named `specs/gh-<number>-<slug>`. Specify, clarify,
