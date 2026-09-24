@@ -12,6 +12,7 @@ It defines no application API or runtime configuration.
 - `platform-roadmap.md`: proposed delivery sequence and foundation acceptance dependencies.
 - `platform-design.md`: proposed architecture, module boundaries and technical contracts.
 - `threat-model.md`: initial trust boundaries, required controls and residual risks.
+- `symphony.md`: operator guide for GitHub issue-driven Symphony and Spec Kit automation.
 - [Root README](../README.md): canonical developer commands and implemented scope.
 - [Spec Kit feature](../specs/001-acquire-tau3-banking/spec.md): requirements and acceptance authority.
 - [Feature 002](../specs/002-durable-knowledge-support/spec.md): durable knowledge-support requirements and acceptance scope.
