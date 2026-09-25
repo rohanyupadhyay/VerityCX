@@ -7,12 +7,13 @@ and token usage; it is not where requirements are approved.
 
 ## Start Symphony
 
-Authenticate once with GitHub CLI, build the reusable Symphony fork, and launch it with the
+Authenticate once with GitHub CLI, build the reusable
+[Symphony Plus fork](https://github.com/rohanyupadhyay/symphony-plus), and launch it with the
 repository-owned workflow:
 
 ```bash
 gh auth login
-cd /home/rohan/code/symphony-github-speckit/elixir
+cd /home/rohan/code/symphony-plus/elixir
 mise exec -- mix setup
 ./scripts/run-github /home/rohan/code/VerityCX/WORKFLOW.md --port 4000
 ```
