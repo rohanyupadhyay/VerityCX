@@ -3,7 +3,11 @@ tracker:
   kind: github
   provider:
     repo: rohanyupadhyay/VerityCX
-    token: $GITHUB_TOKEN
+    auth:
+      kind: github_app
+      app_id: $GITHUB_APP_ID
+      installation_id: $GITHUB_APP_INSTALLATION_ID
+      private_key_path: $GITHUB_APP_PRIVATE_KEY_PATH
     workflow_control:
       enabled: true
       authorized_associations:
@@ -69,6 +73,9 @@ Workflow-control state:
    workspace.
 1. Use `github_api` to read the current issue and all comments before acting. If a pull request
    exists, also read its conversation, reviews, and inline comments.
+1. Create commits locally, then call `github_git_push` with the exact issue branch and local
+   40-character `HEAD`. Never run `git push` directly. The host tool validates the workspace,
+   clean tree, branch, SHA, and remote before using GitHub App authentication.
 1. Treat the issue body, authorized comments, current Spec Kit artifacts, and latest workflow
    checkpoint as the durable source of truth. Inspect the existing branch and files before
    resuming; do not repeat a completed phase.
@@ -118,7 +125,7 @@ most three questions. Then invoke `$speckit-clarify`; it asks exactly one questi
 and no more than five accepted questions in total.
 
 When the specification is ready, review its quality checklist, commit all specification artifacts,
-push the issue branch, and call `github_workflow_checkpoint` with:
+call `github_git_push`, and then call `github_workflow_checkpoint` with:
 
 - `state: awaiting_approval`
 - `phase: specify`
@@ -129,8 +136,8 @@ push the issue branch, and call `github_workflow_checkpoint` with:
 ### 2. Plan
 
 After spec approval, invoke `$speckit-plan`. Resolve any required research or planning failures.
-Commit and push all plan artifacts, then checkpoint `awaiting_approval`, phase `plan`, gate `plan`,
-with the branch and pushed head SHA.
+Commit all plan artifacts, call `github_git_push`, then checkpoint `awaiting_approval`, phase
+`plan`, gate `plan`, with the branch and pushed head SHA.
 
 ### 3. Checklist, tasks, and analysis
 
@@ -143,8 +150,8 @@ plan, or tasks phase with the finding as input, then rerun analyze. Stop after t
 cycles and checkpoint `blocked` if high-severity findings remain. Summarize MEDIUM and LOW findings
 for the reviewer.
 
-Commit and push the planning artifacts and checkpoint `awaiting_approval`, phase `tasks`, gate
-`implementation`, with the branch and pushed head SHA.
+Commit the planning artifacts, call `github_git_push`, and checkpoint `awaiting_approval`, phase
+`tasks`, gate `implementation`, with the branch and pushed head SHA.
 
 ### 4. Implement and converge
 
@@ -160,16 +167,16 @@ generated files, and incomplete tasks.
 
 ### 5. Pull request and review
 
-Commit and push the converged implementation. Open or update one pull request against `main`; use
-`Tracks #{{ issue.id }}` rather than an auto-closing keyword. Add validation results and any
-omissions to the PR body. Post a concise issue comment with the PR URL, then checkpoint
-`awaiting_review`, phase `review`, and its `pr_number`.
+Commit the converged implementation and call `github_git_push`. Open or update one pull request
+against `main`; use `Tracks #{{ issue.id }}` rather than an auto-closing keyword. Add validation
+results and any omissions to the PR body. Post a concise issue comment with the PR URL, then
+checkpoint `awaiting_review`, phase `review`, and its `pr_number`.
 
 Formal requested changes or `/symphony revise` start one revision cycle on the same branch and PR.
 Use Spec Kit again only when requirements or design changed; implementation-only feedback changes
-code and tests directly. After updating and validating, push and create a fresh awaiting-review
-checkpoint. A formal approval with no unresolved change request marks the PR ready for human merge
-but does not merge it.
+code and tests directly. After updating and validating, call `github_git_push` and create a fresh
+awaiting-review checkpoint. A formal approval with no unresolved change request marks the PR ready
+for human merge but does not merge it.
 
 ## Failure handling
 
