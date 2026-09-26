@@ -7,20 +7,28 @@ and token usage; it is not where requirements are approved.
 
 ## Start Symphony
 
-Authenticate once with GitHub CLI, build the reusable
-[Symphony Plus fork](https://github.com/rohanyupadhyay/symphony-plus), and launch it with the
-repository-owned workflow:
+Build the reusable [Symphony Plus fork](https://github.com/rohanyupadhyay/symphony-plus), create an
+operator-owned private GitHub App profile once, and launch it with the repository-owned workflow:
 
 ```bash
-gh auth login
 cd /home/rohan/code/symphony-plus/elixir
 mise exec -- mix setup
-./scripts/run-github /home/rohan/code/VerityCX/WORKFLOW.md --port 4000
+mise exec -- mix build
+./bin/symphony github-app setup rohanyupadhyay/VerityCX --profile veritycx
+./bin/symphony github-app verify rohanyupadhyay/VerityCX --profile veritycx
+./scripts/run-github --app-profile veritycx /home/rohan/code/VerityCX/WORKFLOW.md --port 4000
 ```
 
-Open `http://localhost:4000` for runtime status. The launcher supplies the `gh` token and
-Symphony's required engineering-preview acknowledgment flag to the host process. Codex does not
-inherit the token.
+The setup command opens GitHub with the required Contents, Issues, Pull requests, and Workflows
+write permissions and webhooks disabled. Generate a private key, install the App only on VerityCX,
+and enter the App ID, installation ID, and downloaded PEM path. The resulting `veritycx` profile
+lives under `~/.config/symphony-plus/github-apps/` with private file permissions; it is not part of
+this repository.
+
+Open `http://localhost:4000` for runtime status. The launcher supplies App identifiers and the key
+path only to the Symphony host. Symphony mints short-lived installation tokens and removes all App
+credentials from Codex. GitHub comments, labels, PRs, and pushes appear as the selected App's
+`<slug>[bot]` identity.
 
 ## Start, inspect, and stop work
 
@@ -39,6 +47,10 @@ This is necessary because Codex's narrower `workspace-write` sandbox makes `.git
 would prevent Symphony from creating the required issue branch or commits. Do not point
 `workspace.root` at this checkout or another developer working tree. This setting does not change
 the sandbox used by ordinary Codex sessions outside Symphony.
+
+Agents create commits locally with the App bot identity and call the host-authenticated
+`github_git_push` tool. Direct `git push` is not part of this workflow. App-authenticated pushes
+currently require local workspaces; SSH workers must use the legacy external credential path.
 
 Do not add the label to issue #1 while its work remains deferred. Use a separate issue when testing
 the integration.
@@ -80,6 +92,6 @@ The integration polls every 30 seconds. An issue awaiting PR review makes additi
 the PR conversation, inline comments, formal reviews, and merge state. If many issues are labeled
 simultaneously, increase the polling interval and monitor GitHub API rate limits.
 
-PAT-based polling, manual startup, and the local dashboard are intentional for the first version.
-GitHub App authentication, webhooks, automatic daemon startup, and the official Spec Kit GitHub
-extension remain deferred.
+Polling, manual startup, and the local dashboard remain intentional. Webhooks, automatic daemon
+startup, and the official Spec Kit GitHub extension remain deferred. Legacy PAT authentication is
+available in Symphony Plus for compatibility but is not the VerityCX default.
