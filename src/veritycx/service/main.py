@@ -6,6 +6,7 @@ from pathlib import Path
 
 import uvicorn
 
+from veritycx.environment import EnvironmentLoadError, load_project_environment
 from veritycx.service.app import create_app
 from veritycx.service.configuration import ConfigurationError, load_configuration
 from veritycx.service.runtime import run_async
@@ -13,6 +14,11 @@ from veritycx.service.runtime import run_async
 
 def main() -> int:
     """Validate settings and run one server process without reload/multiprocessing."""
+    try:
+        load_project_environment()
+    except EnvironmentLoadError as error:
+        print(str(error))
+        return 1
     parser = argparse.ArgumentParser(description="Run local support API")
     parser.add_argument("--provider", choices=["deterministic", "openai"])
     parser.add_argument("--corpus-mode", choices=["synthetic", "official"])

@@ -11,6 +11,10 @@ Run all commands from the Git repository root, never from this directory.
 - `data_sources/test_tau3.py` exercises acquisition, preservation, Git/filesystem boundaries, and
   safe output using temporary local repositories and generated synthetic data.
 - [Data-source test guidance](data_sources/README.md) describes the detailed safety coverage.
+- `unit/test_environment.py` isolates root dotenv loading with a temporary project root.
+- `contract/test_environment_contract.py` proves exact source/template inventory and value-blind
+  diagnostics; `support/contract/test_configuration_loading.py` and
+  `test_environment_commands.py` guard entry-point ordering.
 
 ## Interfaces, Dependencies, and Configuration
 
@@ -24,11 +28,14 @@ Synthetic repositories that create commits supply local author identity, not glo
 ```text
 uv sync --locked
 uv run pytest tests -m "not support_db and not live"
+uv run python scripts/check_environment_contract.py
 uv run ruff check src scripts tests
 uv run mypy --strict src scripts tests
 ```
 
 Missing Git, missing root scripts, or a broken package installation fails the root checks.
+Pytest loads the optional root `.env` at session start. Hermetic subprocess sessions can pass
+`--no-project-dotenv`; test APIs that receive explicit mappings remain isolated from ambient values.
 Capability-only file-symlink cases may skip on Windows without link privileges; injected safety
 checks and available junction cases remain required. Full three-OS hosted acceptance is separate
 from a passing local suite.

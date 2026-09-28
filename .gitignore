@@ -29,4 +29,5 @@ Thumbs.db
 .cache/support/
 .env
 .env.*
+!.env.example
 *.local.toml

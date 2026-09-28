@@ -27,9 +27,9 @@ an independently useful increment.
 **Purpose**: Establish the dependency, ignore rules, and documented test-module boundaries shared by
 all stories.
 
-- [ ] T001 Add the pinned `python-dotenv==1.2.3` runtime dependency and refresh the reproducible lock in `pyproject.toml` and `uv.lock`
-- [ ] T002 Correct dotenv ignore rules so `.env` and local variants remain ignored while `.env.example` is trackable in `.gitignore`
-- [ ] T003 [P] Document the new environment unit and contract test modules, including purpose, configuration, failure modes, and focused commands, in `tests/unit/README.md` and `tests/contract/README.md`
+- [X] T001 Add the pinned `python-dotenv==1.2.3` runtime dependency and refresh the reproducible lock in `pyproject.toml` and `uv.lock`
+- [X] T002 Correct dotenv ignore rules so `.env` and local variants remain ignored while `.env.example` is trackable in `.gitignore`
+- [X] T003 [P] Document the new environment unit and contract test modules, including purpose, configuration, failure modes, and focused commands, in `tests/unit/README.md` and `tests/contract/README.md`
 
 ______________________________________________________________________
 
@@ -39,8 +39,8 @@ ______________________________________________________________________
 
 **⚠️ CRITICAL**: No user story implementation begins until this phase is complete.
 
-- [ ] T004 Establish the single-root path invariant and documented public environment module boundary in `src/veritycx/README.md` and `src/veritycx/__init__.py`
-- [ ] T005 Add an explicit pytest-session dotenv opt-in boundary that can be disabled by isolated tests in `tests/conftest.py`
+- [X] T004 Establish the single-root path invariant and documented public environment module boundary in `src/veritycx/README.md` and `src/veritycx/__init__.py`
+- [X] T005 Add an explicit pytest-session dotenv opt-in boundary that can be disabled by isolated tests in `tests/conftest.py`
 
 **Checkpoint**: The dependency, root boundary, and test opt-in point are ready for story work.
 
@@ -57,16 +57,16 @@ overrides, no `.env`, and a non-root current working directory.
 
 ### Tests for User Story 1
 
-- [ ] T006 [P] [US1] Add failing unit coverage for absolute-root loading, `override=False` precedence, empty values, missing files, parse failures, repeated calls, and value-safe diagnostics in `tests/unit/test_environment.py`
-- [ ] T007 [P] [US1] Add failing entry-point coverage proving service and worker startup load before configuration reads while explicit mapping APIs remain isolated in `tests/support/contract/test_configuration_loading.py`
-- [ ] T008 [P] [US1] Add failing entry-point coverage proving management and validation commands load from root under a non-root current working directory and preserve existing exit categories in `tests/support/contract/test_environment_commands.py`
+- [X] T006 [P] [US1] Add failing unit coverage for absolute-root loading, `override=False` precedence, empty values, missing files, parse failures, repeated calls, and value-safe diagnostics in `tests/unit/test_environment.py`
+- [X] T007 [P] [US1] Add failing entry-point coverage proving service and worker startup load before configuration reads while explicit mapping APIs remain isolated in `tests/support/contract/test_configuration_loading.py`
+- [X] T008 [P] [US1] Add failing entry-point coverage proving management and validation commands load from root under a non-root current working directory and preserve existing exit categories in `tests/support/contract/test_environment_commands.py`
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Implement the typed, documented `load_project_environment()` API using the absolute Git-root `.env`, non-overwriting loading, missing-file no-op behavior, and secret-safe failures in `src/veritycx/environment.py`
-- [ ] T010 [US1] Invoke root dotenv loading before the first configuration read in service and worker startup without changing explicit mapping interfaces in `src/veritycx/service/main.py` and `src/veritycx/orchestration/worker.py`
-- [ ] T011 [US1] Invoke root dotenv loading before configuration reads in maintained management and validation command entry points in `scripts/manage_support.py` and `scripts/validate_support.py`
-- [ ] T012 [US1] Complete and run the focused US1 tests, correcting loader or entry-point behavior while preserving all existing configuration validation in `tests/unit/test_environment.py`, `tests/support/contract/test_configuration_loading.py`, and `tests/support/contract/test_environment_commands.py`
+- [X] T009 [US1] Implement the typed, documented `load_project_environment()` API using the absolute Git-root `.env`, non-overwriting loading, missing-file no-op behavior, and secret-safe failures in `src/veritycx/environment.py`
+- [X] T010 [US1] Invoke root dotenv loading before the first configuration read in service and worker startup without changing explicit mapping interfaces in `src/veritycx/service/main.py` and `src/veritycx/orchestration/worker.py`
+- [X] T011 [US1] Invoke root dotenv loading before configuration reads in maintained management and validation command entry points in `scripts/manage_support.py` and `scripts/validate_support.py`
+- [X] T012 [US1] Complete and run the focused US1 tests, correcting loader or entry-point behavior while preserving all existing configuration validation in `tests/unit/test_environment.py`, `tests/support/contract/test_configuration_loading.py`, and `tests/support/contract/test_environment_commands.py`
 
 **Checkpoint**: User Story 1 is independently usable with `.env`, explicit overrides, or no file.
 
@@ -84,16 +84,16 @@ canary cases fail with sorted name-only diagnostics.
 
 ### Tests for User Story 2
 
-- [ ] T013 [US2] Add failing parser and exact-set tests for blank/comment lines, missing, extra, duplicate, malformed, wrong-case, and export-prefixed entries in `tests/contract/test_environment_contract.py`
-- [ ] T014 [US2] Add failing ownership and AST evidence tests for `VERITYCX_*`, adopted provider keys, external host/tool controls, literal read forms, aliases, and fail-closed dynamic project reads in `tests/contract/test_environment_contract.py`
-- [ ] T015 [US2] Add failing secrecy tests for unsafe placeholders, absent `.env.example`, seeded secret canaries, value-blind output, stable sorting, and the live repository inventory in `tests/contract/test_environment_contract.py`
+- [X] T013 [US2] Add failing parser and exact-set tests for blank/comment lines, missing, extra, duplicate, malformed, wrong-case, and export-prefixed entries in `tests/contract/test_environment_contract.py`
+- [X] T014 [US2] Add failing ownership and AST evidence tests for `VERITYCX_*`, adopted provider keys, external host/tool controls, literal read forms, aliases, and fail-closed dynamic project reads in `tests/contract/test_environment_contract.py`
+- [X] T015 [US2] Add failing secrecy tests for unsafe placeholders, absent `.env.example`, seeded secret canaries, value-blind output, stable sorting, and the live repository inventory in `tests/contract/test_environment_contract.py`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Create the tracked root template containing exactly the ten specified project-owned names once with empty or unmistakably nonsecret placeholders in `.env.example`
-- [ ] T017 [US2] Implement typed AST environment-read evidence collection and the documented project/external ownership policy in `scripts/check_environment_contract.py`
-- [ ] T018 [US2] Implement strict `.env.example` lexical parsing, exact-set comparison, safe-placeholder enforcement, deterministic exit codes, and sorted name-only diagnostics without opening `.env` in `scripts/check_environment_contract.py`
-- [ ] T019 [US2] Complete and run the focused US2 tests and the real-repository checker, correcting inventory or diagnostics until all contract cases pass in `tests/contract/test_environment_contract.py`, `scripts/check_environment_contract.py`, and `.env.example`
+- [X] T016 [US2] Create the tracked root template containing exactly the ten specified project-owned names once with empty or unmistakably nonsecret placeholders in `.env.example`
+- [X] T017 [US2] Implement typed AST environment-read evidence collection and the documented project/external ownership policy in `scripts/check_environment_contract.py`
+- [X] T018 [US2] Implement strict `.env.example` lexical parsing, exact-set comparison, safe-placeholder enforcement, deterministic exit codes, and sorted name-only diagnostics without opening `.env` in `scripts/check_environment_contract.py`
+- [X] T019 [US2] Complete and run the focused US2 tests and the real-repository checker, correcting inventory or diagnostics until all contract cases pass in `tests/contract/test_environment_contract.py`, `scripts/check_environment_contract.py`, and `.env.example`
 
 **Checkpoint**: User Story 2 independently exposes and validates the exact safe configuration contract.
 
@@ -110,13 +110,13 @@ seeded source/template drift must make the gate fail.
 
 ### Tests for User Story 3
 
-- [ ] T020 [P] [US3] Add repository quality-contract assertions for the documented root command, workflow invocation, three-host matrix coverage, and tracked/ignored dotenv files in `tests/test_repository_layout.py`
+- [X] T020 [P] [US3] Add repository quality-contract assertions for the documented root command, workflow invocation, three-host matrix coverage, and tracked/ignored dotenv files in `tests/test_repository_layout.py`
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Add the environment-contract command to the existing three-host quality job and include all GH-5 Markdown artifacts in deterministic documentation checks in `.github/workflows/quality.yml`
-- [ ] T022 [US3] Document the local checker, CI enforcement, supported-host behavior, and value-blind failure output in `.github/workflows/README.md`
-- [ ] T023 [US3] Complete and run the focused repository quality-contract test and checker command in `tests/test_repository_layout.py` and `scripts/check_environment_contract.py`
+- [X] T021 [US3] Add the environment-contract command to the existing three-host quality job and include all GH-5 Markdown artifacts in deterministic documentation checks in `.github/workflows/quality.yml`
+- [X] T022 [US3] Document the local checker, CI enforcement, supported-host behavior, and value-blind failure output in `.github/workflows/README.md`
+- [X] T023 [US3] Complete and run the focused repository quality-contract test and checker command in `tests/test_repository_layout.py` and `scripts/check_environment_contract.py`
 
 **Checkpoint**: All three stories are independently testable and contract drift is merge-blocking.
 
@@ -127,11 +127,11 @@ ______________________________________________________________________
 **Purpose**: Keep module documentation, contributor guidance, and repository-wide quality evidence
 consistent with the implemented contract.
 
-- [ ] T024 [P] Document root `.env` setup, process precedence, the exact ownership boundary, safe placeholders, checker usage, and failure recovery in `README.md`
-- [ ] T025 [P] Document loader, startup integration, and checker responsibilities, configuration names, public interfaces, dependencies, and failure modes in `src/veritycx/README.md`, `src/veritycx/service/README.md`, `src/veritycx/orchestration/README.md`, `scripts/README.md`, and `tests/README.md`
-- [ ] T026 Review all changed Python modules for file documentation, function documentation, explicit strict types, validated untyped boundaries, and rationale comments in `src/veritycx/environment.py`, `scripts/check_environment_contract.py`, and changed entry points/tests
-- [ ] T027 Run the focused scenarios in `specs/gh-5-env-support/quickstart.md`, then run formatting, lint, strict typing, non-live tests, Markdown, YAML, and `git diff --check` gates from the Git root
-- [ ] T028 Review tracked dotenv files and the full diff for credentials, tokens, passwords, private paths, connection strings, generated files, unrelated changes, and incomplete task markers using `.env.example`, `.gitignore`, and `specs/gh-5-env-support/tasks.md`
+- [X] T024 [P] Document root `.env` setup, process precedence, the exact ownership boundary, safe placeholders, checker usage, and failure recovery in `README.md`
+- [X] T025 [P] Document loader, startup integration, and checker responsibilities, configuration names, public interfaces, dependencies, and failure modes in `src/veritycx/README.md`, `src/veritycx/service/README.md`, `src/veritycx/orchestration/README.md`, `scripts/README.md`, and `tests/README.md`
+- [X] T026 Review all changed Python modules for file documentation, function documentation, explicit strict types, validated untyped boundaries, and rationale comments in `src/veritycx/environment.py`, `scripts/check_environment_contract.py`, and changed entry points/tests
+- [X] T027 Run the focused scenarios in `specs/gh-5-env-support/quickstart.md`, then run formatting, lint, strict typing, non-live tests, Markdown, YAML, and `git diff --check` gates from the Git root
+- [X] T028 Review tracked dotenv files and the full diff for credentials, tokens, passwords, private paths, connection strings, generated files, unrelated changes, and incomplete task markers using `.env.example`, `.gitignore`, and `specs/gh-5-env-support/tasks.md`
 
 ______________________________________________________________________
 
