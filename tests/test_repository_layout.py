@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
@@ -19,6 +20,55 @@ def test_symphony_configuration_uses_tool_owned_directory() -> None:
     assert not (repository_root / "WORKFLOW.md").exists()
     assert (repository_root / ".symphony" / "WORKFLOW.md").is_file()
     assert (repository_root / ".symphony" / "README.md").is_file()
+
+
+def test_symphony_workflow_reports_every_spec_kit_phase_and_interaction() -> None:
+    """Keep GitHub checkpoints explicit about phase execution and human input."""
+    workflow = (REPOSITORY_ROOT / ".symphony" / "WORKFLOW.md").read_text(encoding="utf-8")
+    normalized = " ".join(workflow.split())
+    match = re.search(
+        r"```text\n### Spec Kit progress\n(.*?)\n```",
+        workflow,
+        flags=re.DOTALL,
+    )
+    assert match is not None
+    report = match.group(1)
+
+    for phase in (
+        "specify",
+        "clarify",
+        "plan",
+        "checklist",
+        "tasks",
+        "analyze",
+        "implement",
+        "converge",
+    ):
+        assert f"- {phase}:" in report
+
+    for field in (
+        "Phases",
+        "Current checkpoint",
+        "Questions asked",
+        "Assumptions adopted",
+        "Analyze cycles",
+        "Convergence cycles",
+        "Validation",
+        "Next phase",
+    ):
+        assert field in normalized
+
+    assert "zero questions" in normalized
+    assert "checklist focus, depth, and audience" in normalized
+    assert "must ask one initial batch" in normalized
+    assert "Never omit a phase from the ledger" in normalized
+    assert "including its cumulative run count and outcome" in normalized
+
+    for context in ("awaiting_input", "blocked", "awaiting_approval", "awaiting_review"):
+        assert context in normalized
+
+    assert "/symphony status" in normalized
+    assert "final merged-PR comments" in normalized
 
 
 @pytest.mark.parametrize(

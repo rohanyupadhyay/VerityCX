@@ -92,6 +92,37 @@ Workflow-control state:
    `phase`, and a concise `summary`, then end the turn.
 1. Never merge a pull request or expose credentials. Do not use auto-closing PR keywords.
 
+## Required checkpoint phase report
+
+Every `github_workflow_checkpoint` summary is an operator-facing audit record. Begin it with this
+exact structure and fill every field; use `none` or `not run` instead of omitting a field:
+
+```text
+### Spec Kit progress
+- Phases:
+  - specify: <completed | not run | skipped: reason; run count; outcome>
+  - clarify: <completed | not run | skipped: reason; run count; outcome>
+  - plan: <completed | not run | skipped: reason; run count; outcome>
+  - checklist: <completed | not run | skipped: reason; run count; outcome>
+  - tasks: <completed | not run | skipped: reason; run count; outcome>
+  - analyze: <completed | not run | skipped: reason; run count; outcome>
+  - implement: <completed | not run | skipped: reason; run count; outcome>
+  - converge: <completed | not run | skipped: reason; run count; outcome>
+- Current checkpoint: <waiting state, phase, and approval gate when applicable>
+- Questions asked: <count by specify, clarify, and checklist; explain every zero>
+- Assumptions adopted: <material defaults inferred without an answer, or none>
+- Analyze cycles: <count, findings, and remediations, or not run>
+- Convergence cycles: <count and tasks appended, or not run>
+- Validation: <checks performed and omissions>
+- Next phase: <what an answer or approval will run>
+```
+
+Never omit a phase from the ledger or claim that a phase ran when it was skipped. Mark every phase
+as `completed`, `not run`, or `skipped: <reason>`, including its cumulative run count and outcome,
+rather than collapsing phases into broad labels such as “planning” or “implementation.” If a phase
+asks zero questions, record `zero questions` and the concrete reason. Include the same report in `awaiting_input`, `blocked`,
+`awaiting_approval`, `awaiting_review`, `/symphony status`, and final merged-PR comments.
+
 ## Resume commands
 
 Interpret only the normalized trigger supplied in `issue.native_ref.workflow_control`:
@@ -122,7 +153,8 @@ Ignore stale or duplicate events and general comments that were not normalized a
 On a newly labeled issue, create/reuse the issue branch and invoke `$speckit-specify` with the issue
 description. If specify produces critical questions, ask one issue-comment batch containing at
 most three questions. Then invoke `$speckit-clarify`; it asks exactly one question per checkpoint
-and no more than five accepted questions in total.
+and no more than five accepted questions in total. Clarify may ask zero only when its structured
+scan finds no material ambiguity; record that outcome and its concrete reason in the phase report.
 
 When the specification is ready, review its quality checklist, commit all specification artifacts,
 call `github_git_push`, and then call `github_workflow_checkpoint` with:
@@ -131,19 +163,25 @@ call `github_git_push`, and then call `github_workflow_checkpoint` with:
 - `phase: specify`
 - `gate: spec`
 - the pushed `branch` and exact 40-character `head_sha`
-- a summary linking the specification and listing validation performed
+- a structured phase report naming `specify` and `clarify` separately, their question counts,
+  every material assumption adopted, a link to the specification, and validation performed
 
 ### 2. Plan
 
 After spec approval, invoke `$speckit-plan`. Resolve any required research or planning failures.
 Commit all plan artifacts, call `github_git_push`, then checkpoint `awaiting_approval`, phase
-`plan`, gate `plan`, with the branch and pushed head SHA.
+`plan`, gate `plan`, with the branch and pushed head SHA. Its phase report must name `plan`, retain
+the earlier interaction totals and assumptions, and identify `checklist` as the next phase.
 
 ### 3. Checklist, tasks, and analysis
 
-After plan approval, invoke `$speckit-checklist`. It may ask one initial batch of up to three
-questions and, only if still necessary, one follow-up batch of up to two. Then invoke
-`$speckit-tasks` and `$speckit-analyze`.
+After plan approval, determine whether authorized issue input already specifies checklist focus,
+depth, and audience. If any dimension is missing, `$speckit-checklist` must ask one initial batch of
+up to three questions covering the missing dimensions. GitHub checkpoints make interaction
+possible, so do not silently apply the skill's fallback defaults. It may ask one follow-up batch of
+up to two only when still necessary. If all three dimensions were explicit, ask zero questions and
+cite the controlling issue input in the phase report. Then invoke `$speckit-tasks` and
+`$speckit-analyze`.
 
 Analyze is non-destructive. For every CRITICAL or HIGH finding, rerun the owning specify, clarify,
 plan, or tasks phase with the finding as input, then rerun analyze. Stop after three remediation
@@ -151,7 +189,9 @@ cycles and checkpoint `blocked` if high-severity findings remain. Summarize MEDI
 for the reviewer.
 
 Commit the planning artifacts, call `github_git_push`, and checkpoint `awaiting_approval`, phase
-`tasks`, gate `implementation`, with the branch and pushed head SHA.
+`tasks`, gate `implementation`, with the branch and pushed head SHA. Its phase report must name
+`checklist`, `tasks`, and `analyze` separately, record checklist questions and answers, and state
+the analyze cycle count and findings by severity.
 
 ### 4. Implement and converge
 
@@ -170,7 +210,9 @@ generated files, and incomplete tasks.
 Commit the converged implementation and call `github_git_push`. Open or update one pull request
 against `main`; use `Tracks #{{ issue.id }}` rather than an auto-closing keyword. Add validation
 results and any omissions to the PR body. Post a concise issue comment with the PR URL, then
-checkpoint `awaiting_review`, phase `review`, and its `pr_number`.
+checkpoint `awaiting_review`, phase `review`, and its `pr_number`. Its phase report must name
+`implement` and `converge` separately, state the convergence cycle count and whether tasks were
+appended, and list every validation omission.
 
 Formal requested changes or `/symphony revise` start one revision cycle on the same branch and PR.
 Use Spec Kit again only when requirements or design changed; implementation-only feedback changes

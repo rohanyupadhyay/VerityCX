@@ -39,8 +39,9 @@ credentials from Codex. GitHub comments, labels, PRs, and pushes appear as the s
   the label before the issue was closed, startup recovery performs this terminal cleanup.
 
 Each issue uses `/home/rohan/code/symphony-workspaces/VerityCX/GH-<number>`, one branch named
-`symphony/gh-<number>-<slug>`, and one directory named `specs/gh-<number>-<slug>`. Specify, clarify,
-plan, tasks, implementation, convergence, and PR revisions all reuse them.
+`symphony/gh-<number>-<slug>`, and one directory named `specs/gh-<number>-<slug>`. The `specify`,
+`clarify`, `plan`, `checklist`, `tasks`, `analyze`, `implement`, and `converge` phases, plus PR
+revisions, all reuse them.
 
 The workflow gives its Codex agents `danger-full-access` inside those dedicated issue workspaces.
 This is necessary because Codex's narrower `workspace-write` sandbox makes `.git` read-only and
@@ -74,6 +75,14 @@ Commands and answers are accepted from repository owners, organization members, 
 General comments do not start revision work. On a PR, a formal “Request changes” review or explicit
 `/symphony revise` triggers work; ordinary conversation and inline comments are collected as
 context. Approval never merges automatically.
+
+Every checkpoint comment begins with a `Spec Kit progress` report. It names each phase separately,
+states how many questions were asked and why a phase asked none, records material assumptions and
+analyze/convergence cycle counts, lists validation and omissions, and identifies the next phase.
+Before generating a custom checklist, Symphony asks for any missing focus, depth, or audience
+choices rather than silently selecting fallback defaults. `specify` and `clarify` still ask no
+question when there is no material ambiguity; that zero-question decision remains visible in the
+next checkpoint.
 
 The issue remains open after the PR opens. Symphony closes it only after GitHub reports the PR
 merged. If the PR closes without merge, the issue remains open and asks whether to revise, replace,
