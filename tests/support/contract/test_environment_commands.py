@@ -1,5 +1,6 @@
 """Prove management and validation commands load dotenv at their process boundary."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -42,10 +43,13 @@ def test_commands_preserve_missing_configuration_from_non_root_cwd(
 ) -> None:
     """Resolve the root dotenv while retaining established missing-setting exits."""
     root = Path(__file__).resolve().parents[3]
+    environment = {
+        name: value for name, value in os.environ.items() if not name.startswith("VERITYCX_")
+    }
     result = subprocess.run(  # noqa: S603
         [sys.executable, str(root / script), *arguments],
         cwd=tmp_path,
-        env={},
+        env=environment,
         capture_output=True,
         text=True,
         check=False,
