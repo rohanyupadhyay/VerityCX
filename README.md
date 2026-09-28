@@ -21,6 +21,12 @@ approved-document retrieval, LangGraph routing, PostgreSQL recovery, truthful es
 and opt-in metadata tracing. Local deterministic checks are recorded in its quickstart; hosted
 and human-reviewed live acceptance remain open.
 
+## Development Automation
+
+VerityCX's GitHub issue automation is configured under [`.symphony/`](.symphony/README.md).
+That guide explains the repository-owned Symphony Plus workflow, startup command, issue commands,
+workspace isolation, and Spec Kit boundary.
+
 ## Prerequisites
 
 - Python 3.12, selected automatically by uv from `.python-version`
@@ -142,6 +148,7 @@ are in the [Spec Kit quickstart](specs/001-acquire-tau3-banking/quickstart.md).
 - `tests/`: repository-root command checks and network-independent data-source safety tests
 - `docs/`: current data policy and explicitly future platform vision
 - `.specify/` and `.agents/skills/`: GitHub Spec Kit constitution, templates, workflow, and skills
+- `.symphony/`: Symphony Plus workflow configuration and operator guide
 - `.github/workflows/`: root-level quality gates on Windows, Linux, and macOS
 - `specs/001-acquire-tau3-banking/`: specification, contracts, plan, tasks, and validation guide
 

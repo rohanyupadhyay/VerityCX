@@ -7,7 +7,8 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
-from veritycx.knowledge.configuration import active_corpus
+from veritycx.knowledge.configuration import active_corpus, source_mode
+from veritycx.knowledge.manifest import approve, prepare
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.attempts import AttemptLedger
 from veritycx.persistence.database import database_pool
@@ -54,6 +55,9 @@ def test_storage_outage_does_not_accept(tmp_path: Path) -> None:
 @pytest.mark.support_db
 def test_exhausted_key_is_stable(test_database_url: str) -> None:
     """Spent reservations produce one durable failure; identical retries preserve the budget."""
+    root, cache, pin = source_mode("synthetic")
+    prepared = prepare(root, cache, "synthetic", pin)
+    approve(root, cache, prepared.aggregate_hash)
 
     async def exercise() -> None:
         """Spend both attempts before graph execution, then retry the same operation."""
