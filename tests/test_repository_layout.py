@@ -10,6 +10,15 @@ from pathlib import Path
 import pytest
 
 
+def test_symphony_configuration_uses_tool_owned_directory() -> None:
+    """Keep Symphony's executable workflow out of the generic repository root."""
+    repository_root = Path(__file__).resolve().parents[1]
+
+    assert not (repository_root / "WORKFLOW.md").exists()
+    assert (repository_root / ".symphony" / "WORKFLOW.md").is_file()
+    assert (repository_root / ".symphony" / "README.md").is_file()
+
+
 @pytest.mark.parametrize(
     "arguments",
     [

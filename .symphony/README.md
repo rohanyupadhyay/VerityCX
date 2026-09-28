@@ -16,7 +16,7 @@ mise exec -- mix setup
 mise exec -- mix build
 ./bin/symphony github-app setup rohanyupadhyay/VerityCX --profile veritycx
 ./bin/symphony github-app verify rohanyupadhyay/VerityCX --profile veritycx
-./scripts/run-github --app-profile veritycx /home/rohan/code/VerityCX/WORKFLOW.md --port 4000
+./scripts/run-github --app-profile veritycx /home/rohan/code/VerityCX/.symphony/WORKFLOW.md --port 4000
 ```
 
 The setup command opens GitHub with the required Contents, Issues, Pull requests, and Workflows
