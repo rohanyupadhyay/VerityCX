@@ -11,6 +11,7 @@ from openai import AsyncOpenAI
 from psycopg import Error
 from psycopg_pool import PoolTimeout
 
+from veritycx.environment import EnvironmentLoadError, load_project_environment
 from veritycx.observability.audit import export_result
 from veritycx.observability.export import TraceExporter
 from veritycx.orchestration.graph import execute_job
@@ -143,6 +144,11 @@ async def run_configured_provider(
 
 def main() -> int:
     """Start a single worker on the shared Windows-compatible loop."""
+    try:
+        load_project_environment()
+    except EnvironmentLoadError as error:
+        print(str(error))
+        return 1
     parser = argparse.ArgumentParser(description="Run local support worker")
     parser.add_argument("--provider", choices=["deterministic", "openai"])
     parser.add_argument("--corpus-mode", choices=["synthetic", "official"])

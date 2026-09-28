@@ -13,6 +13,11 @@ every five seconds. `uv run python -m veritycx.orchestration.worker` runs the wo
 runtime configuration and corpus as the API. Interrupt/resume uses server-authorized pause IDs and operation rows. Human requests save
 context before interrupting; no inbox is connected and nobody is notified.
 
+Worker startup calls `load_project_environment()` before its first configuration read. It uses only
+the repository-root `.env`, retains explicit process precedence, and leaves `work()` and other typed
+interfaces isolated from ambient configuration. Missing files preserve the existing configuration
+error behavior; malformed files fail with a value-free category.
+
 Application rows govern ownership, counts, budgets and terminal answers. Checkpoints cannot overwrite
 these values or grant authority. Losing a lease cancels local execution; stale writes fail. The
 checkpoint saver guard and rollback tests must continue passing before changing graph integration.

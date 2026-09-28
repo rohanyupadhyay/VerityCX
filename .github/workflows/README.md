@@ -25,6 +25,12 @@ local commit identity instead of requiring developer-global Git settings. The ti
 operation, then stops it only after validated promotion returns successfully; pytest startup,
 collection, and fixture construction are outside the SC-001 interval.
 
+After locked synchronization, every matrix host runs
+`uv run python scripts/check_environment_contract.py`. This value-blind gate derives project-owned
+names from maintained sources and fails missing, extra, duplicate, malformed, wrong-case,
+unsafe-placeholder, or dynamic-read drift without opening `.env` or printing values. The Markdown
+gate includes all `specs/gh-5-env-support` artifacts.
+
 All run steps use `defaults.run.working-directory: .`; Git-root workflow files are addressed
 with `.github/workflows/`. The Git-root `.gitattributes` pins formatter-owned Python, Markdown, and YAML
 to LF so Windows, Linux, and macOS check identical text. The directory contains only this

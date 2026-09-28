@@ -6,13 +6,15 @@
 
 `veritycx` contains reusable, strictly typed project behavior. The package currently exposes the
 `data_sources` module, which owns external dependency configuration, validation, setup, and safe
-structural reporting.
+structural reporting. `PROJECT_ROOT` is the package-wide root invariant, and `environment.py`
+provides the public `load_project_environment()` process-boundary loader.
 
 ## Structure and Interfaces
 
 ```text
 src/veritycx/
 ├── __init__.py
+├── environment.py
 └── data_sources/
     ├── __init__.py
     └── tau3.py
@@ -29,6 +31,11 @@ dependencies; its responsibility packages document implemented interfaces and re
 fixed τ³ pin and paths come from `config/tau3-bench.toml`; external TOML, JSON, subprocess, and
 filesystem values are validated before entering typed application state.
 
+`environment.py` depends on pinned `python-dotenv==1.2.3`. It reads only `<PROJECT_ROOT>/.env`, uses
+non-overwriting semantics, accepts a missing file, and raises only `invalid_environment_file` for an
+unreadable or malformed file. Library APIs that accept an explicit environment mapping remain
+isolated; only maintained process entry points invoke the loader.
+
 ## Usage and Tests
 
 Developer-facing usage belongs to project-root scripts. Validate the package with:
@@ -37,6 +44,7 @@ Developer-facing usage belongs to project-root scripts. Validate the package wit
 uv run ruff check src/veritycx
 uv run mypy --strict src
 uv run pytest tests/data_sources/test_tau3.py
+uv run pytest tests/unit/test_environment.py
 ```
 
 ## Constraints and Failure Modes

@@ -94,3 +94,17 @@ dedicated test storage. Grounding returns nonzero with human review pending; str
 do not certify semantic correctness. The demo uses only a previously approved official corpus.
 `setup_support_ci.py` separately initializes a fresh CI-owned native cluster and database roles; it
 refuses use outside GitHub Actions and does not reset existing clusters.
+
+## Environment Contract
+
+`manage_support.py` and `validate_support.py` load the optional root `.env` before reading any
+project-owned setting; explicit process values retain precedence. Their existing validation and exit
+categories remain authoritative when a required value is absent. Explicit environment mappings used
+inside support libraries and subprocess tests do not trigger ambient loading.
+
+`uv run python scripts/check_environment_contract.py` statically derives literal project-owned
+reads from maintained Python sources, strictly parses `.env.example`, and requires exact name
+equality. Missing, extra, duplicate, malformed, wrong-case, unsafe-placeholder, and dynamic-read
+findings exit `1` with sorted name-only output; success exits `0` with
+`environment_contract_ok`. The checker never opens `.env`. Correct the named source/template drift,
+and use only empty or obvious synthetic placeholders in the tracked example.
