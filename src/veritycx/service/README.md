@@ -12,6 +12,11 @@ create, submit, poll, delete and current-pause resume with server-derived owners
 `health.py` distinguishes liveness from reviewed corpus/schema, fresh worker and cleanup readiness.
 `main.py` launches one loopback API without reload. Human requests persist a truthful disconnected pause; resume queues a fenced control job.
 
+At process startup, `main.py` calls `load_project_environment()` before reading configuration. The
+root `.env` is optional and never overrides an explicit process value. `load_configuration()` keeps
+its explicit mapping interface and does not read ambient dotenv state itself; malformed dotenv files
+fail with the secret-safe `invalid_environment_file` category before configuration validation.
+
 Run `uv run python scripts/manage_support.py auth init-demo`, set `VERITYCX_DATABASE_URL` and
 `VERITYCX_AUTH_FILE`, then `uv run python -m veritycx.service.main`. Migration credentials never enter
 runtime configuration. Provider/corpus are the only launcher overrides. No public bind is supported.

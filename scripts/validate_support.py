@@ -9,6 +9,7 @@ import sys
 import httpx
 from pydantic import ValidationError as SchemaError
 
+from veritycx.environment import EnvironmentLoadError, load_project_environment
 from veritycx.policy.sources import SourceError
 from veritycx.service.configuration import ConfigurationError
 from veritycx.service.validation import (
@@ -22,6 +23,11 @@ from veritycx.service.validation import (
 
 def main() -> int:
     """Select a bounded suite and return nonzero for unavailable acceptance gates."""
+    try:
+        load_project_environment()
+    except EnvironmentLoadError as error:
+        print(str(error))
+        return 1
     parser = argparse.ArgumentParser(description="Validate durable support")
     parser.add_argument("--suite", choices=["offline", "grounding", "demo"], required=True)
     parser.add_argument("--live", action="store_true")

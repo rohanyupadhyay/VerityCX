@@ -62,6 +62,7 @@ jobs:
         run: uv run pytest -q -s tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout
       - name: Run Python quality gates
         run: |
+          uv run python scripts/check_environment_contract.py
           uv run ruff format --check src scripts tests
           uv run ruff check src scripts tests
           uv run mypy --strict src scripts tests
@@ -75,6 +76,7 @@ jobs:
           uv run mdformat --check specs/001-acquire-tau3-banking/contracts/configuration.md specs/001-acquire-tau3-banking/contracts/data-use-policy.md specs/001-acquire-tau3-banking/contracts/inspection-cli.md specs/001-acquire-tau3-banking/contracts/setup-cli.md .github/workflows/README.md
           uv run mdformat --check specs/001-acquire-tau3-banking/checklists/comprehensive.md specs/001-acquire-tau3-banking/checklists/requirements.md
           uv run mdformat --check docs/platform-roadmap.md docs/platform-design.md docs/threat-model.md specs/002-durable-knowledge-support
+          uv run mdformat --check specs/gh-5-env-support
           uv run mdformat --check src scripts tests config docs
       - name: Check workflow formatting
         run: uv run yamlfix --check .github/workflows/quality.yml .github/workflows/support-integration.yml

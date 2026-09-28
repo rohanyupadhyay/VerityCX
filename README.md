@@ -38,6 +38,31 @@ Feature 001 acquisition needs no credentials. Feature 002 requires native Postgr
 demo authentication; its deterministic provider needs no paid account. OpenAI and LangSmith
 credentials are used only by explicitly enabled live execution/export.
 
+## Local Environment Configuration
+
+Copy `.env.example` to the ignored root `.env` and fill only the settings needed by the command you
+intend to run. Maintained API, worker, management, validation, and pytest entry points load that one
+absolute root file; values already exported by the invoking process always win. A missing `.env` is
+supported and preserves each command's existing missing-configuration result.
+
+The example contains every and only these VerityCX-owned names: `VERITYCX_DATABASE_URL`,
+`VERITYCX_AUTH_FILE`, `VERITYCX_MIGRATION_DATABASE_URL`, `VERITYCX_TEST_DATABASE_URL`,
+`VERITYCX_TEST_MIGRATION_DATABASE_URL`, `VERITYCX_VALIDATION_PROVIDER`,
+`VERITYCX_VALIDATION_CORPUS`, `OPENAI_API_KEY`, `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT`. Host,
+shell, Git, package, virtual-environment, PostgreSQL bootstrap, and CI controls remain externally
+owned. Keep example values empty or unmistakably synthetic; never place a usable credential, DSN,
+password, private path, or token in the tracked template.
+
+Run the value-blind drift check from the Git root:
+
+```text
+uv run python scripts/check_environment_contract.py
+```
+
+Success prints `environment_contract_ok`. Failure prints sorted categories and names only. Fix the
+maintained source read or `.env.example` entry named by the diagnostic; the checker never opens the
+real `.env` or prints configured values.
+
 ## Acquire the Pinned Checkout
 
 Run the single setup entry point from the project root:
@@ -91,6 +116,7 @@ and untracked files still fail validation. No cache files or user Git settings a
 ```text
 uv lock --check
 uv sync --locked
+uv run python scripts/check_environment_contract.py
 uv run ruff format --check src scripts tests
 uv run ruff check src scripts tests
 uv run mypy --strict src scripts tests

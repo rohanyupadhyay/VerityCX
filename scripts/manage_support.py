@@ -7,6 +7,7 @@ from typing import Literal
 from psycopg import Error
 from psycopg.conninfo import conninfo_to_dict
 
+from veritycx.environment import EnvironmentLoadError, load_project_environment
 from veritycx.knowledge.configuration import source_mode
 from veritycx.knowledge.manifest import approve, load_manifest, prepare
 from veritycx.persistence.database import database_pool
@@ -20,6 +21,11 @@ from veritycx.service.runtime import run_async
 
 def main() -> int:
     """Dispatch root management commands and report sanitized expected failures."""
+    try:
+        load_project_environment()
+    except EnvironmentLoadError as error:
+        print(str(error))
+        return 1
     parser = argparse.ArgumentParser(description="Manage local durable support")
     commands = parser.add_subparsers(dest="command", required=True)
     database = commands.add_parser("db")

@@ -19,3 +19,8 @@ or subprocess handles created by that test; it must never reset unrelated databa
 ## Current files
 
 `test_auth.py`, `test_conversation_api.py`, `test_delete_api.py`, `test_error_privacy.py`, `test_health.py`, `test_management.py`, `test_providers.py`, `test_resume_api.py`, `test_validation_cli.py`.
+
+`test_configuration_loading.py` requires API and worker startup to load the root dotenv before
+configuration. `test_environment_commands.py` applies the same ordering contract to management and
+validation commands. These tests inspect process boundaries only; explicit mapping APIs remain
+ambient-environment independent.

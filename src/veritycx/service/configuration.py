@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, model_validator
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+from veritycx import PROJECT_ROOT as PROJECT_ROOT
 
 
 class ConfigurationError(ValueError):
