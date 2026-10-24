@@ -18,13 +18,14 @@ def test_symphony_configuration_uses_tool_owned_directory() -> None:
     repository_root = Path(__file__).resolve().parents[1]
 
     assert not (repository_root / "WORKFLOW.md").exists()
-    assert (repository_root / ".symphony" / "WORKFLOW.md").is_file()
-    assert (repository_root / ".symphony" / "README.md").is_file()
+    assert not (repository_root / ".symphony").exists()
+    assert (repository_root / ".symphony-plus" / "WORKFLOW.md").is_file()
+    assert (repository_root / ".symphony-plus" / "README.md").is_file()
 
 
 def test_symphony_workflow_reports_every_spec_kit_phase_and_interaction() -> None:
     """Keep GitHub checkpoints explicit about phase execution and human input."""
-    workflow = (REPOSITORY_ROOT / ".symphony" / "WORKFLOW.md").read_text(encoding="utf-8")
+    workflow = (REPOSITORY_ROOT / ".symphony-plus" / "WORKFLOW.md").read_text(encoding="utf-8")
     normalized = " ".join(workflow.split())
     match = re.search(
         r"```text\n### Spec Kit progress\n(.*?)\n```",
@@ -49,7 +50,10 @@ def test_symphony_workflow_reports_every_spec_kit_phase_and_interaction() -> Non
     for field in (
         "Phases",
         "Current checkpoint",
-        "Questions asked",
+        "Questions asked this run",
+        "Questions asked total",
+        "Checklist choices",
+        "Answers retained",
         "Assumptions adopted",
         "Analyze cycles",
         "Convergence cycles",
@@ -60,14 +64,21 @@ def test_symphony_workflow_reports_every_spec_kit_phase_and_interaction() -> Non
 
     assert "zero questions" in normalized
     assert "checklist focus, depth, and audience" in normalized
-    assert "must ask one initial batch" in normalized
+    assert "Pass the resolved choices explicitly" in normalized
+    assert "Missing checklist preferences alone do not require input" in normalized
     assert "Never omit a phase from the ledger" in normalized
     assert "including its cumulative run count and outcome" in normalized
 
-    for context in ("awaiting_input", "blocked", "awaiting_approval", "awaiting_review"):
+    for context in (
+        "awaiting_input",
+        "blocked",
+        "awaiting_approval",
+        "review_pending",
+        "merge_queued",
+    ):
         assert context in normalized
 
-    assert "/symphony status" in normalized
+    assert "/symphony-plus status" in normalized
     assert "final merged-PR comments" in normalized
 
 
