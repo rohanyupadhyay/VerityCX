@@ -22,4 +22,5 @@ or subprocess handles created by that test; it must never reset unrelated databa
 
 `test_chatwoot.py` adds offline signed-webhook, public configuration, two-token HTTP
 routing, strict AgentBot assignment and safe error contracts. Its mock transports never
-contact an actual Chatwoot server or OpenAI.
+contact an actual Chatwoot server or OpenAI. The webhook persistence test prepares and
+approves a corpus in its own temporary cache, independent of local app setup or test order.

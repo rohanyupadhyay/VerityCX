@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 from contextlib import nullcontext
+from pathlib import Path
 from uuid import uuid4
 
 import httpx
@@ -274,7 +275,9 @@ def test_routes_disabled_and_unsigned_webhook() -> None:
     run_async(exercise())
 
 
-def test_routes_acknowledge_only_after_normalized_persistence() -> None:
+def test_routes_acknowledge_only_after_normalized_persistence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verify the real signature boundary commits its bounded event before sending HTTP202."""
     import time
     from unittest.mock import AsyncMock, Mock, patch
@@ -282,7 +285,15 @@ def test_routes_acknowledge_only_after_normalized_persistence() -> None:
     from fastapi import FastAPI
 
     from veritycx.handoff.routes import register_chatwoot
+    from veritycx.knowledge import configuration as knowledge_configuration
+    from veritycx.knowledge.manifest import approve, prepare
     from veritycx.persistence.database import DatabasePool
+
+    root, _, pin = knowledge_configuration.source_mode("synthetic")
+    cache = tmp_path / "corpus"
+    manifest = prepare(root, cache, "synthetic", pin)
+    approve(root, cache, manifest.aggregate_hash)
+    monkeypatch.setattr(knowledge_configuration, "source_mode", lambda mode: (root, cache, pin))
 
     async def exercise() -> None:
         config = load_chatwoot_configuration(environment())
@@ -315,6 +326,7 @@ def test_routes_acknowledge_only_after_normalized_persistence() -> None:
             saved.assert_awaited_once()
             event = saved.call_args.args[0]
             assert event.content == "Policy question" and event.key == "message:9"
+            assert saved.call_args.args[1] == manifest.corpus_version
 
     run_async(exercise())
 
