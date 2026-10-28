@@ -161,7 +161,7 @@ def test_private_runner_returns_only_current_output(tmp_path: Path) -> None:
 
     (tmp_path / "setup.log").write_text('VERITYCX_RESULT={"api_token":"old-secret"}\n')
     content = setup._run_private([sys.executable, "-c", "print('current-output')"], tmp_path)
-    assert content == "current-output\n"
+    assert content.splitlines() == ["current-output"]
     assert "old-secret" in (tmp_path / "setup.log").read_text()
     if os.name == "posix":
         assert (tmp_path / "setup.log").stat().st_mode & 0o777 == 0o600
