@@ -32,7 +32,8 @@ unsafe-placeholder, or dynamic-read drift without opening `.env` or printing val
 gate includes all `specs/gh-5-env-support` artifacts.
 
 All run steps use `defaults.run.working-directory: .`; Git-root workflow files are addressed
-with `.github/workflows/`. The Git-root `.gitattributes` pins formatter-owned Python, Markdown, and YAML
+with `.github/workflows/`. The Git-root `.gitattributes` pins formatter-owned Python, Markdown, YAML,
+HTML, TypeScript, CSS, and JSON
 to LF so Windows, Linux, and macOS check identical text. The directory contains only this
 documentation and `quality.yml`.
 
