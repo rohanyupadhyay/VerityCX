@@ -12,6 +12,8 @@ It defines no application API or runtime configuration.
 - `platform-roadmap.md`: proposed delivery sequence and foundation acceptance dependencies.
 - `platform-design.md`: proposed architecture, module boundaries and technical contracts.
 - `threat-model.md`: initial trust boundaries, required controls and residual risks.
+- [Local Chatwoot setup](chatwoot-local-setup.md): owned local provisioning, private
+  credentials, network requirements and actual widget/inbox acceptance gates.
 - [Symphony Plus operator guide](../.symphony-plus/README.md): GitHub issue-driven automation.
 - [Root README](../README.md): canonical developer commands and implemented scope.
 - [Spec Kit feature](../specs/001-acquire-tau3-banking/spec.md): requirements and acceptance authority.
@@ -38,3 +40,7 @@ classification are documentation failures; formatting alone does not establish t
 ## Feature 002 implementation
 
 Feature 002 implementation and local evidence are documented in `specs/002-durable-knowledge-support/quickstart.md`. Hosted and human-reviewed live gates remain open.
+
+The [customer chat design](superpowers/specs/2026-10-26-customer-chat-design.md) and
+[implementation plan](superpowers/plans/2026-10-26-customer-chat.md) record the branded
+page, native widget, signed bridge and open live deployment/AI acceptance gates.

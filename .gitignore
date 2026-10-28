@@ -31,3 +31,9 @@ Thumbs.db
 .env.*
 !.env.example
 *.local.toml
+
+# Locked frontend dependencies and browser test artifacts.
+node_modules/
+coverage/
+playwright-report/
+test-results/

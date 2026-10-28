@@ -42,6 +42,12 @@ The workflow depends on GitHub-hosted runner images, `actions/checkout`, `action
 `astral-sh/setup-uv`. Action majors and the exact uv tool version are explicit. Project dependency
 versions remain governed by `pyproject.toml` and `uv.lock`; CI uses no unlocked install path.
 
+Each quality matrix host also installs Node.js 24 using `actions/setup-node`, restores
+the npm cache, and runs locked `npm ci` followed by frontend formatting, strict TypeScript,
+Vitest and the production Vite build. Browser lifecycle tests use local jsdom fixtures;
+they never require Chatwoot, OpenAI credentials or paid calls. The root npm lockfile pins
+the frontend toolchain independently of the Python lockfile.
+
 ## Usage, Tests, and Failure Modes
 
 The workflow runs for every push and pull request, including changes to root-level tooling,
@@ -51,8 +57,9 @@ status contract; infrastructure retries must be recorded separately and cannot r
 failure. A missing/old Git, lock drift, formatting/lint/type/test error, disclosure regression, or
 duration at or above ten minutes fails the corresponding job.
 
-The only manual networked validation is the separately documented one-environment official smoke
-test. It does not belong in this workflow.
+Official upstream acquisition remains a separately documented manual smoke test.
+Actual Chatwoot widget/inbox and paid OpenAI acceptance are also explicit external
+checks; none belongs in the network-independent test portion of this workflow.
 
 ## Feature 002 implementation
 

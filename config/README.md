@@ -52,4 +52,12 @@ explicit environment credentials. Test with `uv run pytest tests/support/unit/te
 
 ## Feature 002 implementation
 
+`chatwoot.compose.yml` pins the optional local customer messaging stack. Use it only
+through `scripts/setup_chatwoot.py`, which checks installation-specific ownership labels,
+generates private configuration, and refuses unrelated resources. Chatwoot PostgreSQL,
+Redis and Rails use separate loopback ports 55433, 6380 and 3000, respectively, with
+storage isolated from VerityCX application tables. Host networking requires a Linux
+Docker engine or explicitly enabled compatible Docker Desktop host networking. No
+credential belongs in the tracked Compose file. See [local setup](../docs/chatwoot-local-setup.md).
+
 Tracing is disabled by default, including inherited graph auto-tracing. Enabling `traces_enabled` requires an explicit project and key and sends only allow-listed metadata through the fixed LangSmith endpoint. The service defaults to loopback, ten jobs, a twenty-connection pool, 8,000-character messages, 100 customer turns and thirty-day retention.

@@ -46,6 +46,9 @@ def test_commands_preserve_missing_configuration_from_non_root_cwd(
     environment = {
         name: value for name, value in os.environ.items() if not name.startswith("VERITYCX_")
     }
+    # Keep missing-configuration cases isolated even after local app setup creates .env.
+    environment["VERITYCX_DATABASE_URL"] = ""
+    environment["VERITYCX_TEST_DATABASE_URL"] = ""
     result = subprocess.run(  # noqa: S603
         [sys.executable, str(root / script), *arguments],
         cwd=tmp_path,

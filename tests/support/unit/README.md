@@ -19,3 +19,7 @@ or subprocess handles created by that test; it must never reset unrelated databa
 ## Current files
 
 `test_checkpoint_serialization.py`, `test_configuration.py`, `test_corpus.py`, `test_event_loop.py`, `test_models.py`, `test_retrieval.py`, `test_routing.py`, `test_safety.py`, `test_trace_privacy.py`.
+
+`test_chatwoot.py` adds offline signed-webhook, public configuration, two-token HTTP
+routing, strict AgentBot assignment and safe error contracts. Its mock transports never
+contact an actual Chatwoot server or OpenAI.

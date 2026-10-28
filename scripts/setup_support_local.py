@@ -1,4 +1,4 @@
-"""Bootstrap an isolated local PostgreSQL database for VerityCX support tests."""
+"""Bootstrap owned local PostgreSQL databases and optional app demo configuration."""
 
 from __future__ import annotations
 
@@ -21,7 +21,13 @@ import psycopg
 from psycopg import sql
 from psycopg.conninfo import make_conninfo
 
-from veritycx.persistence.migrate import migrate
+from veritycx.knowledge.configuration import active_corpus
+from veritycx.persistence.migrate import MigrationError, migrate
+from veritycx.policy.sources import SourceError
+from veritycx.service.auth import AuthError, authenticate, init_demo, load_principals
+from veritycx.service.local_environment import LocalSetupError as LocalSetupError
+from veritycx.service.local_environment import _app_environment_content as _app_environment_content
+from veritycx.service.local_environment import _write_app_environment as _write_app_environment
 from veritycx.service.runtime import run_async
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -32,10 +38,6 @@ POSTGRESQL_PORT = 55432
 OWNER_MARKER = ".veritycx-local-postgres"
 ARCHIVE_NAME = f"postgresql-{POSTGRESQL_VERSION}.tar.bz2"
 ARCHIVE_URL = f"https://ftp.postgresql.org/pub/source/v{POSTGRESQL_VERSION}/{ARCHIVE_NAME}"
-
-
-class LocalSetupError(ValueError):
-    """Expose one safe local-setup failure category without credentials."""
 
 
 @dataclass(frozen=True)
@@ -108,11 +110,43 @@ def _layout_status(paths: SetupPaths) -> str:
 
 
 def _write_private(path: Path, content: str, *, exclusive: bool = False) -> None:
+    """Write an owned secret file privately from creation, optionally refusing overwrite."""
     path.parent.mkdir(parents=True, exist_ok=True)
     mode = "x" if exclusive else "w"
-    with path.open(mode, encoding="utf-8") as output:
+    descriptor = os.open(
+        path, os.O_WRONLY | os.O_CREAT | (os.O_EXCL if exclusive else os.O_TRUNC), 0o600
+    )
+    with os.fdopen(descriptor, mode, encoding="utf-8") as output:
         output.write(content)
     path.chmod(0o600)
+
+
+def _ensure_app_auth(directory: Path, *, create: bool = True) -> Path:
+    """Reuse complete valid demo identities, refusing partial or mismatched credentials."""
+    targets = (directory / "auth.json", directory / "client-1.token", directory / "client-2.token")
+    try:
+        if directory.is_symlink():
+            raise AuthError("invalid_auth_configuration")
+        if not any(path.exists() or path.is_symlink() for path in targets) and create:
+            directory.mkdir(parents=True, mode=0o700, exist_ok=True)
+            directory.chmod(0o700)
+            targets = init_demo(directory)
+        if any(not path.is_file() or path.is_symlink() for path in targets):
+            raise AuthError("invalid_auth_configuration")
+        principals = load_principals(targets[0])
+        owners = {
+            authenticate("Bearer " + token.read_text(encoding="utf-8").strip(), principals)
+            for token in targets[1:]
+        }
+        if len(owners) != 2:
+            raise AuthError("invalid_auth_configuration")
+        if create:
+            directory.chmod(0o700)
+            for path in targets:
+                path.chmod(0o600)
+        return targets[0]
+    except (AuthError, OSError, UnicodeError):
+        raise LocalSetupError("local_support_app_auth_invalid") from None
 
 
 def _claim_layout(paths: SetupPaths) -> None:
@@ -271,7 +305,12 @@ def _load_or_create_credentials(paths: SetupPaths) -> dict[str, str]:
     return credentials
 
 
-def _connection_strings(credentials: dict[str, str]) -> tuple[str, str, str]:
+def _connection_strings(
+    credentials: dict[str, str], runtime_role: str = "veritycx_support_test"
+) -> tuple[str, str, str]:
+    """Build fixed local admin/migration/runtime DSNs without exposing passwords."""
+    if runtime_role not in {"veritycx_support", "veritycx_support_test"}:
+        raise LocalSetupError("local_support_setup_unowned")
     admin = make_conninfo(
         host="127.0.0.1",
         port=POSTGRESQL_PORT,
@@ -279,10 +318,10 @@ def _connection_strings(credentials: dict[str, str]) -> tuple[str, str, str]:
         password=credentials["admin_password"],
         dbname="postgres",
     )
-    migration = make_conninfo(admin, dbname="veritycx_support_test")
+    migration = make_conninfo(admin, dbname=runtime_role)
     runtime = make_conninfo(
         migration,
-        user="veritycx_support_test",
+        user=runtime_role,
         password=credentials["runtime_password"],
     )
     return admin, migration, runtime
@@ -352,41 +391,139 @@ def _start_cluster(paths: SetupPaths) -> None:
     )
 
 
-def _provision_database(admin: str, migration: str, runtime_password: str) -> None:
+def _provision_database(
+    admin: str, migration: str, runtime_password: str, runtime_role: str = "veritycx_support_test"
+) -> None:
+    """Provision one fixed owned database and migrate it without dropping existing data."""
+    if runtime_role not in {"veritycx_support", "veritycx_support_test"}:
+        raise LocalSetupError("local_support_setup_unowned")
+    identifier = sql.Identifier(runtime_role)
     with psycopg.connect(admin, autocommit=True) as connection:
         cursor = connection.execute(
-            "SELECT rolname FROM pg_roles WHERE rolname='veritycx_support_test'"
-        )
-        if cursor.fetchone() is None:
-            connection.execute(
-                sql.SQL(
-                    "CREATE ROLE veritycx_support_test LOGIN PASSWORD {} "
-                    "NOSUPERUSER NOCREATEDB NOCREATEROLE"
-                ).format(sql.Literal(runtime_password))
-            )
-        else:
-            connection.execute(
-                sql.SQL(
-                    "ALTER ROLE veritycx_support_test PASSWORD {} "
-                    "NOSUPERUSER NOCREATEDB NOCREATEROLE"
-                ).format(sql.Literal(runtime_password))
-            )
-        cursor = connection.execute(
-            "SELECT pg_get_userbyid(datdba) AS owner FROM pg_database "
-            "WHERE datname='veritycx_support_test'"
+            "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname=%s", (runtime_role,)
         )
         database = cursor.fetchone()
-        if database is None:
-            connection.execute("CREATE DATABASE veritycx_support_test OWNER veritycx_admin")
-        elif database[0] != "veritycx_admin":
+        if database is not None and database[0] != "veritycx_admin":
             raise LocalSetupError("local_support_setup_unowned")
-        connection.execute("REVOKE CONNECT ON DATABASE veritycx_support_test FROM PUBLIC")
+        cursor = connection.execute(
+            "SELECT rolsuper, rolcreatedb, rolcreaterole FROM pg_roles WHERE rolname=%s",
+            (runtime_role,),
+        )
+        role = cursor.fetchone()
+        if role is None:
+            connection.execute(
+                sql.SQL(
+                    "CREATE ROLE {} LOGIN PASSWORD {} NOSUPERUSER NOCREATEDB NOCREATEROLE"
+                ).format(identifier, sql.Literal(runtime_password))
+            )
+        elif runtime_role == "veritycx_support_test":
+            connection.execute(
+                sql.SQL("ALTER ROLE {} PASSWORD {} NOSUPERUSER NOCREATEDB NOCREATEROLE").format(
+                    identifier, sql.Literal(runtime_password)
+                )
+            )
+        elif any(role):
+            raise LocalSetupError("local_support_setup_unowned")
+        if database is None:
+            connection.execute(
+                sql.SQL("CREATE DATABASE {} OWNER veritycx_admin").format(identifier)
+            )
+        connection.execute(sql.SQL("REVOKE CONNECT ON DATABASE {} FROM PUBLIC").format(identifier))
         connection.execute(
-            "GRANT CONNECT ON DATABASE veritycx_support_test TO veritycx_support_test"
+            sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(identifier, identifier)
         )
     with psycopg.connect(migration, autocommit=True) as connection:
         connection.execute("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
-    run_async(migrate(migration, "veritycx_support_test"))
+    run_async(migrate(migration, runtime_role))
+
+
+def _app_credentials(paths: SetupPaths, admin: str, *, create: bool) -> dict[str, str]:
+    """Keep app credentials stable and refuse adoption of an unregistered database/role."""
+    path = paths.local / "app-credentials.json"
+    if path.is_symlink():
+        raise LocalSetupError("local_support_app_credentials_invalid")
+    if path.is_file():
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            raise LocalSetupError("local_support_app_credentials_invalid") from None
+        if (
+            not isinstance(value, dict)
+            or set(value) != {"runtime_password"}
+            or not isinstance(value["runtime_password"], str)
+            or not value["runtime_password"]
+        ):
+            raise LocalSetupError("local_support_app_credentials_invalid")
+        return {"runtime_password": value["runtime_password"]}
+    if not create:
+        raise LocalSetupError("local_support_app_setup_incomplete")
+    with psycopg.connect(admin, autocommit=True) as connection:
+        row = connection.execute(
+            "SELECT EXISTS (SELECT FROM pg_roles WHERE rolname='veritycx_support') "
+            "OR EXISTS (SELECT FROM pg_database WHERE datname='veritycx_support')"
+        ).fetchone()
+        if row is None or row[0]:
+            raise LocalSetupError("local_support_setup_unowned")
+    credentials = {"runtime_password": secrets.token_urlsafe(32)}
+    # Persist before provisioning so an interrupted first setup can be resumed.
+    _write_private(path, json.dumps(credentials) + "\n", exclusive=True)
+    return credentials
+
+
+def _app_values(paths: SetupPaths, *, create: bool) -> dict[str, str]:
+    """Derive app settings using the cluster admin and separate saved runtime password."""
+    credentials = _load_or_create_credentials(paths)
+    admin, _, _ = _connection_strings(credentials)
+    app_credentials = _app_credentials(paths, admin, create=create)
+    _, migration, runtime = _connection_strings(
+        {**credentials, **app_credentials}, "veritycx_support"
+    )
+    return {
+        "VERITYCX_DATABASE_URL": runtime,
+        "VERITYCX_MIGRATION_DATABASE_URL": migration,
+        "VERITYCX_AUTH_FILE": str(paths.root / "credentials" / "auth.json"),
+    }
+
+
+def _setup_app(paths: SetupPaths) -> None:
+    """Provision the separate app database, reuse demo auth and fill root dotenv settings."""
+    values = _app_values(paths, create=True)
+    environment = PROJECT_ROOT / ".env"
+    # Detect configuration conflicts before provisioning the app database or demo auth.
+    _app_environment_content(environment, values)
+    _ensure_app_auth(paths.root / "credentials")
+    cluster_credentials = _load_or_create_credentials(paths)
+    admin, _, _ = _connection_strings(cluster_credentials)
+    app_credentials = _app_credentials(paths, admin, create=False)
+    _provision_database(
+        admin,
+        values["VERITYCX_MIGRATION_DATABASE_URL"],
+        app_credentials["runtime_password"],
+        "veritycx_support",
+    )
+    # Confirm the saved password works; never reset an existing app role on rerun.
+    with psycopg.connect(values["VERITYCX_DATABASE_URL"], connect_timeout=5):
+        pass
+    _write_app_environment(environment, values)
+
+
+def _app_layout_status(paths: SetupPaths) -> str:
+    """Read app files without connecting to PostgreSQL or generating credentials."""
+    try:
+        if not paths.credentials.is_file():
+            return "local_support_app_setup_incomplete"
+        values = _app_values(paths, create=False)
+        _ensure_app_auth(paths.root / "credentials", create=False)
+        environment = PROJECT_ROOT / ".env"
+        if not environment.is_file():
+            return "local_support_app_setup_incomplete"
+        if _app_environment_content(environment, values) != environment.read_text(encoding="utf-8"):
+            return "local_support_app_setup_incomplete"
+    except LocalSetupError as error:
+        return str(error)
+    except (OSError, UnicodeError):
+        return "local_support_app_setup_incomplete"
+    return "local_support_app_setup_ready"
 
 
 def _bootstrap(paths: SetupPaths) -> None:
@@ -412,18 +549,27 @@ def main() -> int:
     parser.add_argument(
         "--check", action="store_true", help="inspect existing setup without changing it"
     )
+    parser.add_argument(
+        "--app",
+        action="store_true",
+        help="also provision the separate app database, demo auth and root .env",
+    )
     arguments = parser.parse_args()
     paths = SetupPaths.from_root(arguments.root)
     status = _layout_status(paths)
     if arguments.check:
+        if arguments.app and status == "local_support_setup_ready":
+            status = _app_layout_status(paths)
         print(status)
-        return 0 if status == "local_support_setup_ready" else 1
+        return 0 if status in {"local_support_setup_ready", "local_support_app_setup_ready"} else 1
     if status == "local_support_setup_unowned":
         print(status)
         return 1
     try:
         _bootstrap(paths)
-    except LocalSetupError as error:
+        if arguments.app:
+            _setup_app(paths)
+    except (LocalSetupError, MigrationError) as error:
         print(str(error))
         return 1
     except (
@@ -432,11 +578,20 @@ def main() -> int:
         subprocess.SubprocessError,
         tarfile.TarError,
         urllib.error.URLError,
+        UnicodeError,
     ):
         print("local_support_setup_failed")
         return 1
     print("local_support_setup_ready")
     print(f"environment={paths.environment}")
+    if arguments.app:
+        print("local_support_app_setup_ready")
+        print(f"app_environment={PROJECT_ROOT / '.env'}")
+        try:
+            active_corpus("synthetic")
+            print("corpus=approved")
+        except (SourceError, OSError, ValueError):
+            print("corpus=approval_required")
     return 0
 
 

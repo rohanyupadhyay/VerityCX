@@ -78,5 +78,17 @@ jobs:
           uv run mdformat --check docs/platform-roadmap.md docs/platform-design.md docs/threat-model.md specs/002-durable-knowledge-support
           uv run mdformat --check specs/gh-5-env-support
           uv run mdformat --check src scripts tests config docs
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Verify customer frontend
+        run: |
+          npm ci
+          npm run format:check
+          npm run typecheck
+          npm test
+          npm run build
       - name: Check workflow formatting
         run: uv run yamlfix --check .github/workflows/quality.yml .github/workflows/support-integration.yml

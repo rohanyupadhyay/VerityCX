@@ -29,6 +29,31 @@ Prerequisite resolution must name this feature and its plan. It does not validat
 
 ## Local Database and Environment
 
+On Linux/WSL, prefer the maintained bootstrap over manual database provisioning:
+
+```bash
+uv run python scripts/setup_support_local.py --app
+```
+
+It starts the project-owned PostgreSQL 18.6 cluster on port 55432, creates separate
+app/test databases and runtime roles, applies migrations, creates or reuses demo
+authentication, and fills missing or empty app settings in the ignored root `.env`.
+Existing nonempty settings must match; conflicting configuration is preserved and
+reported as `local_support_app_configuration_conflict`. No SQL or password copying
+is needed. Default setup without `--app` remains dedicated to tests.
+
+If setup reports `corpus=approval_required`, run the corpus prepare/review/approve
+steps below. Already approved unchanged synthetic documents need no repeat approval.
+Skip `db migrate` and `auth init-demo` below after successful `--app` setup because
+the helper already performed those operations. Start the API and worker in separate
+terminals as documented below; readiness is checked through `/health/ready`.
+
+`uv run python scripts/setup_support_local.py --app --check` is a read-only file-layout
+and configuration check, not a running-service health check. See the
+[scripts guide](../../scripts/README.md#local-application-setup) for rerun and conflict behavior.
+
+For a separately managed PostgreSQL installation, the manual provisioning alternative follows.
+
 After PostgreSQL installation, use administrator credentials interactively:
 
 ```powershell

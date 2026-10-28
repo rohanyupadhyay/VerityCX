@@ -19,3 +19,10 @@ or subprocess handles created by that test; it must never reset unrelated databa
 ## Current files
 
 `test_attempt_recovery.py`, `test_checkpoint_transactions.py`, `test_escalation.py`, `test_interrupt_recovery.py`, `test_migrations.py`, `test_recovery.py`, `test_repository.py`, `test_retention.py`.
+
+`test_chatwoot.py` exercises the independent integration migration, scoped thread mapping,
+event replay across corpus updates and interrupted mapping creation, uncertain delivery
+reconciliation, actual graph handoff/resume, terminal
+intake limits and human-ownership fences. It uses the explicitly dedicated runtime and
+migration DSNs plus mock remote HTTP; these tests do not prove a real Chatwoot deployment.
+Run database suites sequentially against their shared dedicated test database.
