@@ -44,3 +44,7 @@ Feature 002 implementation and local evidence are documented in `specs/002-durab
 The [customer chat design](superpowers/specs/2026-10-26-customer-chat-design.md) and
 [implementation plan](superpowers/plans/2026-10-26-customer-chat.md) record the branded
 page, native widget, signed bridge and open live deployment/AI acceptance gates.
+
+The proposed [bank information design](superpowers/specs/2026-10-29-bank-information-design.md)
+describes product and service pages with shared search over approved banking documents.
+It awaits user approval and does not describe implemented website functionality.
