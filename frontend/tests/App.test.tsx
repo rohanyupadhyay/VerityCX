@@ -40,8 +40,13 @@ it("renders an honest demo, readable guidance, and unavailable chat controls", a
   );
   expect(launchers.length).toBeGreaterThan(3);
   launchers.forEach((button) => expect(button.disabled).toBe(true));
-  expect(container.querySelector("textarea, [role='log'], form")).toBeNull();
+  expect(container.querySelector("textarea, [role='log']")).toBeNull();
+  expect(container.querySelector("form[role='search']")).not.toBeNull();
   expect(container.querySelector("a[href='#']")).toBeNull();
+  expect(container.querySelector("a[href='/bank']")).not.toBeNull();
+  expect(
+    container.querySelector("a[href='/bank/services/cards']"),
+  ).not.toBeNull();
 });
 
 it("enables every conversation action only after native readiness and opens that widget", async () => {

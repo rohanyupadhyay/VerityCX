@@ -12,6 +12,7 @@ from veritycx import PROJECT_ROOT
 from veritycx.knowledge import configuration as corpus_configuration
 from veritycx.knowledge import manifest as corpus_manifest
 from veritycx.knowledge.manifest import approve, prepare
+from veritycx.policy.sources import verified_bytes
 from veritycx.service import app as service_app
 from veritycx.service.auth import init_demo
 from veritycx.service.configuration import RuntimeConfiguration, Settings
@@ -171,7 +172,7 @@ def test_source_change_between_inventory_and_read_is_rejected(
     bank_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Publication must compare the actual returned bytes with the approved document hash."""
-    original = corpus_manifest.verified_bytes
+    original = verified_bytes
     calls = 0
 
     def changed(root: Path, relative: str) -> bytes:

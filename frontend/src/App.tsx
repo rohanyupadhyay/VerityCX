@@ -1,6 +1,7 @@
 /** Present the synthetic banking support page around the actual native messaging connection. */
 import { useEffect, useState, type ReactElement } from "react";
 import { ChatConnection, type ChatState } from "./chat";
+import { BankPages, BankSearch } from "./BankPages";
 
 type IconName =
   "arrow" | "chat" | "shield" | "bank" | "card" | "leaf" | "transfer";
@@ -47,6 +48,7 @@ const topics: {
   title: string;
   description: string;
   tag: string;
+  category: string;
 }[] = [
   {
     number: "01",
@@ -55,6 +57,7 @@ const topics: {
     description:
       "Make sense of Birch checking fees, account requirements and the everyday details.",
     tag: "Checking & accounts",
+    category: "accounts",
   },
   {
     number: "02",
@@ -63,6 +66,7 @@ const topics: {
     description:
       "Explore Cedar card replacement policies and understand the next steps.",
     tag: "Cards & replacements",
+    category: "cards",
   },
   {
     number: "03",
@@ -71,6 +75,7 @@ const topics: {
     description:
       "Get clarity on Alder savings requirements and how the policies fit together.",
     tag: "Savings & eligibility",
+    category: "savings",
   },
   {
     number: "04",
@@ -79,6 +84,7 @@ const topics: {
     description:
       "Ask about transfer rules, timing and the policy behind a banking question.",
     tag: "Payments & transfers",
+    category: "payments",
   },
 ];
 
@@ -144,6 +150,9 @@ function ChatButton({
 
 /** Render the public customer experience without account access or private credentials. */
 export function App(): ReactElement {
+  const bankView =
+    window.location.pathname === "/bank" ||
+    window.location.pathname.startsWith("/bank/");
   const [connection] = useState(() => new ChatConnection());
   const [state, setState] = useState<ChatState>(connection.state);
 
@@ -168,7 +177,7 @@ export function App(): ReactElement {
         Skip to content
       </a>
       <header className="site-header shell">
-        <a className="wordmark" href="#main" aria-label="Verity support home">
+        <a className="wordmark" href="/" aria-label="Verity support home">
           <svg
             width="34"
             height="36"
@@ -184,10 +193,12 @@ export function App(): ReactElement {
           </span>
         </a>
         <span className="header-divider" aria-hidden="true" />
-        <span className="header-label">Support center</span>
+        <span className="header-label">Your bank, explained</span>
         <nav aria-label="Main navigation">
-          <a href="#topics">Help topics</a>
-          <a href="#good-to-know">Good to know</a>
+          <a className="bank-nav-link" href="/bank">
+            Explore the bank
+          </a>
+          <a href="/#good-to-know">Support guide</a>
           <ChatButton state={state} onOpen={openChat} className="header-chat">
             Let’s talk <Icon name="arrow" />
           </ChatButton>
@@ -195,163 +206,195 @@ export function App(): ReactElement {
       </header>
 
       <main id="main">
-        <section className="hero shell" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <p className="eyebrow">
-              <span className="small-line" /> A LITTLE CLARITY GOES A LONG WAY
-            </p>
-            <h1 id="hero-title">
-              Good questions.
-              <br />
-              <em>Clear answers.</em>
-            </h1>
-            <p className="hero-description">
-              Banking has enough fine print.
-              <br className="desktop-break" /> Getting help shouldn’t add to it.
-            </p>
-            <p className="hero-detail">
-              Find your way through our policies, ask what’s on your mind, and
-              get a little guidance for your next step.
-            </p>
-            <div className="hero-actions">
-              <ChatButton
-                state={state}
-                onOpen={openChat}
-                className="button button-primary"
-              >
-                <Icon name="chat" /> Start a conversation <Icon name="arrow" />
-              </ChatButton>
-              <a className="text-link" href="#topics">
-                Explore help topics <span aria-hidden="true">↗</span>
-              </a>
-            </div>
-            <p className="privacy-note">
-              <Icon name="shield" /> Policy help. No personal banking details
-              needed.
-            </p>
-          </div>
+        {bankView ? (
+          <BankPages state={state} onOpen={openChat} />
+        ) : (
+          <>
+            <section className="hero shell" aria-labelledby="hero-title">
+              <div className="hero-copy">
+                <p className="eyebrow">
+                  <span className="small-line" /> A LITTLE CLARITY GOES A LONG
+                  WAY
+                </p>
+                <h1 id="hero-title">
+                  Good questions.
+                  <br />
+                  <em>Clear answers.</em>
+                </h1>
+                <p className="hero-description">
+                  Banking has enough fine print.
+                  <br className="desktop-break" /> Getting help shouldn’t add to
+                  it.
+                </p>
+                <p className="hero-detail">
+                  Get to know our accounts, cards, savings, and payment
+                  policies. Explore the details, then ask VerityCX what’s on
+                  your mind.
+                </p>
+                <div className="hero-actions">
+                  <ChatButton
+                    state={state}
+                    onOpen={openChat}
+                    className="button button-primary"
+                  >
+                    <Icon name="chat" /> Start a conversation{" "}
+                    <Icon name="arrow" />
+                  </ChatButton>
+                  <a className="text-link" href="/bank">
+                    Explore the bank <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+                <p className="privacy-note">
+                  <Icon name="shield" /> Policy help. No personal banking
+                  details needed.
+                </p>
+              </div>
 
-          <div className="hero-visual">
-            <div className="orbit orbit-one" aria-hidden="true" />
-            <div className="orbit orbit-two" aria-hidden="true" />
-            <div className="visual-caption">
-              <span className="four-point-star" aria-hidden="true">
-                ✳
-              </span>{" "}
-              A FRESH PERSPECTIVE
-            </div>
-            <div className="question-card">
-              <span className="eyebrow">LET’S START WITH YOU</span>
-              <h2>
-                A question is
-                <br />a good beginning.
-              </h2>
-              <p>Here are a few places to start.</p>
-              {[
-                "What are the Birch checking fees?",
-                "How do Cedar card replacements work?",
-                "What does Alder savings require?",
-              ].map((question, index) => (
-                <ChatButton
-                  key={question}
-                  state={state}
-                  onOpen={openChat}
-                  className="suggested-question"
-                  label={`Open chat to ask: ${question}`}
-                >
-                  <span className="question-number">0{index + 1}</span>
-                  <span>{question}</span>
-                  <Icon name="arrow" />
-                </ChatButton>
-              ))}
-              <span className="card-footnote">
-                Your question. A clearer next step.
-              </span>
-            </div>
-            <div className="visual-bottom">
-              <span className="mini-mark" aria-hidden="true">
-                v.
-              </span>
-              <span>
-                A LITTLE HELP.
-                <br />A LOT MORE CLARITY.
-              </span>
-              <Icon name="shield" />
-            </div>
-          </div>
-        </section>
-
-        <div className={`connection-strip connection-${state}`}>
-          <div className="shell connection-content">
-            <p id="chat-status" role="status">
-              <span className="status-dot" />
-              {statusText[state]}
-            </p>
-            <p>
-              {state === "ready"
-                ? "Ask a policy question in our support chat. Human availability depends on the connected inbox."
-                : state === "loading"
-                  ? "We’re checking the support connection. You can explore the guidance below while you wait."
-                  : "The support connection isn’t available. You can still explore the guidance below."}
-            </p>
-            {state === "unavailable" && (
-              <button
-                className="retry-button"
-                type="button"
-                onClick={() => window.location.reload()}
-              >
-                Try again <span aria-hidden="true">↻</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <section
-          className="topics-section shell"
-          id="topics"
-          aria-labelledby="topics-title"
-        >
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">A GOOD PLACE TO START</p>
-              <h2 id="topics-title">
-                Let’s make it <em>simple.</em>
-              </h2>
-            </div>
-            <p>
-              Big question or small detail.
-              <br />
-              There’s a conversation for that.
-            </p>
-          </div>
-          <div className="topic-grid">
-            {topics.map((topic) => (
-              <ChatButton
-                key={topic.number}
-                state={state}
-                onOpen={openChat}
-                className="topic-card"
-                label={`Open chat about ${topic.tag.toLowerCase()}`}
-              >
-                <span className="topic-card-top">
-                  <span className="topic-icon">
-                    <Icon name={topic.icon} />
+              <div className="hero-visual">
+                <div className="orbit orbit-one" aria-hidden="true" />
+                <div className="orbit orbit-two" aria-hidden="true" />
+                <div className="visual-caption">
+                  <span className="four-point-star" aria-hidden="true">
+                    ✳
+                  </span>{" "}
+                  A FRESH PERSPECTIVE
+                </div>
+                <div className="question-card">
+                  <span className="eyebrow">LET’S START WITH YOU</span>
+                  <h2>
+                    A question is
+                    <br />a good beginning.
+                  </h2>
+                  <p>Here are a few places to start.</p>
+                  {[
+                    "What are the Birch checking fees?",
+                    "How do Cedar card replacements work?",
+                    "What does Alder savings require?",
+                  ].map((question, index) => (
+                    <ChatButton
+                      key={question}
+                      state={state}
+                      onOpen={openChat}
+                      className="suggested-question"
+                      label={`Open chat to ask: ${question}`}
+                    >
+                      <span className="question-number">0{index + 1}</span>
+                      <span>{question}</span>
+                      <Icon name="arrow" />
+                    </ChatButton>
+                  ))}
+                  <span className="card-footnote">
+                    Your question. A clearer next step.
                   </span>
-                  <span className="topic-number">{topic.number}</span>
-                </span>
-                <span className="topic-title">{topic.title}</span>
-                <span className="topic-description">{topic.description}</span>
-                <span className="topic-bottom">
-                  <span>{topic.tag}</span>
-                  <Icon name="arrow" />
-                </span>
-              </ChatButton>
-            ))}
-          </div>
-          <p className="topics-note">
-            Topic cards open the support conversation when chat is connected.
-          </p>
-        </section>
+                </div>
+                <div className="visual-bottom">
+                  <span className="mini-mark" aria-hidden="true">
+                    v.
+                  </span>
+                  <span>
+                    A LITTLE HELP.
+                    <br />A LOT MORE CLARITY.
+                  </span>
+                  <Icon name="shield" />
+                </div>
+              </div>
+            </section>
+
+            <div className={`connection-strip connection-${state}`}>
+              <div className="shell connection-content">
+                <p id="chat-status" role="status">
+                  <span className="status-dot" />
+                  {statusText[state]}
+                </p>
+                <p>
+                  {state === "ready"
+                    ? "Ask a policy question in our support chat. Human availability depends on the connected inbox."
+                    : state === "loading"
+                      ? "We’re checking the support connection. You can explore the guidance below while you wait."
+                      : "The support connection isn’t available. You can still explore the guidance below."}
+                </p>
+                {state === "unavailable" && (
+                  <button
+                    className="retry-button"
+                    type="button"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try again <span aria-hidden="true">↻</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <section
+              className="bank-home-search shell"
+              aria-labelledby="bank-discovery-title"
+            >
+              <div>
+                <p className="eyebrow">KNOW WHAT’S POSSIBLE</p>
+                <h2 id="bank-discovery-title">
+                  A bank worth <em>understanding.</em>
+                </h2>
+                <p>
+                  Read our product and service policies before you start a
+                  conversation. Fees, limits, and timelines—all from our
+                  approved documents.
+                </p>
+              </div>
+              <BankSearch />
+              <a className="text-link" href="/bank">
+                Browse all bank information <span aria-hidden="true">↗</span>
+              </a>
+            </section>
+
+            <section
+              className="topics-section shell"
+              id="topics"
+              aria-labelledby="topics-title"
+            >
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">A GOOD PLACE TO START</p>
+                  <h2 id="topics-title">
+                    Find your <em>starting point.</em>
+                  </h2>
+                </div>
+                <p>
+                  Get to know the services.
+                  <br />
+                  Explore the policies behind them.
+                </p>
+              </div>
+              <div className="topic-grid">
+                {topics.map((topic) => (
+                  <a
+                    key={topic.number}
+                    className="topic-card"
+                    href={"/bank/services/" + topic.category}
+                  >
+                    <span className="topic-card-top">
+                      <span className="topic-icon">
+                        <Icon name={topic.icon} />
+                      </span>
+                      <span className="topic-number">{topic.number}</span>
+                    </span>
+                    <span className="topic-title">{topic.title}</span>
+                    <span className="topic-description">
+                      {topic.description}
+                    </span>
+                    <span className="topic-bottom">
+                      <span>{topic.tag}</span>
+                      <Icon name="arrow" />
+                    </span>
+                  </a>
+                ))}
+              </div>
+              <p className="topics-note">
+                Explore all services, including deposits, cash access, and other
+                policies in <a href="/bank">bank information →</a>.
+              </p>
+            </section>
+          </>
+        )}
 
         <section
           className="good-to-know shell"
