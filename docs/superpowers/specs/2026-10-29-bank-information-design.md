@@ -2,7 +2,7 @@
 
 # Bank information pages and shared search
 
-Status: proposed design, awaiting user approval. The user selected product pages
+Status: approved by the user on 2026-10-29. The user selected product pages
 with shared search. Details below are proposed implementation choices, not further
 decisions attributed to the user.
 

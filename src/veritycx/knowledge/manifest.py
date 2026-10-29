@@ -12,7 +12,12 @@ from pydantic import ValidationError
 from veritycx.conversations.models import parse_json
 from veritycx.knowledge.documents import parse_document
 from veritycx.knowledge.index import sections
-from veritycx.knowledge.models import CorpusManifest, EvidenceSection, ManifestEntry
+from veritycx.knowledge.models import (
+    CorpusManifest,
+    EvidenceSection,
+    KnowledgeDocument,
+    ManifestEntry,
+)
 from veritycx.policy.sources import SourceError, verified_bytes
 
 
@@ -140,9 +145,9 @@ def read_active(root: Path, cache: Path) -> CorpusManifest:
     return manifest
 
 
-def load_sections(root: Path, manifest: CorpusManifest) -> list[EvidenceSection]:
-    """Use verified source bytes, never trust a potentially modified derived index."""
-    result: list[EvidenceSection] = []
+def load_documents(root: Path, manifest: CorpusManifest) -> list[KnowledgeDocument]:
+    """Load complete documents only after matching approved hashes, IDs, and section inventory."""
+    result: list[KnowledgeDocument] = []
     for entry in manifest.entries:
         raw = verified_bytes(root, entry.path)
         if sha256(raw).hexdigest() != entry.sha256:
@@ -154,5 +159,14 @@ def load_sections(root: Path, manifest: CorpusManifest) -> list[EvidenceSection]
             or tuple(s.section_id for s in indexed) != entry.section_ids
         ):
             raise SourceError("corpus_changed")
-        result.extend(indexed)
+        result.append(document)
     return result
+
+
+def load_sections(root: Path, manifest: CorpusManifest) -> list[EvidenceSection]:
+    """Use verified source bytes, never trust a potentially modified derived index."""
+    return [
+        section
+        for document in load_documents(root, manifest)
+        for section in sections(document, manifest.corpus_version)
+    ]

@@ -5,7 +5,12 @@ export default defineConfig({
   root: "frontend",
   base: "/",
   build: { outDir: "../dist/chat", emptyOutDir: true },
-  server: { proxy: { "/chat/config": "http://127.0.0.1:8000" } },
+  server: {
+    proxy: {
+      "/chat/config": "http://127.0.0.1:8000",
+      "/bank/api": "http://127.0.0.1:8000",
+    },
+  },
   test: {
     environment: "jsdom",
     include: ["tests/**/*.test.{ts,tsx}"],

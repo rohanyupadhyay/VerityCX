@@ -2,11 +2,12 @@
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.staticfiles import StaticFiles
 
 from veritycx import PROJECT_ROOT
+from veritycx.knowledge.catalog import CATEGORIES
 
 FRONTEND_ROOT = PROJECT_ROOT / "dist" / "chat"
 
@@ -32,7 +33,7 @@ def register_frontend(app: FastAPI, directory: Path, widget_origin: str | None =
 
     @app.get("/", include_in_schema=False)
     @app.get("/chat", include_in_schema=False)
-    async def customer_page() -> Response:
+    def customer_page() -> Response:
         """Return the built page or an explicit unavailable response without private paths."""
         index = directory / "index.html"
         if not index.is_file() or index.is_symlink():
@@ -47,3 +48,23 @@ def register_frontend(app: FastAPI, directory: Path, widget_origin: str | None =
                 "Referrer-Policy": "same-origin",
             },
         )
+
+    @app.get("/bank", include_in_schema=False)
+    @app.get("/bank/search", include_in_schema=False)
+    def bank_page() -> Response:
+        """Serve explicit information entry pages with the same browser security boundary."""
+        return customer_page()
+
+    @app.get("/bank/services/{category}", include_in_schema=False)
+    def service_page(category: str) -> Response:
+        """Serve only supported service categories, leaving unknown paths as real errors."""
+        if category not in CATEGORIES:
+            raise HTTPException(404, "page_not_found")
+        return customer_page()
+
+    @app.get("/bank/policies/{document_id:path}", include_in_schema=False)
+    def policy_page(document_id: str) -> Response:
+        """Permit direct document links without a catch-all that could mask API errors."""
+        if not document_id:
+            raise HTTPException(404, "page_not_found")
+        return customer_page()

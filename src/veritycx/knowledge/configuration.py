@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Literal
 
 from veritycx.data_sources.tau3 import load_tau3_config
-from veritycx.knowledge.manifest import load_sections, read_active
-from veritycx.knowledge.models import CorpusManifest, EvidenceSection
+from veritycx.knowledge.manifest import load_documents, load_sections, read_active
+from veritycx.knowledge.models import CorpusManifest, EvidenceSection, KnowledgeDocument
 from veritycx.policy.sources import SourceError
 from veritycx.service.configuration import PROJECT_ROOT
 
@@ -64,3 +64,14 @@ def active_corpus(
     if manifest.source_pin != pin or manifest.mode != mode:
         raise SourceError("corpus_changed")
     return manifest, load_sections(root, manifest)
+
+
+def active_documents(
+    mode: Literal["synthetic", "official"],
+) -> tuple[CorpusManifest, list[KnowledgeDocument]]:
+    """Return complete approved documents, rechecking provenance and bytes on every call."""
+    root, cache, pin = source_mode(mode)
+    manifest = read_active(root, cache)
+    if manifest.source_pin != pin or manifest.mode != mode:
+        raise SourceError("corpus_changed")
+    return manifest, load_documents(root, manifest)

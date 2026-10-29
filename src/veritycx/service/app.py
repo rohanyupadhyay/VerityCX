@@ -17,6 +17,7 @@ from veritycx.persistence.migrate import MigrationError
 from veritycx.persistence.repository import RepositoryError
 from veritycx.policy.sources import SourceError
 from veritycx.service.auth import AuthError, load_principals
+from veritycx.service.bank import register_bank
 from veritycx.service.configuration import RuntimeConfiguration
 from veritycx.service.frontend import FRONTEND_ROOT, register_frontend
 from veritycx.service.health import register_health
@@ -109,6 +110,7 @@ def create_app(configuration: RuntimeConfiguration) -> FastAPI:
 
     register_routes(app, configuration, principals, get_pool)
     register_health(app, configuration.settings, get_pool)
+    register_bank(app, configuration.settings.corpus_mode)
     register_chatwoot(
         app, configuration.chatwoot, get_pool, corpus_mode=configuration.settings.corpus_mode
     )

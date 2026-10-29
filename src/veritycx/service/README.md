@@ -12,6 +12,21 @@ Build with `npm run build` from the repository root, or use
 the API/worker together. A missing build returns an explicit unavailable response while
 backend liveness remains usable.
 
+`bank.py` adds public read-only `GET /bank/api/policies` and
+`GET /bank/api/policies/{document_id}`. The list accepts only `q` (up to 200
+characters), `category`, and `page` (1–100000), returns 12 full-text-search matches
+per page, all category counts, and the active corpus version/mode. Detail returns
+the exact complete approved text. Source roots and corpus mode cannot be selected
+by visitors. These synchronous endpoints run source verification off the event loop,
+need no database or chat connection, use no-store responses, and expose no source
+paths, banking records, evaluation data, or private configuration. Changed or missing
+approval produces the existing sanitized 503 response; unknown IDs return 404.
+`frontend.py` also serves explicit `/bank`, `/bank/search`,
+`/bank/services/{known-category}`, and `/bank/policies/{document_id}` page routes.
+There is no blanket frontend fallback for API or unknown paths.
+
+Verify with `uv run pytest tests/support/contract/test_bank_information.py`.
+
 Optional typed Chatwoot configuration exposes only the public widget origin/token through
 `GET /chat/config`; signed webhook intake and durable delivery belong to the `handoff`
 package. API and AgentBot tokens and the OpenAI key remain server-side. The worker runs

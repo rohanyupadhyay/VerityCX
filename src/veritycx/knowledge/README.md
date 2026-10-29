@@ -12,6 +12,14 @@ character evidence cap and 16000-character contiguous prior context. `configurat
 only fixed synthetic/official roots and checks official Git provenance without reading banking data.
 `models.py` defines strict document, evidence and manifest contracts.
 
+`configuration.active_documents(mode)` and `manifest.load_documents` return complete
+approved source documents after verifying the manifest, hashes, identifiers, and section
+inventory. `catalog.py` projects these into public categories, matching excerpts, related
+titles, and explicitly known synthetic conflict pairs. Unclassified titles remain in
+Other policies; category metadata never changes source facts. No upstream documents are
+copied into tracked frontend files. Both full-document publication and chat retrieval
+fail closed when approval is missing or sources change.
+
 Prepare with `uv run python scripts/manage_support.py corpus prepare --mode synthetic`, then review
 and run `uv run python scripts/manage_support.py corpus approve --hash HASH`. Artifacts live under
 ignored `.cache/support/corpora/`. Source changes fail closed; no automatic approval, embeddings,
