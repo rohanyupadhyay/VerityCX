@@ -83,6 +83,8 @@ full documents at `/bank/policies/{encoded-document-id}`. Shared search uses
 Back/Forward, and ordinary new-tab navigation. The six service categories are
 accounts, savings, cards, payments, deposits, and other policies. Empty categories
 are omitted. Full policies and search work even when Chatwoot is unavailable.
+Every bank page offers a reload-based chat retry when the native connection is
+unavailable, independently of whether policy loading succeeds.
 
 Pages fetch only the public `/bank/api/policies` list/search and document-detail
 endpoints. The API returns current approved source text, category counts, and corpus

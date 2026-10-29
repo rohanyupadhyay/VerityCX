@@ -2,7 +2,7 @@
 
 # Bank Information Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Help visitors discover bank services, read all approved policies, and ask informed questions in VerityCX.
 
@@ -58,15 +58,15 @@
 
 - Frontend paths: `/bank`, `/bank/search`, `/bank/services/{known-category}`, `/bank/policies/{encoded-id}`. Reserved API paths cannot become HTML fallbacks.
 
-- [ ] Write contract tests using a real temporary prepared/approved corpus. Assert all 40 authored synthetic documents can be paged, exact Birch full text, body search, fallback categories, conflict links, absent private fields, unapproved/drifted source 503, malformed query 422, unknown ID 404, no database dependency, and supported/unsupported deep links.
+- [x] Write contract tests using a real temporary prepared/approved corpus. Assert all 40 authored synthetic documents can be paged, exact Birch full text, body search, fallback categories, conflict links, absent private fields, unapproved/drifted source 503, malformed query 422, unknown ID 404, no database dependency, and supported/unsupported deep links.
 
-- [ ] Run `uv run pytest tests/support/contract/test_bank_information.py -q`; expect failures because bank routes do not exist.
+- [x] Run `uv run pytest tests/support/contract/test_bank_information.py -q`; expect failures because bank routes do not exist.
 
-- [ ] Implement the interfaces, exact source verification, safe excerpts, category metadata, and explicit shell routes. Use synchronous endpoints so filesystem verification runs off the async event loop. Keep full content as text and private paths out of responses.
+- [x] Implement the interfaces, exact source verification, safe excerpts, category metadata, and explicit shell routes. Use synchronous endpoints so filesystem verification runs off the async event loop. Keep full content as text and private paths out of responses.
 
-- [ ] Update module READMEs and proxy `/bank/api` in Vite.
+- [x] Update module READMEs and proxy `/bank/api` in Vite.
 
-- [ ] Run new contract tests and existing customer-page/corpus tests; expect all pass. Run touched Python formatter/linter/type checks and commit as `feat: expose approved bank information and policy search`.
+- [x] Run new contract tests and existing customer-page/corpus tests; expect all pass. Run touched Python formatter/linter/type checks and commit as `feat: expose approved bank information and policy search`.
 
 ### Task 2: Bank pages, shared search, and chat integration
 
@@ -82,15 +82,15 @@
 
 - Use `AbortController`, bounded fetch timeouts, and cleanup to prevent stale page updates. Do not persist queries or load an alternate fixture corpus on failure.
 
-- [ ] Write tests for schema rejection, search submission/clear/filter/pagination URLs, complete text with literal HTML, fallback/multiple sources, native chat readiness, failure retry, and stale responses after navigation. Update homepage tests to assert a usable information link with chat disabled.
+- [x] Write tests for schema rejection, search submission/clear/filter/pagination URLs, complete text with literal HTML, fallback/multiple sources, native chat readiness, failure retry, and stale responses after navigation. Update homepage tests to assert a usable information link with chat disabled.
 
-- [ ] Run `npm test`; expect new tests to fail because the page modules do not exist or links are missing.
+- [x] Run `npm test`; expect new tests to fail because the page modules do not exist or links are missing.
 
-- [ ] Implement the validated client and routed bank views. Include service overviews, named source titles, source metadata, counts, excerpts, full text, known conflict links, example questions derived from titles, visible loading/errors, and no-results messaging.
+- [x] Implement the validated client and routed bank views. Include service overviews, named source titles, source metadata, counts, excerpts, full text, known conflict links, example questions derived from titles, visible loading/errors, and no-results messaging.
 
-- [ ] Replace homepage topic chat buttons with service links, add a bank-information entry and homepage search, retain the existing support content and native messaging lifecycle. Add responsive styles without a new UI library.
+- [x] Replace homepage topic chat buttons with service links, add a bank-information entry and homepage search, retain the existing support content and native messaging lifecycle. Add responsive styles without a new UI library.
 
-- [ ] Run `npm test`, `npm run typecheck`, `npm run format:check`, and `npm run build`; expect all pass. Commit as `feat: add bank service pages and shared policy search`.
+- [x] Run `npm test`, `npm run typecheck`, `npm run format:check`, and `npm run build`; expect all pass. Commit as `feat: add bank service pages and shared policy search`.
 
 ### Task 3: Integration verification and review
 
@@ -98,7 +98,34 @@
 
 **Interfaces:** Consume the complete public API and compiled frontend from Tasks 1–2.
 
-- [ ] Run the full offline Python suite, strict typing, linting, formatting, frontend suite/build, environment contract, and maintained Markdown checks.
-- [ ] Start a disposable local preview against a temporary approved copy of the authored synthetic document corpus. Do not alter runtime corpus approval or require a provider/database connection. Verify homepage → service → full policy, body search, clear/no-results, direct refresh, Back/Forward, unavailable chat, and 390px mobile width in a real browser.
-- [ ] Request one fresh whole-branch code review against this plan and design, including the Review Focus cases. Fix important findings with a failing regression test first and rerun relevant checks.
-- [ ] Record evidence, commit documentation as needed, and report the implemented behavior plus any material limitation. Do not push, merge, publish, or start paid provider calls as part of this task.
+- [x] Run the full offline Python suite, strict typing, linting, formatting, frontend suite/build, environment contract, and maintained Markdown checks.
+- [x] Start a disposable local preview against a temporary approved copy of the authored synthetic document corpus. Do not alter runtime corpus approval or require a provider/database connection. Verify homepage → service → full policy, body search, clear/no-results, direct refresh, Back/Forward, unavailable chat, and 390px mobile width in a real browser.
+- [x] Request one fresh whole-branch code review against this plan and design, including the Review Focus cases. Fix important findings with a failing regression test first and rerun relevant checks.
+- [x] Record evidence, commit documentation as needed, and report the implemented behavior plus any material limitation. Do not push, merge, publish, or start paid provider calls as part of this task.
+
+## Execution evidence
+
+Implemented on `feat/bank-information`. Final offline verification: 349 Python tests
+passed, 88 database/live tests deselected, and 24 frontend tests passed. The existing
+Starlette/AnyIO deprecation warning remains. Ruff lint/format, strict mypy (129 files),
+TypeScript, Prettier, the production build, maintained Markdown formatting, environment
+contract validation, and lock checks passed.
+
+A disposable browser preview verified homepage/service/policy navigation, full source
+text, a body-only search for `14:00`, no-results and clearing, refresh, real Back/Forward,
+keyboard heading focus, narrow layouts without horizontal overflow, and independent
+chat retry. The preview used only copied authored synthetic documents and no provider
+or database access. The original active corpus was unchanged.
+
+One fresh whole-branch review found a missing chat retry control plus bounded-error
+and error-cache contract gaps. All three were reproduced with failing regression tests
+and fixed; the full offline suite and frontend tests then passed. No review findings
+remain deferred.
+
+Execution choices: implement inline in the attached workspace on a feature branch,
+proceed after design approval without another plan approval, and keep the branch locally.
+The checkout therefore contains the feature; main remains unchanged. Source completeness
+and known-conflict identification follow the approved design. Missing real banking facts,
+automatic semantic conflict detection, hosted proxy acceptance, and a repeat of live
+provider/widget delivery remain outside this change. These limits require additional
+reviewed content or deployment acceptance if the demonstration is expanded.

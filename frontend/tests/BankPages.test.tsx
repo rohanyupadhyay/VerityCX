@@ -194,3 +194,30 @@ it("ignores old responses after navigation and responds to history changes", asy
   await act(async () => visit("/bank/unknown"));
   expect(container.textContent).toContain("Page not found");
 });
+
+it("offers chat recovery independently of loaded policies and policy failures", async () => {
+  const retryChat = vi.fn();
+  await act(async () =>
+    root.render(
+      <BankPages
+        state="unavailable"
+        onOpen={vi.fn()}
+        onRetryChat={retryChat}
+      />,
+    ),
+  );
+  expect(container.textContent).toContain("Birch checking monthly fee");
+  const retry = container.querySelector<HTMLButtonElement>(
+    "button[data-chat-retry]",
+  );
+  expect(retry).not.toBeNull();
+  expect(retry?.disabled).toBe(false);
+  await act(async () => retry?.click());
+  expect(retryChat).toHaveBeenCalledOnce();
+  vi.mocked(fetch).mockResolvedValue(new Response("{}", { status: 503 }));
+  await act(async () => visit("/bank/search?q=fees"));
+  expect(container.textContent).toContain(
+    "Bank information is currently unavailable",
+  );
+  expect(container.querySelector("button[data-chat-retry]")).not.toBeNull();
+});

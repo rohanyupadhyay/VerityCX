@@ -139,6 +139,5 @@ Acceptance checks must establish:
 
 ## Remaining decisions
 
-No additional product decision is required to prepare an implementation plan.
-The user must approve this design before implementation. Missing bank facts remain
+The user approved this design before implementation. Missing bank facts remain
 absent until authoritative content is supplied; this feature cannot manufacture them.

@@ -21,6 +21,8 @@ by visitors. These synchronous endpoints run source verification off the event l
 need no database or chat connection, use no-store responses, and expose no source
 paths, banking records, evaluation data, or private configuration. Changed or missing
 approval produces the existing sanitized 503 response; unknown IDs return 404.
+Validation errors are bounded and never reflect rejected query values. Every public
+bank API response, including 404/422/503 errors, sets `Cache-Control: no-store`.
 `frontend.py` also serves explicit `/bank`, `/bank/search`,
 `/bank/services/{known-category}`, and `/bank/policies/{document_id}` page routes.
 There is no blanket frontend fallback for API or unknown paths.

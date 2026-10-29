@@ -187,3 +187,27 @@ def test_source_change_between_inventory_and_read_is_rejected(
 
     monkeypatch.setattr(corpus_manifest, "verified_bytes", changed)
     assert bank_client.get("/bank/api/policies/policy-02").status_code == 503
+
+
+def test_oversized_query_has_a_bounded_error(bank_client: TestClient) -> None:
+    """Validation failures must not reflect arbitrarily large query strings into responses."""
+    response = bank_client.get("/bank/api/policies", params={"q": "x" * 20000})
+    assert response.status_code == 422
+    assert len(response.content) < 512
+    assert "x" * 100 not in response.text
+
+
+def test_error_responses_prevent_negative_caching(bank_client: TestClient, tmp_path: Path) -> None:
+    """Missing and invalid policy responses cannot be cached across subsequent corpus updates."""
+    for url in [
+        "/bank/api/policies/unknown",
+        "/bank/api/policies?page=0",
+        "/bank/api/policies?mode=official",
+    ]:
+        response = bank_client.get(url)
+        assert response.status_code in {404, 422}
+        assert response.headers.get("cache-control") == "no-store"
+    (tmp_path / "corpus/active").unlink()
+    response = bank_client.get("/bank/api/policies")
+    assert response.status_code == 503
+    assert response.headers.get("cache-control") == "no-store"

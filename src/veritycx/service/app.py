@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from psycopg import Error
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool, PoolTimeout
@@ -98,15 +100,28 @@ def create_app(configuration: RuntimeConfiguration) -> FastAPI:
     ):
         app.add_exception_handler(exception, safe_error)
 
+    @app.exception_handler(RequestValidationError)
+    async def bounded_public_validation(
+        request: Request, error: RequestValidationError
+    ) -> JSONResponse:
+        """Bound bank validation errors without reflecting input; preserve other API contracts."""
+        if request.url.path.startswith("/bank/api/"):
+            return JSONResponse({"error": "invalid_search"}, status_code=422)
+        return await request_validation_exception_handler(request, error)
+
     @app.middleware("http")
     async def private_error_boundary(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         """Prevent unexpected exceptions reaching Uvicorn's raw traceback logger."""
         try:
-            return await call_next(request)
+            response = await call_next(request)
         except Exception as error:
-            return await safe_error(request, error)
+            response = await safe_error(request, error)
+        # Even missing-policy responses must not be cached across corpus approvals.
+        if request.url.path.startswith("/bank/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
 
     register_routes(app, configuration, principals, get_pool)
     register_health(app, configuration.settings, get_pool)

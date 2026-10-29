@@ -101,9 +101,11 @@ function PolicyText({ content }: { content: string }): ReactElement {
 export function BankPages({
   state,
   onOpen,
+  onRetryChat = () => window.location.reload(),
 }: {
   state: ChatState;
   onOpen: () => void;
+  onRetryChat?: () => void;
 }): ReactElement {
   const [location, setLocation] = useState(
     () => window.location.pathname + window.location.search,
@@ -233,6 +235,16 @@ export function BankPages({
             : "VerityCX chat is currently unavailable"}{" "}
         · Bank information is available independently.
       </p>
+      {state === "unavailable" && (
+        <button
+          type="button"
+          className="bank-chat-retry"
+          data-chat-retry
+          onClick={onRetryChat}
+        >
+          Retry chat connection ↻
+        </button>
+      )}
       <div className="bank-heading">
         <p className="eyebrow">EXPLORE. UNDERSTAND. ASK.</p>
         <h1 ref={headingRef} tabIndex={-1}>

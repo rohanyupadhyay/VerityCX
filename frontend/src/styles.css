@@ -804,6 +804,15 @@ a.topic-card:hover {
   color: var(--muted);
   margin-bottom: 0;
 }
+.bank-chat-retry {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #a9b7a4;
+  font-size: 11px;
+}
 .bank-heading {
   padding-block: 45px 12px;
   max-width: 850px;

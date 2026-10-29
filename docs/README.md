@@ -45,6 +45,8 @@ The [customer chat design](superpowers/specs/2026-10-26-customer-chat-design.md)
 [implementation plan](superpowers/plans/2026-10-26-customer-chat.md) record the branded
 page, native widget, signed bridge and open live deployment/AI acceptance gates.
 
-The proposed [bank information design](superpowers/specs/2026-10-29-bank-information-design.md)
-describes product and service pages with shared search over approved banking documents.
-It awaits user approval and does not describe implemented website functionality.
+The approved [bank information design](superpowers/specs/2026-10-29-bank-information-design.md)
+and [implementation plan](superpowers/plans/2026-10-29-bank-information.md) document
+the implemented service pages, complete policies, shared search, and contextual
+VerityCX entry points under `/bank`. Content comes from the active approved corpus;
+missing bank facts remain absent. Public browsing works independently of chat.
