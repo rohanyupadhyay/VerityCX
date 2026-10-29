@@ -4,6 +4,26 @@
 
 Authenticated local API, startup and validation infrastructure.
 
+The API also serves the built customer page at `/` and `/chat`, with public assets
+under `/assets/`. `frontend.py` restricts delivery to the root `dist/chat` build and
+applies browser security headers; project files and credentials are never mounted.
+Build with `npm run build` from the repository root, or use
+`uv run python scripts/run_support.py --provider openai --build` to build and supervise
+the API/worker together. A missing build returns an explicit unavailable response while
+backend liveness remains usable.
+
+Optional typed Chatwoot configuration exposes only the public widget origin/token through
+`GET /chat/config`; signed webhook intake and durable delivery belong to the `handoff`
+package. API and AgentBot tokens and the OpenAI key remain server-side. The worker runs
+the bridge only when fully configured; it requires a pool of at least two connections.
+The standalone conversation API retains its original owner authorization and disconnected
+escalation semantics. Core migrations remain immutable; Chatwoot uses an independent ledger.
+
+`local_environment.py` supplies shared private, atomic dotenv generation for setup
+commands. It preserves unrelated/matching values and refuses conflicts, malformed
+assignments, symlinks and generated values containing interpolation syntax. Ordinary
+runtime configuration still uses the existing non-overwriting root environment loader.
+
 `configuration.py` loads strict nonsecret `config/support.toml` plus named environment secrets;
 `runtime.py` selects a Psycopg-compatible Selector loop before any async connections.
 `auth.py` provisions two 256-bit synthetic tokens into new ignored files and compares all digest rows

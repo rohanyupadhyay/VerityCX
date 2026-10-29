@@ -6,6 +6,20 @@
 **Status**: Delivery sequence with Feature 002 locally implemented; hosted/live acceptance remains
 open. Later platform capabilities are future work.
 
+**Customer chat implementation update (2026-10-28):** A branded React customer support
+page, native Chatwoot widget integration, signed durable AgentBot adapter and local
+provisioning/launcher scripts are implemented. This advances the Chatwoot increment's
+code. Docker Engine 29.9.2 and Compose 5.6.1 are installed in the native WSL distribution,
+and the real Chatwoot 4.19.1 stack is running. Browser smoke checks passed for the actual
+widget, signed webhook intake, private handoff summary, staff API reply delivery and
+explicit reassignment/resumption. With the updated local OpenAI key, a subsequent real
+widget check returned exactly one live AI answer identifying the synthetic Birch checking
+monthly fee as 5 synthetic dollars, with a policy citation and no browser page errors.
+The full live grounding matrix, human rubric review and complete external security/restart
+acceptance matrix remain open. See the
+[design](superpowers/specs/2026-10-26-customer-chat-design.md) and
+[local setup guide](chatwoot-local-setup.md).
+
 VerityCX will demonstrate grounded banking support, durable multi-agent execution and controlled
 human escalation. The benchmark supplies the business environment; the platform owns orchestration,
 policy enforcement, persistence, service integration and operational evidence.

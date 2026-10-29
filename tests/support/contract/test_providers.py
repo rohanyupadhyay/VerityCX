@@ -119,3 +119,103 @@ def test_malformed_provider_output(payload: dict[str, object]) -> None:
 
     with pytest.raises(ValidationError):
         ProviderResult.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("wire", "kind", "text"),
+    [
+        (
+            {
+                "disposition": "answer",
+                "claims": [
+                    {"text": "The fee is 5 synthetic dollars.", "evidence_ids": ["policy:0001"]}
+                ],
+            },
+            "answer",
+            None,
+        ),
+        (
+            {"disposition": "abstain", "text": "The sources do not support an answer."},
+            "abstain",
+            "The sources do not support an answer.",
+        ),
+        (
+            {"disposition": "clarify", "text": "Which policy version applies?"},
+            "clarify",
+            "Which policy version applies?",
+        ),
+    ],
+)
+def test_sdk_decodes_disposition_specific_output_without_model_authored_metadata(
+    wire: dict[str, object],
+    kind: str,
+    text: str | None,
+) -> None:
+    """The SDK must decode schema-enforced answer variants into the strict internal contract."""
+    import json
+
+    import httpx2
+    from openai import AsyncOpenAI
+
+    from veritycx.providers.openai import OpenAIProvider
+    from veritycx.service.runtime import run_async
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return the real Responses envelope using synthetic structured output and SDK usage."""
+        return httpx2.Response(
+            200,
+            json={
+                "id": "resp_offline",
+                "object": "response",
+                "created_at": 0,
+                "status": "completed",
+                "model": "sdk-fixture",
+                "output": [
+                    {
+                        "id": "msg_offline",
+                        "type": "message",
+                        "role": "assistant",
+                        "status": "completed",
+                        "content": [
+                            {
+                                "type": "output_text",
+                                "text": json.dumps({"result": wire}),
+                                "annotations": [],
+                            }
+                        ],
+                    }
+                ],
+                "usage": {
+                    "input_tokens": 19,
+                    "output_tokens": 7,
+                    "total_tokens": 26,
+                    "input_tokens_details": {"cached_tokens": 0},
+                    "output_tokens_details": {"reasoning_tokens": 0},
+                },
+            },
+        )
+
+    async def exercise() -> None:
+        """Parse real SDK responses through an offline transport."""
+        async with AsyncOpenAI(
+            api_key="offline-test",
+            max_retries=0,
+            http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(respond)),
+        ) as client:
+            result = await OpenAIProvider(client).generate(
+                ProviderRequest(
+                    correlation_id="fixture",
+                    question="What is the fee?",
+                    evidence=(),
+                    remaining_seconds=5.0,
+                )
+            )
+            assert result.disposition == kind
+            assert result.text == text
+            assert bool(result.claims) is (kind == "answer")
+            assert result.model == "gpt-4.1-mini-2025-04-14"
+            assert result.usage is not None
+            assert result.usage.input_tokens == 19
+            assert result.usage.output_tokens == 7
+
+    run_async(exercise())

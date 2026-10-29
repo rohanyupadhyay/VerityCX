@@ -27,9 +27,9 @@ jobs:
         uses: actions/checkout@v6
       - name: Verify formatter text normalization
         run: |
-          attribute_output="$(git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md .github/workflows/README.md .github/workflows/quality.yml)"
+          attribute_output="$(git check-attr eol -- README.md specs/001-acquire-tau3-banking/tasks.md .github/workflows/README.md .github/workflows/quality.yml frontend/index.html frontend/src/App.tsx frontend/src/chat.ts frontend/src/styles.css package.json)"
           printf '%s\n' "$attribute_output"
-          test "$(printf '%s\n' "$attribute_output" | grep -c 'eol: lf$')" -eq 4
+          test "$(printf '%s\n' "$attribute_output" | grep -c 'eol: lf$')" -eq 9
       - name: Set up Python 3.12
         uses: actions/setup-python@v6
         with:
@@ -78,5 +78,17 @@ jobs:
           uv run mdformat --check docs/platform-roadmap.md docs/platform-design.md docs/threat-model.md specs/002-durable-knowledge-support
           uv run mdformat --check specs/gh-5-env-support
           uv run mdformat --check src scripts tests config docs
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Verify customer frontend
+        run: |
+          npm ci
+          npm run format:check
+          npm run typecheck
+          npm test
+          npm run build
       - name: Check workflow formatting
         run: uv run yamlfix --check .github/workflows/quality.yml .github/workflows/support-integration.yml

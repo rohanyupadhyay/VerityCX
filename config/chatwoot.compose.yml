@@ -1,0 +1,114 @@
+---
+# Isolated local deployment. Invoke through scripts/setup_chatwoot.py for ownership checks.
+name: veritycx-chatwoot
+x-chatwoot: &chatwoot
+  image: chatwoot/chatwoot:v4.19.1
+  network_mode: host
+  env_file:
+    - ${VERITYCX_CHATWOOT_LOCAL_ROOT:?run setup_chatwoot.py}/compose.env
+  environment:
+    POSTGRES_HOST: 127.0.0.1
+    POSTGRES_PORT: '55433'
+  volumes:
+    - storage_data:/app/storage
+    - ${VERITYCX_CHATWOOT_LOCAL_ROOT:?run setup_chatwoot.py}/credentials.json:/run/veritycx/credentials.json:ro
+    - ../scripts/chatwoot_provision.rb:/run/veritycx/provision.rb:ro
+  labels:
+    io.veritycx.chatwoot.owner: ${VERITYCX_CHATWOOT_OWNER:?run setup_chatwoot.py}
+  restart: unless-stopped
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16
+    network_mode: host
+    command:
+      - postgres
+      - -c
+      - listen_addresses=127.0.0.1
+      - -p
+      - '55433'
+    environment:
+      POSTGRES_DB: veritycx_chatwoot
+      POSTGRES_USER: veritycx_chatwoot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run setup_chatwoot.py}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    labels:
+      io.veritycx.chatwoot.owner: ${VERITYCX_CHATWOOT_OWNER:?run setup_chatwoot.py}
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - -h
+        - 127.0.0.1
+        - -p
+        - '55433'
+        - -U
+        - veritycx_chatwoot
+        - -d
+        - veritycx_chatwoot
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  redis:
+    image: redis:7.4.2-alpine
+    network_mode: host
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?run setup_chatwoot.py}
+    command:
+      - sh
+      - -c
+      - exec redis-server --bind 127.0.0.1 --port 6380 --appendonly yes --requirepass "$$REDIS_PASSWORD"
+    volumes:
+      - redis_data:/data
+    labels:
+      io.veritycx.chatwoot.owner: ${VERITYCX_CHATWOOT_OWNER:?run setup_chatwoot.py}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli -h 127.0.0.1 -p 6380 ping | grep -q PONG'
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  rails:
+    <<: *chatwoot
+    entrypoint: docker/entrypoints/rails.sh
+    command:
+      - bundle
+      - exec
+      - rails
+      - s
+      - -p
+      - '3000'
+      - -b
+      - 127.0.0.1
+    healthcheck:
+      test:
+        - CMD
+        - ruby
+        - -rnet/http
+        - -e
+        - "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/')).code.to_i < 400 ? 0 : 1)"
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 30
+  sidekiq:
+    <<: *chatwoot
+    command:
+      - bundle
+      - exec
+      - sidekiq
+      - -C
+      - config/sidekiq.yml
+volumes:
+  postgres_data:
+    labels:
+      io.veritycx.chatwoot.owner: ${VERITYCX_CHATWOOT_OWNER:?run setup_chatwoot.py}
+  redis_data:
+    labels:
+      io.veritycx.chatwoot.owner: ${VERITYCX_CHATWOOT_OWNER:?run setup_chatwoot.py}
+  storage_data:
+    labels:
+      io.veritycx.chatwoot.owner: ${VERITYCX_CHATWOOT_OWNER:?run setup_chatwoot.py}

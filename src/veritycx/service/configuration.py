@@ -9,6 +9,11 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, model_validator
 
 from veritycx import PROJECT_ROOT as PROJECT_ROOT
+from veritycx.handoff.configuration import (
+    ChatwootConfiguration,
+    ChatwootConfigurationError,
+    load_chatwoot_configuration,
+)
 
 
 class ConfigurationError(ValueError):
@@ -58,6 +63,7 @@ class RuntimeConfiguration:
     provider_key: SecretStr | None = field(default=None, repr=False)
     trace_key: SecretStr | None = field(default=None, repr=False)
     trace_project: str | None = field(default=None, repr=False)
+    chatwoot: ChatwootConfiguration | None = field(default=None, repr=False)
 
 
 def load_configuration(
@@ -89,6 +95,12 @@ def load_configuration(
     auth_file = env.get("VERITYCX_AUTH_FILE")
     if not database_url or not auth_file:
         raise ConfigurationError("missing_runtime_configuration")
+    try:
+        chatwoot = load_chatwoot_configuration(env)
+    except ChatwootConfigurationError:
+        raise ConfigurationError("invalid_chatwoot_configuration") from None
+    if chatwoot is not None and settings.pool_max_size < 2:
+        raise ConfigurationError("invalid_chatwoot_configuration")
     return RuntimeConfiguration(
         settings,
         SecretStr(database_url),
@@ -96,4 +108,5 @@ def load_configuration(
         SecretStr(provider_key) if provider_key else None,
         SecretStr(trace_key) if trace_key else None,
         project,
+        chatwoot,
     )

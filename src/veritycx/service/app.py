@@ -11,12 +11,14 @@ from psycopg_pool import AsyncConnectionPool, PoolTimeout
 from pydantic import ValidationError
 from starlette.responses import JSONResponse, Response
 
+from veritycx.handoff.routes import register_chatwoot
 from veritycx.persistence.database import DatabasePool, configure_connection
 from veritycx.persistence.migrate import MigrationError
 from veritycx.persistence.repository import RepositoryError
 from veritycx.policy.sources import SourceError
 from veritycx.service.auth import AuthError, load_principals
 from veritycx.service.configuration import RuntimeConfiguration
+from veritycx.service.frontend import FRONTEND_ROOT, register_frontend
 from veritycx.service.health import register_health
 from veritycx.service.routes import ServiceError, register_routes
 
@@ -107,4 +109,10 @@ def create_app(configuration: RuntimeConfiguration) -> FastAPI:
 
     register_routes(app, configuration, principals, get_pool)
     register_health(app, configuration.settings, get_pool)
+    register_chatwoot(
+        app, configuration.chatwoot, get_pool, corpus_mode=configuration.settings.corpus_mode
+    )
+    register_frontend(
+        app, FRONTEND_ROOT, configuration.chatwoot.base_url if configuration.chatwoot else None
+    )
     return app

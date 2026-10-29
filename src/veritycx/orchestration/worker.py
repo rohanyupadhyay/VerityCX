@@ -12,12 +12,14 @@ from psycopg import Error
 from psycopg_pool import PoolTimeout
 
 from veritycx.environment import EnvironmentLoadError, load_project_environment
+from veritycx.handoff.bridge import run_bridge
 from veritycx.observability.audit import export_result
 from veritycx.observability.export import TraceExporter
 from veritycx.orchestration.graph import execute_job
 from veritycx.orchestration.recovery import block_incompatible, reconcile_terminal
 from veritycx.persistence.database import DatabasePool, database_pool
 from veritycx.persistence.maintenance import purge_expired
+from veritycx.persistence.migrate import MigrationError
 from veritycx.persistence.models import WorkJob
 from veritycx.persistence.repository import Repository, RepositoryError
 from veritycx.providers.deterministic import DeterministicProvider
@@ -89,8 +91,16 @@ async def work(
         running: set[asyncio.Task[None]] = set()
         tick = 0
         await purge_expired(pool)
+        bridge = (
+            asyncio.create_task(run_bridge(pool, configuration.chatwoot, configuration.settings))
+            if configuration.chatwoot is not None
+            else None
+        )
         try:
             while True:
+                if bridge is not None and bridge.done():
+                    # A failed bridge must stop worker readiness instead of silently losing chat.
+                    await bridge
                 if tick and tick % configuration.settings.purge_interval_seconds == 0:
                     await purge_expired(pool)
                 if tick % configuration.settings.heartbeat_seconds == 0:
@@ -111,6 +121,9 @@ async def work(
                 await asyncio.sleep(configuration.settings.work_scan_seconds)
                 tick += 1
         finally:
+            if bridge is not None:
+                bridge.cancel()
+                await asyncio.gather(bridge, return_exceptions=True)
             for task in running:
                 task.cancel()
             await asyncio.gather(*running, return_exceptions=True)
@@ -163,6 +176,12 @@ def main() -> int:
         run_async(configured_worker(configuration))
     except ConfigurationError as error:
         print(str(error))
+        return 1
+    except MigrationError as error:
+        print(str(error))
+        return 1
+    except (Error, PoolTimeout):
+        print("worker_storage_unavailable")
         return 1
     except KeyboardInterrupt:
         return 0

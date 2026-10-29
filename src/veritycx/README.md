@@ -60,3 +60,9 @@ The `conversations`, `service`, `orchestration`, `knowledge`, `policy`, `provide
 `persistence` and `observability` packages implement the Feature 002 boundaries. Each has
 a responsibility README. Foundation configuration, typed contracts, authentication, migration and guarded persistence are
 implemented; the API/knowledge and durable escalation workflows are implemented with local tests. Acquisition behavior is unchanged.
+
+The optional `handoff` package adds the signed Chatwoot AgentBot adapter and its separate
+checksummed persistence ledger. The service serves a root-built React customer support
+page and a closed public widget configuration; paid-provider and Chatwoot credentials
+remain server-side. The handoff package README documents ownership, delivery and actual
+external acceptance limits. The frontend has its own root-level npm lockfile and tooling.

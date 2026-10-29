@@ -13,6 +13,8 @@ def test_missing_admin_is_safe() -> None:
         for key, value in os.environ.items()
         if key not in {"VERITYCX_MIGRATION_DATABASE_URL"}
     }
+    # An explicit empty value also masks a developer's configured root dotenv.
+    env["VERITYCX_MIGRATION_DATABASE_URL"] = ""
     env["VERITYCX_DATABASE_URL"] = "secret-canary"
     result = subprocess.run(
         [sys.executable, "scripts/manage_support.py", "db", "migrate"],

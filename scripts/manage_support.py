@@ -8,6 +8,11 @@ from psycopg import Error
 from psycopg.conninfo import conninfo_to_dict
 
 from veritycx.environment import EnvironmentLoadError, load_project_environment
+from veritycx.handoff.configuration import (
+    ChatwootConfigurationError,
+    load_chatwoot_configuration,
+)
+from veritycx.handoff.migrate import migrate_chatwoot
 from veritycx.knowledge.configuration import source_mode
 from veritycx.knowledge.manifest import approve, load_manifest, prepare
 from veritycx.persistence.database import database_pool
@@ -123,8 +128,13 @@ def main() -> int:
             print("invalid_migration_database")
             return 1
         run_async(migrate(admin, database_name))
+        if load_chatwoot_configuration(os.environ) is not None:
+            run_async(migrate_chatwoot(admin, database_name))
     except MigrationError as error:
         print(str(error))
+        return 1
+    except ChatwootConfigurationError:
+        print("invalid_chatwoot_configuration")
         return 1
     except (Error, OSError, ValueError):
         print("migration_unavailable")

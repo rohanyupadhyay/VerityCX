@@ -38,6 +38,75 @@ Feature 001 acquisition needs no credentials. Feature 002 requires native Postgr
 demo authentication; its deterministic provider needs no paid account. OpenAI and LangSmith
 credentials are used only by explicitly enabled live execution/export.
 
+## Run the Local App
+
+On Linux/WSL, use the maintained bootstrap from the repository root:
+
+```bash
+uv run python scripts/setup_support_local.py --app
+```
+
+This starts the owned PostgreSQL cluster, provisions separate app and test databases,
+applies migrations, creates or reuses demo authentication, and fills missing or empty
+app settings in the ignored root `.env`. No manual SQL or password copying is needed.
+Reruns preserve app credentials and existing nonempty settings; conflicting configuration
+fails with a value-free category. Existing unregistered app databases/roles are not adopted.
+The default command without `--app` retains its test-only behavior.
+
+If setup reports `corpus=approval_required`, prepare the synthetic documents, review the
+summary, and approve the printed hash explicitly:
+
+```bash
+uv run python scripts/manage_support.py corpus prepare --mode synthetic
+uv run python scripts/manage_support.py corpus approve --hash HASH
+```
+
+Replace `HASH` with the printed digest. An already approved, unchanged collection needs no
+further action. Setup never approves documents or enables paid provider calls.
+
+For the customer page, build the frontend and run the API and worker together:
+
+```bash
+uv run python scripts/run_support.py --provider openai --build
+```
+
+This requires Node.js 24 and a valid server-side `OPENAI_API_KEY`. The launcher installs
+locked frontend dependencies if missing, builds the page, verifies readiness, and owns
+both child processes. Ctrl+C stops only those children. It refuses an occupied API port;
+it never kills an existing service. Use `--setup` to run the app database bootstrap first,
+or `--provider deterministic` for explicitly offline authored-fixture behavior.
+
+Check `curl --fail-with-body http://127.0.0.1:8000/health/ready` for `{"status":"ready"}`.
+Open `http://127.0.0.1:8000/` for the branded banking support page. Its customer messenger
+uses a configured Chatwoot widget; without Chatwoot it truthfully shows chat unavailable.
+There are no interactive API docs. The standalone
+[HTTP contract](specs/002-durable-knowledge-support/contracts/http-api.md) remains available
+using the generated local client credentials.
+
+### Connect the Chatwoot customer messenger
+
+The [local Chatwoot guide](docs/chatwoot-local-setup.md) documents Docker requirements,
+private administrator credentials, a signed AgentBot connection, and real acceptance gates.
+For an isolated local Linux Docker setup:
+
+```bash
+uv run python scripts/setup_chatwoot.py --allow-local-webhooks
+```
+
+This explicit flag permits private-network webhook callbacks inside the owned local
+Chatwoot deployment. The helper starts separate Chatwoot PostgreSQL/Redis services,
+creates the synthetic demo inbox and bot, fills missing integration settings, and runs
+the independent integration migration. Restart the app launcher afterward. Hosted
+Chatwoot requires equivalent verified configuration, one AgentBot in the configured account,
+and a reachable authenticated webhook. Accounts with multiple AgentBots are unsupported.
+OpenAI and Chatwoot API secrets never enter the frontend; only the public origin and
+website token are exposed by `/chat/config`.
+
+Run the setup command again after a reboot to start PostgreSQL and verify the configuration.
+`uv run python scripts/setup_support_local.py --app --check` checks local files without
+starting services, connecting to the database, or writing credentials. It does not replace
+the HTTP readiness check.
+
 ## Local Environment Configuration
 
 Copy `.env.example` to the ignored root `.env` and fill only the settings needed by the command you
@@ -48,7 +117,10 @@ supported and preserves each command's existing missing-configuration result.
 The example contains every and only these VerityCX-owned names: `VERITYCX_DATABASE_URL`,
 `VERITYCX_AUTH_FILE`, `VERITYCX_MIGRATION_DATABASE_URL`, `VERITYCX_TEST_DATABASE_URL`,
 `VERITYCX_TEST_MIGRATION_DATABASE_URL`, `VERITYCX_VALIDATION_PROVIDER`,
-`VERITYCX_VALIDATION_CORPUS`, `OPENAI_API_KEY`, `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT`. Host,
+`VERITYCX_VALIDATION_CORPUS`, `OPENAI_API_KEY`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`,
+`VERITYCX_CHATWOOT_URL`, `VERITYCX_CHATWOOT_ACCOUNT_ID`, `VERITYCX_CHATWOOT_INBOX_ID`,
+`VERITYCX_CHATWOOT_WEBSITE_TOKEN`, `VERITYCX_CHATWOOT_API_TOKEN`,
+`VERITYCX_CHATWOOT_BOT_TOKEN`, and `VERITYCX_CHATWOOT_WEBHOOK_SECRET`. Host,
 shell, Git, package, virtual-environment, PostgreSQL bootstrap, and CI controls remain externally
 owned. Keep example values empty or unmistakably synthetic; never place a usable credential, DSN,
 password, private path, or token in the tracked template.

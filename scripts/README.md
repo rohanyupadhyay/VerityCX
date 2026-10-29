@@ -62,6 +62,38 @@ migrations, and writes shell exports to ignored `.cache/support/local/test.env`.
 command reuses and validates its owned setup. It refuses an existing unmarked data directory and
 never resets or adopts another cluster. Use `--check` for read-only layout validation.
 
+### Local application setup
+
+Run `uv run python scripts/setup_support_local.py --app` to bootstrap the interactive
+application as well as the dedicated test database. It reuses the same owned cluster,
+creates the separate `veritycx_support` database and limited runtime role, applies the
+existing migrations, and creates or validates demo credentials under
+`.cache/support/credentials/`. App runtime credentials are saved separately in
+`.cache/support/local/app-credentials.json`; reruns do not rotate them. Existing app
+roles/databases without saved setup credentials are refused rather than adopted.
+
+The script fills only missing or empty `VERITYCX_DATABASE_URL`,
+`VERITYCX_MIGRATION_DATABASE_URL`, and `VERITYCX_AUTH_FILE` assignments in root `.env`.
+It preserves unrelated content and matching nonempty values. Malformed dotenv, duplicate
+target assignments, symlink targets, literal `${...}` in generated values, and conflicting nonempty values are refused without
+replacing the file. Conflicts report `local_support_app_configuration_conflict`; review
+the existing values locally before clearing only settings you intend the helper to own.
+Generated dotenv and credential files are private; output contains paths and statuses only.
+
+`--app --check` validates app credential/configuration files without connecting to PostgreSQL
+or generating anything. `local_support_app_setup_ready` describes configuration readiness;
+the HTTP readiness endpoint checks the actual database, schema, worker, and corpus.
+
+Setup reports `corpus=approved` or `corpus=approval_required`. It never approves documents
+or calls a paid provider. When approval is required, run the existing corpus preparation
+and explicit hash approval commands below. Then start the API and worker in separate
+terminals using `uv run python -m veritycx.service.main` and
+`uv run python -m veritycx.orchestration.worker`. Check
+`curl --fail-with-body http://127.0.0.1:8000/health/ready` for readiness.
+
+Contract coverage: `uv run pytest tests/support/contract/test_local_setup.py`. Default
+test-only setup and its generated environment remain unchanged.
+
 After setup, load the generated environment only into the terminal running database-backed tests:
 
 ```text
@@ -94,6 +126,37 @@ dedicated test storage. Grounding returns nonzero with human review pending; str
 do not certify semantic correctness. The demo uses only a previously approved official corpus.
 `setup_support_ci.py` separately initializes a fresh CI-owned native cluster and database roles; it
 refuses use outside GitHub Actions and does not reset existing clusters.
+
+## Customer page and Chatwoot commands
+
+`uv run python scripts/run_support.py --provider openai --build` builds the customer
+page and supervises the loopback API and worker together. It requires Node.js 24 and
+a valid existing server-side OpenAI key. The default provider follows `support.toml`;
+live selection is explicit, and no key or Chatwoot token is bundled into frontend assets.
+`--setup` invokes the existing app database bootstrap first. Without `--build`, an
+existing build is reused; a missing build is created automatically. Frontend and service
+diagnostics stay in private files under `.cache/support/local/`. Ctrl+C terminates only
+owned child handles, while an occupied API port fails without affecting its listener.
+
+`uv run python scripts/setup_chatwoot.py --check` inspects Docker and owned deployment
+configuration without installing anything or writing secrets. Normal setup uses
+`uv run python scripts/setup_chatwoot.py --allow-local-webhooks`; the explicit flag
+allows local callback URLs inside this isolated Docker deployment. The helper provisions
+its own Chatwoot 4.19.1, PostgreSQL and Redis storage, synthetic administrator, website
+inbox, signed AgentBot and private stable credentials, then applies the integration
+migration through `manage_support.py db migrate`. It never adopts foreign containers,
+volumes or accounts, or installs Docker using privileged commands. See the
+[local guide](../docs/chatwoot-local-setup.md) for host networking requirements and open
+real-server acceptance checks.
+
+`chatwoot_provision.rb` runs only through the pinned container's Rails runner. It checks
+ownership transactionally and writes its integration result only to private setup logs.
+Shared non-overwriting dotenv generation lives in
+`veritycx.service.local_environment`; scripts never modify import paths.
+
+Run `uv run pytest tests/support/contract/test_run_support.py tests/support/contract/test_customer_page.py tests/support/contract/test_chatwoot_setup.py`
+for the command and public-page contracts. The signed adapter has additional unit and
+dedicated-database integration tests documented in its module README.
 
 ## Environment Contract
 
