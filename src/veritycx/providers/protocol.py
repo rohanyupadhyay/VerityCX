@@ -20,6 +20,7 @@ class ProviderRequest(VersionedModel):
 
     correlation_id: str
     question: str = Field(min_length=1, max_length=8000)
+    rewritten_query: str | None = Field(default=None, min_length=1, max_length=8000)
     context: tuple[ContextMessage, ...] = ()
     evidence: tuple[EvidenceSection, ...] = Field(max_length=6)
     remaining_seconds: float = Field(gt=0, le=60)
