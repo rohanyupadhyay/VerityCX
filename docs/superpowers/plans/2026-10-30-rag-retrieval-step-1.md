@@ -14,9 +14,9 @@ Retain authoritative source bytes, bounded evidence, and the answer-attempt ledg
 **Tech Stack:** Python 3.12, spaCy with its compatible English pipeline, NLTK/WordNet,
 existing OpenAI structured-output provider, LangGraph, PostgreSQL, Pydantic, uv.
 
-**Spec:** [Draft step 1 design](../specs/2026-10-30-rag-retrieval-step-1-design.md).
-This plan is proposed for review; no implementation or corpus approval is authorized
-by unchecked tasks.
+**Spec:** [Approved step 1 design](../specs/2026-10-30-rag-retrieval-step-1-design.md).
+The user approved direct implementation on 2026-10-30. Corpus activation remains
+a separate explicit maintenance action.
 
 ## Global constraints
 
@@ -28,8 +28,8 @@ by unchecked tasks.
 - Give rewriting a separate model setting, initially defaulting to the answer model.
 - Keep at most six sections and at most 12,000 evidence characters; retain the
   16,000-character contiguous prior-history bound and 60-second turn deadline.
-- Proposed budgets are one rewrite call capped at 10 seconds, followed by at most
-  two answer attempts within the remaining deadline. These need design acceptance.
+- Approved budgets are one rewrite call capped at 10 seconds, followed by at most
+  two answer attempts within the remaining deadline.
 - Documents, history, rewritten queries, and provider output remain untrusted.
 - No runtime language-resource downloads, new source roots, automatic corpus
   approval, bank-record reads, embeddings, vector service, or category integration.
@@ -399,3 +399,22 @@ and migration details in the design. Native implementation in the current sessio
 is recommended because normalization, ledger, corpus metadata and graph contracts
 are tightly connected. Review this design and plan before implementing task 1;
 implementation is not part of this planning deliverable.
+
+## Execution record
+
+- Baseline before changes: 349 database-free tests passed.
+- Focused language/provider checks: 38 passed after observing the initial missing-interface failures.
+- Full offline suite with native PostgreSQL: 473 passed in 317.04 seconds.
+- Strict mypy: 145 source files passed. Ruff and the environment contract passed.
+- The original load test initially failed its unchanged five-second p95 target.
+  A bounded passage-only cache fixed the measured regression; query text is never cached.
+- Regression tests demonstrated and fixed concurrent WordNet-reader access and
+  eviction of still-needed entries in a batch larger than the cache.
+- No paid provider calls, application-database migration, or app corpus activation
+  were performed. Native tests use the fixed test corpus cache.
+- Implementation rulings: use the current feature branch without moving the shared
+  workspace; pin the verified language releases recorded in the resource manifest;
+  register the fixed NLP data directory for NLTK 3.10; protect capitalized singular
+  noun modifiers that spaCy may tag as common nouns; add the measured passage cache;
+  advance the answer prompt metadata to knowledge-v2 because its search-metadata
+  instructions changed.

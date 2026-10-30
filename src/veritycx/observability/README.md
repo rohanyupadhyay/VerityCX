@@ -4,6 +4,13 @@
 
 Atomic local audit and separately gated sanitized export.
 
+Rewriting keeps separate model, prompt version, observed token counts, start/end
+timestamps, and failure categories in the turn-owned query_rewrites row. Retrieval
+also records selected section IDs, selection mode and expansion count there, even
+when answering abstains. Rewritten queries remain private conversation content:
+they are never added to ordinary logs or exported tracing. Existing answer audit
+usage is not relabeled as combined rewrite/answer usage.
+
 `audit.py` commits a terminal customer result and its audit outcome in one fenced transaction.
 Acceptance audit is created by the repository with correlation, pending route and accepted outcome;
 completion fills source IDs, elapsed time, failure category and optional model/usage metadata.

@@ -23,32 +23,42 @@ def test_rewrite_history_bounds() -> None:
     """History is bounded independently of the provider request schema."""
     with pytest.raises(ValidationError):
         RewriteRequest(
-            question="Question", context=tuple(ContextMessage(role="user", text="x" * 8000)
-                                               for _ in range(3)),
-            correlation_id="fixture", corpus_version="v2", remaining_seconds=10.0,
+            question="Question",
+            context=tuple(ContextMessage(role="user", text="x" * 8000) for _ in range(3)),
+            correlation_id="fixture",
+            corpus_version="v2",
+            remaining_seconds=10.0,
         )
 
 
 def test_offline_standalone_and_followup() -> None:
     """Authored cases prove stage routing only, not live model fidelity."""
+
     async def exercise() -> None:
         rewriter = DeterministicQueryRewriter()
         request = RewriteRequest(
             question="What is its replacement fee?",
             context=(ContextMessage(role="user", text="Tell me about the Cedar card."),),
-            correlation_id="fixture", corpus_version="v2", remaining_seconds=10.0,
+            correlation_id="fixture",
+            corpus_version="v2",
+            remaining_seconds=10.0,
         )
         result = await rewriter.rewrite(request)
         assert isinstance(result.result, SearchRewrite)
         assert result.result.query == "What is the Cedar card replacement fee?"
         assert result.usage is None
-        ambiguous = request.model_copy(update={"context": (
-            ContextMessage(role="user", text="Compare Cedar and Hazel cards."),
-        )})
+        ambiguous = request.model_copy(
+            update={
+                "context": (ContextMessage(role="user", text="Compare Cedar and Hazel cards."),)
+            }
+        )
         assert (await rewriter.rewrite(ambiguous)).result.disposition == "clarify"
-        assert (await rewriter.rewrite(request.model_copy(update={"context": ()}))).result.disposition == "clarify"
+        assert (
+            await rewriter.rewrite(request.model_copy(update={"context": ()}))
+        ).result.disposition == "clarify"
         standalone = request.model_copy(update={"question": "Cedar card fee", "context": ()})
         assert (await rewriter.rewrite(standalone)).result == SearchRewrite(
             disposition="search", query="Cedar card fee"
         )
+
     run_async(exercise())

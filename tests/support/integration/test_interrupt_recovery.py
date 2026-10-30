@@ -6,6 +6,7 @@ import pytest
 
 from veritycx.conversations.models import ResumeInput
 from veritycx.knowledge.configuration import active_corpus
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.escalations import ensure_pause, fail_resume, resume
@@ -46,9 +47,13 @@ def test_consumed_resume_recovery(
                     )
                 reclaimed = await repo.claim(uuid4(), conversation_id=parent.id)
                 assert reclaimed is not None and reclaimed.id == initial.id
-                await process_job(pool, reclaimed, Settings(), DeterministicProvider())
+                await process_job(
+                    pool, reclaimed, Settings(), DeterministicProvider(), rag=deterministic_rag()
+                )
             else:
-                await process_job(pool, initial, Settings(), DeterministicProvider())
+                await process_job(
+                    pool, initial, Settings(), DeterministicProvider(), rag=deterministic_rag()
+                )
             await repo.accept(owner, parent.id, uuid4(), "Additional context")
             current = await repo.get(owner, parent.id)
             async with pool.connection() as conn:
@@ -93,7 +98,9 @@ def test_consumed_resume_recovery(
                 await resume(pool, owner, parent.id, key, value)
                 claimed = await repo.claim(uuid4(), conversation_id=parent.id)
                 assert claimed is not None
-            await process_job(pool, claimed, Settings(), DeterministicProvider())
+            await process_job(
+                pool, claimed, Settings(), DeterministicProvider(), rag=deterministic_rag()
+            )
             assert (await repo.get(owner, parent.id)).status == "active"
             assert (await resume(pool, owner, parent.id, key, value)).status == "completed"
             with pytest.raises(RepositoryError, match="stale_resume"):

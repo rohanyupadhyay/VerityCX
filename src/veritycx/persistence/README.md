@@ -2,6 +2,17 @@
 
 # persistence
 
+## Rewrite ledger and migrations
+
+The additive 002_query_rewrites.sql migration creates one turn-owned rewrite
+reservation/result row, independent of answer attempts. The migration runner now
+validates and applies a checksummed ordered prefix; already applied migration
+bytes remain immutable. Runtime readiness requires the complete current inventory.
+RewriteLedger uses existing parent/fence locks, the original database-time deadline,
+and cascading turn deletion. It records separate usage/latency/failure metadata
+and text-free retrieval diagnostics; completed queries remain private conversation
+content. A reserved call whose response was lost cannot be replayed.
+
 Durable application records, fencing, guarded checkpoints, escalation control and retention.
 Implemented interfaces are listed below.
 

@@ -8,6 +8,7 @@ from psycopg import AsyncConnection, sql
 from psycopg.rows import dict_row
 
 MIGRATION = Path(__file__).parent / "migrations" / "001_support.sql"
+MIGRATIONS = (MIGRATION, MIGRATION.with_name("002_query_rewrites.sql"))
 MIGRATION_LOCK = 724063812
 
 
@@ -18,6 +19,14 @@ class MigrationError(ValueError):
 def migration_checksum() -> str:
     """Hash exact migration bytes to detect edits after administrative application."""
     return sha256(MIGRATION.read_bytes()).hexdigest()
+
+
+def migration_inventory() -> list[dict[str, object]]:
+    """Retain every immutable migration checksum in deployment order."""
+    return [
+        {"version": number, "checksum": sha256(path.read_bytes()).hexdigest()}
+        for number, path in enumerate(MIGRATIONS, 1)
+    ]
 
 
 async def verify_version(conn: AsyncConnection[dict[str, object]]) -> None:
@@ -35,7 +44,7 @@ async def verify_schema(conn: AsyncConnection[dict[str, object]]) -> None:
         "SELECT version, checksum FROM support_meta.migrations ORDER BY version"
     )
     rows = await cursor.fetchall()
-    if rows != [{"version": 1, "checksum": migration_checksum()}]:
+    if rows != migration_inventory():
         raise MigrationError("schema_mismatch")
     cursor = await conn.execute(
         "SELECT max(v) AS version FROM support_checkpoints.checkpoint_migrations"
@@ -61,16 +70,22 @@ async def migrate(admin_dsn: str, runtime_role: str) -> None:
                     "CREATE TABLE IF NOT EXISTS support_meta.migrations "
                     "(version integer PRIMARY KEY, checksum text NOT NULL)"
                 )
-                cursor = await conn.execute("SELECT version, checksum FROM support_meta.migrations")
+                cursor = await conn.execute(
+                    "SELECT version, checksum FROM support_meta.migrations ORDER BY version"
+                )
                 rows = await cursor.fetchall()
-                if rows and rows != [{"version": 1, "checksum": migration_checksum()}]:
+                inventory = migration_inventory()
+                if len(rows) > len(inventory) or rows != inventory[: len(rows)]:
                     raise MigrationError("schema_mismatch")
                 await conn.execute("CREATE SCHEMA IF NOT EXISTS support_app")
                 await conn.execute("CREATE SCHEMA IF NOT EXISTS support_checkpoints")
-                if not rows:
-                    await conn.execute(MIGRATION.read_text(encoding="utf-8"))
+                for entry, path in zip(
+                    inventory[len(rows) :], MIGRATIONS[len(rows) :], strict=True
+                ):
+                    await conn.execute(path.read_text(encoding="utf-8"))
                     await conn.execute(
-                        "INSERT INTO support_meta.migrations VALUES (1,%s)", (migration_checksum(),)
+                        "INSERT INTO support_meta.migrations VALUES (%s,%s)",
+                        (entry["version"], entry["checksum"]),
                     )
             # Saver setup contains concurrent index migrations and needs autocommit.
             # Keep the session advisory lock across both administrative phases.

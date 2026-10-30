@@ -24,7 +24,7 @@ class ProviderRequest(VersionedModel):
     context: tuple[ContextMessage, ...] = ()
     evidence: tuple[EvidenceSection, ...] = Field(max_length=6)
     remaining_seconds: float = Field(gt=0, le=60)
-    prompt_version: Literal[1] = 1
+    prompt_version: Literal[2] = 2
 
     @model_validator(mode="after")
     def bounded_context(self) -> Self:

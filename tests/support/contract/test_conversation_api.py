@@ -6,6 +6,7 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.service.app import create_app
 from veritycx.service.auth import init_demo
 from veritycx.service.configuration import RuntimeConfiguration, Settings
@@ -86,7 +87,9 @@ def test_durable_http_flow(tmp_path: Path, test_database_url: str) -> None:
                 repo = Repository(pool)
                 job = await repo.claim(uuid4(), conversation_id=UUID(target))
                 assert job is not None
-                await process_job(pool, job, Settings(), DeterministicProvider())
+                await process_job(
+                    pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+                )
             polled = await client.get(f"/conversations/{target}", headers=headers)
             assert polled.status_code == 200
             turn = polled.json()["turns"][0]

@@ -5,6 +5,7 @@ from typing import Literal
 
 import pytest
 
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.service.validation import validate_recovery
 
 pytestmark = pytest.mark.support_db
@@ -58,7 +59,9 @@ def test_corrupt_pointer_blocks_new_work(test_database_url: str) -> None:
                 )
             job = await repo.claim(uuid4(), conversation_id=parent.id)
             assert job is not None
-            await process_job(pool, job, Settings(), DeterministicProvider())
+            await process_job(
+                pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+            )
             with pytest.raises(RepositoryError, match="incompatible_state"):
                 await repo.accept(owner, parent.id, uuid4(), "New question")
 

@@ -40,6 +40,41 @@ credentials are used only by explicitly enabled live execution/export.
 
 ## Run the Local App
 
+Retrieval version 2 requires pinned local English spaCy and WordNet resources.
+After syncing the locked dependencies, install and verify the reviewed language
+archive explicitly:
+
+```
+uv sync --locked
+uv run python scripts/setup_retrieval_resources.py
+uv run python scripts/setup_retrieval_resources.py --check
+```
+
+The helper verifies installed model files and the WordNet SHA-256 inventory in
+[the resource manifest](config/retrieval-resources.json). Customer requests never
+download language data. Public policy browsing does not load NLP assets.
+Package and resource licenses are retained in their original distributions:
+spaCy and the English pipeline use MIT licenses, NLTK uses Apache-2.0, and
+WordNet carries the Princeton WordNet license in the pinned archive.
+
+Every knowledge question is rewritten using recent completed conversation context
+before normalized title/body retrieval. An optional nonempty rewrite_model setting
+in [support configuration](config/support.toml) selects its model independently;
+omitting it inherits the answer model. Rewriting has one durably reserved call
+capped at ten seconds. Answering retains at most two attempts within the shared
+60-second turn deadline. Rewrite errors return a clear retry message without
+searching an unresolved original question. Ambiguity requests clarification.
+WordNet expansion is attempted once, only after empty primary retrieval.
+
+An existing version-1 installation requires an explicit maintenance transition:
+stop owned workers, run the maintained application database migration/bootstrap,
+prepare the version-2 corpus, review and approve its printed hash, and restart.
+Preparation and startup never approve documents. Old conversations retain their
+original corpus identity; after activation, start a new conversation rather than
+mixing corpus versions. Completed historical answers remain stored under retention.
+The original keyword retriever remains available as the version-1 evaluation
+baseline. Category-aware chat retrieval is a later increment.
+
 On Linux/WSL, use the maintained bootstrap from the repository root:
 
 ```bash

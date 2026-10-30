@@ -1,7 +1,7 @@
 # RAG retrieval correctness: step 1 design
 
-Status: draft for review. The user decisions below are confirmed; implementation
-details marked as proposals have not been approved or implemented.
+Status: approved for implementation by the user on 2026-10-30. Implementation
+evidence and bounded execution rulings are recorded in the accompanying plan.
 
 ## Intent and scope
 
@@ -114,6 +114,13 @@ The normalization representation, stopword overrides, pipeline resources, title
 participation, and synonym policy are part of the versioned retrieval configuration.
 Normalization runs outside the worker event loop; inference and resource loading
 must not prevent lease renewal. Persistent search caches are not required here.
+
+Execution ruling after the existing load test failed: keep a bounded, process-local
+LRU of at most 4096 approved passage representations. Exact title/body bytes key
+entries within a normalizer bound to one loaded resource identity. Source hashes
+are still checked before every retrieval; changed text is reprocessed. Original and
+rewritten queries and conversation history are never cached. This adds bounded
+memory usage but no persistent search service or source-verification bypass.
 
 ## Synonym fallback
 

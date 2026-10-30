@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from veritycx.conversations.models import ClosedModel, ResumeInput, parse_json
 from veritycx.knowledge.configuration import active_corpus
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.escalations import resume
@@ -59,7 +60,9 @@ def test_security_effects(case: Attack, test_database_url: str, tmp_path: Path) 
                 await repo.accept(owner, parent.id, uuid4(), case.payload)
                 job = await repo.claim(uuid4(), conversation_id=parent.id)
                 assert job is not None
-                await process_job(pool, job, Settings(), DeterministicProvider())
+                await process_job(
+                    pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+                )
                 async with pool.connection() as conn:
                     cursor = await conn.execute(
                         "SELECT result->>'kind' AS kind FROM support_app.turns WHERE id=%s",

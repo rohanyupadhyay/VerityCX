@@ -8,6 +8,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from veritycx.conversations.models import ConversationView, ResumeInput
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.repository import Repository
@@ -76,7 +77,9 @@ def test_resume_http_projection(tmp_path: Path, test_database_url: str, corrupt:
             repo = Repository(pool)
             job = await repo.claim(uuid4(), conversation_id=UUID(target))
             assert job is not None
-            await process_job(pool, job, Settings(), DeterministicProvider())
+            await process_job(
+                pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+            )
             view = ConversationView.model_validate_json(
                 (await client.get(url, headers=headers)).content
             )
@@ -122,7 +125,9 @@ def test_resume_http_projection(tmp_path: Path, test_database_url: str, corrupt:
                     await conn.execute(
                         "UPDATE support_app.jobs SET checkpoint_id='missing' WHERE id=%s", (job.id,)
                     )
-            await process_job(pool, job, Settings(), DeterministicProvider())
+            await process_job(
+                pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+            )
             completed = ConversationView.model_validate_json(
                 (await client.get(url, headers=headers)).content
             )

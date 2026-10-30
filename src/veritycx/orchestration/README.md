@@ -4,6 +4,18 @@
 
 Typed intent routing and fenced knowledge graph execution.
 
+## Retrieval version 2
+
+RAGServices explicitly supplies the rewrite provider, shared English normalizer,
+and WordNet expander. Every knowledge turn rewrites original input plus recent
+completed history before lexical selection. Human/operation routing still uses
+the original input and never gains authority from model output.
+Clarification stops before retrieval; rewrite errors return a clear retry.
+Successful rewriting is durable, and NLP work runs outside the event loop so lease
+renewal can continue. The ten-second rewrite stage and two answer attempts share
+the existing 60-second turn deadline. Startup verifies pinned local assets and a
+version-2 approved corpus before publishing worker readiness.
+
 `state.py` defines the primitive graph projection. `router.py` implements versioned deterministic
 English intent rules with no model calls or banking capabilities. `graph.py` checks current database
 authority, routes, retrieves approved evidence, journals provider output and commits one bounded

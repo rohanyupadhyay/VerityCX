@@ -26,6 +26,7 @@ from pydantic import SecretStr
 from veritycx.conversations.models import AcceptanceResponse, ConversationView, CreateResponse
 from veritycx.knowledge.configuration import active_corpus, source_mode
 from veritycx.knowledge.manifest import approve, prepare
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.repository import Repository
@@ -155,7 +156,7 @@ def poll_turn(client: httpx.Client, target: str, turn_id: str) -> ConversationVi
 def validate_offline(env: dict[str, str]) -> dict[str, int | str]:
     """Run synthetic supported/unsupported/conflicting questions through owned subprocesses."""
     dsn = dedicated_database(env.get("VERITYCX_TEST_DATABASE_URL", ""))
-    root, cache, pin = source_mode("synthetic")
+    root, cache, pin = source_mode("synthetic", validation=True)
     manifest = prepare(root, cache, "synthetic", pin)
     approve(root, cache, manifest.aggregate_hash)
     directory = PROJECT_ROOT / ".cache" / "support" / "validation" / str(uuid4())
@@ -262,7 +263,13 @@ def serve_paused_worker(target: str, sentinel: str) -> None:
             for _ in range(30):
                 job = await repo.claim(worker, conversation_id=UUID(target))
                 if job is not None:
-                    await process_job(pool, job, Settings(), PausingProvider(Path(sentinel)))
+                    await process_job(
+                        pool,
+                        job,
+                        Settings(),
+                        PausingProvider(Path(sentinel)),
+                        rag=deterministic_rag(),
+                    )
                     return
                 await asyncio.sleep(1)
         raise ValidationError("claim_timeout")
@@ -314,7 +321,7 @@ def validate_recovery(env: dict[str, str], scenario: str) -> dict[str, int | str
     if scenario not in {"after_acceptance", "before_commit", "after_commit", "retry", "concurrent"}:
         raise ValidationError("invalid_scenario")
     dsn = dedicated_database(env.get("VERITYCX_TEST_DATABASE_URL", ""))
-    root, cache, pin = source_mode("synthetic")
+    root, cache, pin = source_mode("synthetic", validation=True)
     manifest = prepare(root, cache, "synthetic", pin)
     approve(root, cache, manifest.aggregate_hash)
     directory = PROJECT_ROOT / ".cache" / "support" / "validation" / str(uuid4())
@@ -469,7 +476,7 @@ def owned_session(
     if live and not env.get("OPENAI_API_KEY"):
         raise ValidationError("missing_provider_credential")
     if corpus_mode == "synthetic":
-        root, cache, pin = source_mode("synthetic")
+        root, cache, pin = source_mode("synthetic", validation=True)
         manifest = prepare(root, cache, "synthetic", pin)
         approve(root, cache, manifest.aggregate_hash)
     else:
@@ -734,7 +741,7 @@ def validate_handoff(env: dict[str, str], *, live: bool = False) -> dict[str, in
         "suite": "demo" if live else "handoff",
         "model": Settings().model if live else "deterministic-fixture-v1",
         "corpus_version": active_corpus(mode)[0].corpus_version,
-        "prompt_version": 1,
+        "prompt_version": 2,
         "cases_passed": 6,
         "provider": provider,
         "delivery": "not_connected",
@@ -789,7 +796,7 @@ def validate_grounding(env: dict[str, str], *, live: bool) -> dict[str, object]:
         "provider": "openai",
         "model": Settings().model,
         "corpus_version": manifest.corpus_version,
-        "prompt_version": 1,
+        "prompt_version": 2,
         "human_review": "pending",
         "usage": None,
         "cost": None,

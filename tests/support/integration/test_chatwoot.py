@@ -18,6 +18,7 @@ from veritycx.handoff.events import ChatwootEvent
 from veritycx.handoff.migrate import migrate_chatwoot, verify_chatwoot_schema
 from veritycx.handoff.store import ChatwootStore, Thread
 from veritycx.knowledge.configuration import active_corpus
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.database import DatabasePool, database_pool, transaction
 from veritycx.persistence.maintenance import purge_expired
@@ -60,7 +61,7 @@ async def execute(pool: DatabasePool, store: ChatwootStore, thread: Thread) -> N
     """Complete one actual core graph job through the existing deterministic worker."""
     job = await store.repository.claim(uuid4(), conversation_id=thread.conversation_id)
     assert job is not None
-    await process_job(pool, job, Settings(), DeterministicProvider())
+    await process_job(pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag())
 
 
 def test_chatwoot_migration_and_cascading_retention(test_database_url: str) -> None:

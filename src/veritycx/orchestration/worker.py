@@ -13,18 +13,23 @@ from psycopg_pool import PoolTimeout
 
 from veritycx.environment import EnvironmentLoadError, load_project_environment
 from veritycx.handoff.bridge import run_bridge
+from veritycx.knowledge.configuration import active_corpus
+from veritycx.knowledge.resources import ResourceError
 from veritycx.observability.audit import export_result
 from veritycx.observability.export import TraceExporter
 from veritycx.orchestration.graph import execute_job
+from veritycx.orchestration.rag import RAGServices, create_rag, deterministic_rag
 from veritycx.orchestration.recovery import block_incompatible, reconcile_terminal
 from veritycx.persistence.database import DatabasePool, database_pool
 from veritycx.persistence.maintenance import purge_expired
 from veritycx.persistence.migrate import MigrationError
 from veritycx.persistence.models import WorkJob
 from veritycx.persistence.repository import Repository, RepositoryError
+from veritycx.policy.sources import SourceError
 from veritycx.providers.deterministic import DeterministicProvider
 from veritycx.providers.openai import OpenAIProvider
 from veritycx.providers.protocol import KnowledgeProvider
+from veritycx.providers.rewrite import OpenAIQueryRewriter
 from veritycx.service.configuration import (
     ConfigurationError,
     RuntimeConfiguration,
@@ -35,7 +40,12 @@ from veritycx.service.runtime import run_async
 
 
 async def process_job(
-    pool: DatabasePool, job: WorkJob, settings: Settings, provider: KnowledgeProvider
+    pool: DatabasePool,
+    job: WorkJob,
+    settings: Settings,
+    provider: KnowledgeProvider,
+    *,
+    rag: RAGServices,
 ) -> None:
     """Cancel processing if its lease renewal loses authority; finish only reconciled work."""
     repository = Repository(pool)
@@ -49,7 +59,7 @@ async def process_job(
             await repository.renew(job)
 
     renewal = asyncio.create_task(renew())
-    execution = asyncio.create_task(execute_job(pool, job, settings, provider))
+    execution = asyncio.create_task(execute_job(pool, job, settings, provider, rag=rag))
     try:
         done, _ = await asyncio.wait({renewal, execution}, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
@@ -71,6 +81,8 @@ async def work(
     configuration: RuntimeConfiguration,
     provider: KnowledgeProvider,
     exporter: TraceExporter | None = None,
+    *,
+    rag: RAGServices,
 ) -> None:
     """Poll accepted/expired work every second, limiting concurrency to configured slots."""
     worker = uuid4()
@@ -81,7 +93,7 @@ async def work(
 
         async def execute(job: WorkJob) -> None:
             """Complete durable work before isolated optional metadata export."""
-            await process_job(pool, job, configuration.settings, provider)
+            await process_job(pool, job, configuration.settings, provider, rag=rag)
             if exporter is not None:
                 try:
                     await export_result(pool, job, exporter, configuration.settings.provider)
@@ -145,14 +157,22 @@ async def run_configured_provider(
 ) -> None:
     """Select exactly one provider; missing live credentials never trigger fixture fallback."""
     if configuration.settings.provider == "deterministic":
-        await work(configuration, DeterministicProvider(), exporter)
+        rag = await asyncio.to_thread(deterministic_rag)
+        await asyncio.to_thread(active_corpus, configuration.settings.corpus_mode)
+        await work(configuration, DeterministicProvider(), exporter, rag=rag)
         return
     if configuration.provider_key is None:
         raise ConfigurationError("missing_provider_credential")
     async with AsyncOpenAI(
         api_key=configuration.provider_key.get_secret_value(), max_retries=0
     ) as client:
-        await work(configuration, OpenAIProvider(client, configuration.settings.model), exporter)
+        rag = await asyncio.to_thread(
+            create_rag, OpenAIQueryRewriter(client, configuration.settings.effective_rewrite_model)
+        )
+        await asyncio.to_thread(active_corpus, configuration.settings.corpus_mode)
+        await work(
+            configuration, OpenAIProvider(client, configuration.settings.model), exporter, rag=rag
+        )
 
 
 def main() -> int:
@@ -178,6 +198,9 @@ def main() -> int:
         print(str(error))
         return 1
     except MigrationError as error:
+        print(str(error))
+        return 1
+    except (ResourceError, SourceError) as error:
         print(str(error))
         return 1
     except (Error, PoolTimeout):

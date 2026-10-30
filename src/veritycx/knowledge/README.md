@@ -4,6 +4,28 @@
 
 Approved document ingestion and bounded lexical retrieval.
 
+## Retrieval version 2
+
+The original retrieve function remains the frozen version-1 baseline.
+The select_evidence path uses spaCy English lemmas and reviewed stopword overrides
+across original/rewritten query concepts, document titles, and passage bodies.
+It preserves constraints and product modifiers while preventing constraint-only
+relevance. WordNetExpander runs only after empty primary selection, respects POS
+and sense grouping, excludes protected/multiword terms, and permits at most three
+alternatives per concept and twelve in total. A shared reader is serialized across
+worker threads. These lexical tools never supply banking evidence.
+
+resources.py verifies exact installed package and model/archive bytes; nlp.py loads
+the required tagger/lemmatizer components once and batches inference off the worker
+event loop. The maintained setup helper installs data before requests; it never
+silently downloads or repairs assets during retrieval.
+
+Version-2 manifests bind language-resource and normalization identity. Version-1
+hash verification stays unchanged, and public document browsing supports either
+version without loading NLP. Chat requires an explicitly approved version-2 corpus.
+Dedicated test-database processes use a fixed test corpus cache, protecting the
+normal app's active corpus. Category-aware selection remains a later step.
+
 `documents.py` parses closed id/title/content JSON from at most 1 MiB of verified bytes.
 `manifest.py` prepares immutable hash inventories and activates only explicitly approved unchanged
 hashes. `index.py` emits deterministic heading/paragraph sections capped at 2000 characters.

@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 
 from veritycx.knowledge.configuration import active_corpus
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.repository import Repository
@@ -28,7 +29,9 @@ def test_pause_and_context(test_database_url: str) -> None:
             first = await repo.accept(owner, parent.id, key, "I want a human agent")
             job = await repo.claim(uuid4(), conversation_id=parent.id)
             assert job is not None
-            await process_job(pool, job, Settings(), DeterministicProvider())
+            await process_job(
+                pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+            )
             assert (await repo.get(owner, parent.id)).status == "escalation_pending"
             assert (await repo.accept(owner, parent.id, key, "I want a human agent")).id == first.id
             paused = await repo.accept(

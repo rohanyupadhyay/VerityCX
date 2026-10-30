@@ -39,6 +39,14 @@ classification are documentation failures; formatting alone does not establish t
 
 ## Feature 002 implementation
 
+The [RAG step 1 design](superpowers/specs/2026-10-30-rag-retrieval-step-1-design.md)
+and [implementation plan](superpowers/plans/2026-10-30-rag-retrieval-step-1.md)
+cover conversational query rewriting, English normalization, title-aware lexical
+retrieval, bounded empty-result WordNet fallback, and durable recovery. Applying
+the additive migration and activating a reviewed version-2 corpus are explicit
+maintenance operations. Category integration and wider retrieval evaluation remain
+separate steps.
+
 Feature 002 implementation and local evidence are documented in `specs/002-durable-knowledge-support/quickstart.md`. Hosted and human-reviewed live gates remain open.
 
 The [customer chat design](superpowers/specs/2026-10-26-customer-chat-design.md) and
