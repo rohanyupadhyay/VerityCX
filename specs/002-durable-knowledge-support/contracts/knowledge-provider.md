@@ -29,6 +29,35 @@ production content is rejected for review rather than automatically promoted to 
 
 ## Section Index and Retrieval
 
+### Retrieval version 2
+
+The approved RAG step-1 increment adds English spaCy tokenization/POS/lemmatization
+over both query forms, titles/headings and passage bodies. Common auxiliaries do
+not supply relevance; product names/modifiers, numeric values and interpretation
+constraints are retained. Constraint-only input cannot select evidence. The same
+unique-concept logarithmic formula, stable ties and evidence bounds below remain.
+
+NLTK/WordNet supplies a single optional fallback pass only if normalized primary
+selection is empty. POS and approved-corpus vocabulary filter candidate senses;
+multiple surviving senses are not expanded. Protected names/numbers/constraints
+and multiword candidates are excluded. Alternatives are deduplicated, sorted and
+capped at three per concept and twelve per query. A later generation abstention
+does not trigger another search or another model call.
+
+Installed language packages, pipeline/archive hashes and policy identity are bound
+into version-2 manifests. Explicit setup verifies all assets before worker readiness;
+requests never download them. Version-1 hash verification is retained for legacy
+inspection and the frozen baseline. Chat requires a reviewed, explicitly approved
+version-2 corpus; public policy browsing does not depend on NLP installation.
+
+Corpus source bytes are revalidated for every request. A process-local cache holds
+at most 4096 derived passage representations keyed by exact approved title/body
+text and scoped to the loaded language-resource identity. Changed text is processed
+again. Query/history text is never added to this cache. This preserves the existing
+load target without weakening source checks or introducing persistent search storage.
+
+### Version-1 baseline
+
 Normalize content into heading/paragraph sections, retaining document title and heading path.
 Split sections above 2,000 code points on paragraph/word boundaries, with deterministic ordinal
 anchors and no overlap. Record source hash, parser version and section hash. No upstream content
@@ -61,6 +90,33 @@ retrieval, and output checks constrain publication. Operational tools are absent
 Poor intent classification may reduce answer quality but must not grant any forbidden capability.
 
 ## Provider Protocol
+
+### Conversational query rewriting
+
+Every question entering the knowledge route receives one model-based rewrite using
+the recent completed same-conversation context defined above. Original-input
+authority/intent routing remains deterministic and precedes rewriting. The rewrite
+cannot select tools, credentials, ownership, source paths, or operational routes.
+Its closed result is search with a standalone query (1-8,000 characters), or clarify
+with a subject question (1-800 characters). Unknown fields and malformed output fail.
+Query text is retrieval intent and never policy evidence; original question/history
+and verified evidence remain distinct in generation.
+
+The optional rewrite_model setting defaults to the answer model. Rewriting has
+one durably reserved call, no SDK retries and a ten-second maximum. The original
+at-most-two answer attempts retain their own ledger and share the existing
+60-second turn deadline with rewriting. Completed rewrites are reused after
+restart; a reservation without a saved outcome is spent and cannot be replayed.
+Errors/timeouts return a clear retry message without original-query fallback.
+Clarification stops before retrieval; empty evidence retains honest abstention.
+
+The separate query_rewrites row records local query content, model/prompt identity,
+observed usage, start/end timestamps and sanitized failure categories. Selected IDs,
+selection mode and expansion count are text-free diagnostics. Turn retention and
+fencing apply to this record; ordinary logs and trace export never contain queries,
+history or source bodies. Never report answer usage as combined stage usage.
+
+### Grounded answering
 
 An async `KnowledgeProvider` protocol accepts a closed ProviderRequest and returns a closed
 ProviderResult or categorized failure. The request contains question, selected evidence with IDs,
