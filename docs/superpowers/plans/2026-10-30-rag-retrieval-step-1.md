@@ -463,3 +463,22 @@ execution record below distinguishes implementation from app activation.
 - Documentation formatting and Git whitespace checks passed.
 - Tasks 1–7 are implemented and checked above; the optional live-validation item
   remains unchecked because activation and paid calls were outside this execution.
+
+### Subsequent user-requested live smoke and release review — 2026-11-01
+
+- Five real-model turns ran through an isolated API/worker on the dedicated test
+  database with the existing project credential. The model was
+  gpt-4.1-mini-2025-04-14; no application corpus or database transition occurred.
+- Cedar details and the contextual replacement-fee follow-up returned the correct
+  synthetic fee with a Cedar citation. The follow-up rewrite named Cedar. Missing
+  context requested clarification without an answer attempt; the invented Martian
+  vault question abstained.
+- The original broad cards question still abstained after selecting Cedar/Hazel
+  fee policies. Primary retrieval is repaired, but a complete card-offering answer
+  is not established by these selected policies. Category integration remains step 2.
+- Twenty-four focused integration, normalization, synonym and provider-contract
+  regression tests passed after the live smoke.
+- Release review added explicit pinned language-resource setup to both CI
+  workflows; fresh runners otherwise lack the WordNet archive used by NLP tests.
+- The user subsequently authorized pushing, PR review/merge, synchronization and
+  restart, including the documented local version-2 maintenance transition.

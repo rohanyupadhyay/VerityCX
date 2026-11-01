@@ -43,6 +43,12 @@ The workflow depends on GitHub-hosted runner images, `actions/checkout`, `action
 `astral-sh/setup-uv`. Action majors and the exact uv tool version are explicit. Project dependency
 versions remain governed by `pyproject.toml` and `uv.lock`; CI uses no unlocked install path.
 
+Both workflows explicitly install and verify the pinned WordNet archive with
+`uv run python scripts/setup_retrieval_resources.py` after locked synchronization
+and before tests. The English pipeline wheel comes from the lockfile. This setup
+step may download the reviewed archive; test execution never downloads resources
+or calls a paid model. Missing or mismatched language data fails setup.
+
 Each quality matrix host also installs Node.js 24 using `actions/setup-node`, restores
 the npm cache, and runs locked `npm ci` followed by frontend formatting, strict TypeScript,
 Vitest and the production Vite build. Browser lifecycle tests use local jsdom fixtures;
