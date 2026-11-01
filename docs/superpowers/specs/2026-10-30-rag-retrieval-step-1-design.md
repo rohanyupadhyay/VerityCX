@@ -122,6 +122,14 @@ are still checked before every retrieval; changed text is reprocessed. Original 
 rewritten queries and conversation history are never cached. This adds bounded
 memory usage but no persistent search service or source-verification bypass.
 
+Final-review ruling: source verification and normalization share the database-time
+deadline through a bounded blocking-work executor. Coroutine cancellation cannot
+terminate a thread; abandoned work remains charged until physical completion.
+The worker reduces its claim limit and withdraws its own heartbeat when exhausted.
+A permanently blocked thread may require a worker restart. Product protection is
+applied across merged query occurrences and before stopword removal; straight and
+curly negative contractions retain the canonical negation constraint.
+
 ## Synonym fallback
 
 Only an empty primary selection can invoke WordNet. A nonempty but poor primary
@@ -180,6 +188,10 @@ category as separately inspectable local metadata. Retrieval diagnostics contain
 selected source IDs, retrieval mode, and bounded counts, including abstention
 cases; they contain no text bodies. Preserve existing audit/export contracts unless
 explicitly extended with sanitized fields.
+
+Current rewrite metadata records the configured model ID and SDK token usage.
+Recording a separate provider-resolved snapshot when an operator configures a
+moving model alias is deferred; the default model is already a pinned snapshot.
 
 ## Resources, versioning, and rollout
 

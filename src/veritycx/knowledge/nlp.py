@@ -27,6 +27,7 @@ CONSTRAINTS = frozenset(
         "over",
     }
 )
+NEGATIVE_CONTRACTIONS = frozenset({"n't", "n\u2019t"})
 _INFERENCE_LOCK = Lock()
 
 
@@ -72,7 +73,13 @@ class TextNormalizer:
                 continue
             surface = token.text
             lower = surface.casefold()
-            constraint = lower in CONSTRAINTS or token.dep_ == "neg"
+            canonical = (token.lemma_ or surface).casefold()
+            constraint = (
+                lower in CONSTRAINTS
+                or lower in NEGATIVE_CONTRACTIONS
+                or canonical in CONSTRAINTS
+                or token.dep_ == "neg"
+            )
             numeric = token.like_num or any(character.isdigit() for character in surface)
             # Product modifiers such as "Cedar card" can be tagged as common nouns.
             # Preserve capitalized singular modifiers without exempting plural "Fees".
@@ -84,9 +91,9 @@ class TextNormalizer:
                 and doc[index + 1].pos_ == "NOUN"
             )
             protected = numeric or token.pos_ == "PROPN" or named_modifier
-            if token.is_stop and not constraint and not numeric:
+            if token.is_stop and not constraint and not protected:
                 continue
-            lemma = lower if protected or constraint else (token.lemma_ or surface).casefold()
+            lemma = "not" if lower in NEGATIVE_CONTRACTIONS else lower if protected else canonical
             result.append(SearchToken(surface, lemma, token.pos_, protected, constraint))
         return tuple(result)
 

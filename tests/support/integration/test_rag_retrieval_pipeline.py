@@ -213,3 +213,92 @@ def test_nlp_does_not_block_lease_renewal(
             )
 
     run_async(exercise())
+
+
+def test_nlp_selection_obeys_shared_turn_deadline(
+    test_database_url: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A pending NLP thread cannot hold its graph/lease until after the turn deadline."""
+    import asyncio
+    from threading import Event
+
+    from veritycx.knowledge.retrieval import RetrievalSelection
+    from veritycx.orchestration import graph
+
+    released = Event()
+
+    def delayed_select(*args: object, **kwargs: object) -> RetrievalSelection:
+        """Hold the thread until the test observes coroutine completion."""
+        assert released.wait(4)
+        return RetrievalSelection((), "empty")
+
+    monkeypatch.setattr(graph, "select_evidence", delayed_select)
+
+    async def exercise() -> None:
+        """Control database time while keeping this test's worker lease live."""
+        rag = deterministic_rag()
+        manifest, _ = active_corpus("synthetic")
+        async with database_pool(test_database_url) as pool:
+            repo = Repository(pool)
+            owner = uuid4()
+            parent = await repo.create(owner, uuid4(), manifest.corpus_version)
+            turn = await repo.accept(owner, parent.id, uuid4(), "What cards are offered?")
+            job = await repo.claim(uuid4(), conversation_id=parent.id)
+            assert job is not None
+            async with pool.connection() as conn:
+                await conn.execute(
+                    "UPDATE support_app.turns SET "
+                    "processing_started_at=now()-interval '59 seconds',"
+                    "deadline_at=now()+interval '1 second' WHERE id=%s",
+                    (turn.id,),
+                )
+            answer = RecordingAnswer()
+            try:
+                await asyncio.wait_for(
+                    process_job(pool, job, Settings(), answer, rag=rag), timeout=2.5
+                )
+            finally:
+                released.set()
+            assert answer.calls == []
+            async with pool.connection() as conn:
+                row = await (
+                    await conn.execute(
+                        "SELECT status,result FROM support_app.turns WHERE id=%s", (turn.id,)
+                    )
+                ).fetchone()
+                assert row is not None and isinstance(row["result"], dict)
+                assert row["status"] == "failed"
+                assert row["result"]["failure_category"] == "timeout"
+
+    run_async(exercise())
+
+
+def test_validation_worker_claim_leaves_unrelated_owners_queued(test_database_url: str) -> None:
+    """An isolated workload cannot consume pending jobs from another test session."""
+
+    async def exercise() -> None:
+        """Create and clean up only records owned by this test."""
+        from veritycx.persistence.maintenance import purge_expired
+
+        async with database_pool(test_database_url) as pool:
+            repo = Repository(pool)
+            foreign_owner, owner = uuid4(), uuid4()
+            foreign = await repo.create(foreign_owner, uuid4(), "fixture")
+            own = await repo.create(owner, uuid4(), "fixture")
+            await repo.accept(foreign_owner, foreign.id, uuid4(), "What is the fee?")
+            await repo.accept(owner, own.id, uuid4(), "What is the fee?")
+            job = await repo.claim(uuid4(), owner_id=owner)
+            assert job is not None and job.conversation_id == own.id
+            async with pool.connection() as conn:
+                row = await (
+                    await conn.execute(
+                        "SELECT status FROM support_app.jobs WHERE conversation_id=%s",
+                        (foreign.id,),
+                    )
+                ).fetchone()
+                assert row is not None and row["status"] == "accepted"
+            for identifier, principal in [(foreign.id, foreign_owner), (own.id, owner)]:
+                await repo.delete(principal, identifier, uuid4())
+                await purge_expired(pool, target=identifier)
+
+    run_async(exercise())

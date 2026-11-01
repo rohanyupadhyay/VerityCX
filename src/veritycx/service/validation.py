@@ -27,13 +27,13 @@ from veritycx.conversations.models import AcceptanceResponse, ConversationView, 
 from veritycx.knowledge.configuration import active_corpus, source_mode
 from veritycx.knowledge.manifest import approve, prepare
 from veritycx.orchestration.rag import deterministic_rag
-from veritycx.orchestration.worker import process_job
+from veritycx.orchestration.worker import configured_worker, process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.repository import Repository
 from veritycx.providers.deterministic import DeterministicProvider, fixture_cases
 from veritycx.providers.protocol import ProviderRequest, ProviderResult
 from veritycx.service.app import create_app
-from veritycx.service.auth import init_demo, load_principals
+from veritycx.service.auth import authenticate, init_demo, load_principals
 from veritycx.service.configuration import PROJECT_ROOT, Settings, load_configuration
 from veritycx.service.runtime import run_async
 
@@ -119,6 +119,18 @@ def serve_test(port: int) -> None:
         )
     )
     run_async(server.serve())
+
+
+def serve_scoped_worker(owner: str) -> None:
+    """Run only a private validation session's workload; normal worker CLI stays unscoped."""
+    dedicated_database(os.environ.get("VERITYCX_DATABASE_URL", ""))
+    configuration = load_configuration(
+        Path("config/support.toml"),
+        os.environ,
+        provider=os.environ.get("VERITYCX_VALIDATION_PROVIDER", "deterministic"),
+        corpus_mode=os.environ.get("VERITYCX_VALIDATION_CORPUS", "synthetic"),
+    )
+    run_async(configured_worker(configuration, owner_scope=UUID(owner)))
 
 
 def wait_ready(client: httpx.Client, owner: ProcessOwner) -> None:
@@ -470,6 +482,7 @@ def owned_session(
     *,
     live: bool = False,
     corpus_mode: Literal["synthetic", "official"] = "synthetic",
+    isolate_owner: bool = False,
 ) -> Iterator[ValidationSession]:
     """Launch actual API/worker processes and guarantee handle-only cleanup on every exit."""
     dsn = dedicated_database(env.get("VERITYCX_TEST_DATABASE_URL", ""))
@@ -513,16 +526,22 @@ def owned_session(
         processes.launch(
             ["-c", f"from veritycx.service.validation import serve_test; serve_test({port})"]
         )
-        worker = processes.launch(
-            [
-                "-m",
-                "veritycx.orchestration.worker",
-                "--provider",
-                "openai" if live else "deterministic",
-                "--corpus-mode",
-                corpus_mode,
+        worker_args = [
+            "-m",
+            "veritycx.orchestration.worker",
+            "--provider",
+            "openai" if live else "deterministic",
+            "--corpus-mode",
+            corpus_mode,
+        ]
+        if isolate_owner:
+            owner = authenticate("Bearer " + first.read_text().strip(), load_principals(auth))
+            worker_args = [
+                "-c",
+                "from veritycx.service.validation import serve_scoped_worker; "
+                f"serve_scoped_worker('{owner}')",
             ]
-        )
+        worker = processes.launch(worker_args)
         with httpx.Client(
             base_url=f"http://127.0.0.1:{port}",
             timeout=10,
@@ -538,7 +557,7 @@ def owned_session(
 
 def validate_load(env: dict[str, str]) -> dict[str, int | float | str]:
     """Measure production-cadence queue-inclusive latency and check strict owner isolation."""
-    with owned_session(env) as session:
+    with owned_session(env, isolate_owner=True) as session:
 
         def conversation(index: int) -> list[float]:
             """Execute three turns for one owner/conversation without sharing customer context."""

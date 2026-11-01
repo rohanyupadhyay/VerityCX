@@ -59,8 +59,7 @@ class WordNetExpander:
                 warnings.filterwarnings(
                     "ignore",
                     message=(
-                        "The multilingual functions are not available "
-                        "with this Wordnet version"
+                        "The multilingual functions are not available with this Wordnet version"
                     ),
                     category=UserWarning,
                     module="nltk.corpus.reader.wordnet",
@@ -80,11 +79,12 @@ class WordNetExpander:
     ) -> tuple[str, ...]:
         """Serialize the reader's mutable seek/cache operations across worker threads."""
         originals = {token.lemma for token in tokens}
+        protected = {token.lemma for token in tokens if token.protected or token.constraint}
         expanded: set[str] = set()
         visited: set[str] = set()
         parts = {"NOUN": "n", "VERB": "v", "ADJ": "a", "ADV": "r"}
         for token in tokens:
-            if token.protected or token.constraint or token.lemma in visited:
+            if token.lemma in protected or token.lemma in visited:
                 continue
             visited.add(token.lemma)
             pos = parts.get(token.pos)

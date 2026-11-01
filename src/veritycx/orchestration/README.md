@@ -16,6 +16,18 @@ renewal can continue. The ten-second rewrite stage and two answer attempts share
 the existing 60-second turn deadline. Startup verifies pinned local assets and a
 version-2 approved corpus before publishing worker readiness.
 
+The shared database deadline also bounds source verification and lexical selection.
+[inference.py](./inference.py) runs this blocking work in a bounded executor. A timed-out
+coroutine cannot terminate its thread, so that work keeps consuming capacity until
+physical completion. The worker reduces its claim limit accordingly and withdraws
+its own readiness heartbeat if no capacity remains. Permanently blocked work can
+require restarting the worker; cancellation does not pretend to kill threads.
+
+The deterministic load validator scopes claims to its generated owner on the
+dedicated loopback test database, keeping unrelated test leftovers out of measured
+queue time. The normal worker CLI stays unscoped, and application databases reject
+the private validation scope.
+
 `state.py` defines the primitive graph projection. `router.py` implements versioned deterministic
 English intent rules with no model calls or banking capabilities. `graph.py` checks current database
 authority, routes, retrieves approved evidence, journals provider output and commits one bounded

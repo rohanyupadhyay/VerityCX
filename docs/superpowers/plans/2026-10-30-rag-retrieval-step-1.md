@@ -111,27 +111,27 @@ The effective rewrite model is rewrite_model when supplied, otherwise model.
 Validate nonempty bounded model IDs without hard-coding the answer snapshot into
 the new setting. Do not change the existing answer-model default.
 
-- [ ] Write tests named test_rewrite_model_defaults_to_answer_model,
+- [x] Write tests named test_rewrite_model_defaults_to_answer_model,
   test_explicit_rewrite_model_is_independent, test_resource_identity_is_verified,
   test_missing_resources_fail_safely, and test_request_path_never_downloads.
   Assert an empty model ID is rejected, exact resource digests are checked,
   unavailable assets return a value-free failure, and networking is never invoked
   by resource verification or request-time initialization.
-- [ ] Run the new unit tests and configuration tests; confirm each new case fails
+- [x] Run the new unit tests and configuration tests; confirm each new case fails
   for the intended missing interface or behavior before implementation.
-- [ ] Pin compatible Python-3.12 spaCy/NLTK versions using uv's exact dependency
+- [x] Pin compatible Python-3.12 spaCy/NLTK versions using uv's exact dependency
   workflow. Pin the corresponding English pipeline wheel and WordNet archive in
   the reviewed resource manifest with concrete release URLs and SHA-256 digests.
   Include required POS/lemmatizer lookup assets. Check redistribution licensing.
-- [ ] Implement the resource installer/checker with fixed destinations, verified
+- [x] Implement the resource installer/checker with fixed destinations, verified
   bytes, and no request-time downloads. Extend the maintained local setup/launcher
   instructions; worker startup verifies assets before claiming work and existing
   worker-health checks gate chat readiness. Public bank endpoints must not load
   NLP assets merely to validate approved source documents.
-- [ ] Run the new tests, locked dependency validation, and launcher contracts.
+- [x] Run the new tests, locked dependency validation, and launcher contracts.
   Expect pass, with no live provider calls. Keep resource identity metadata
   separate from secret environment values.
-- [ ] Commit this task when implementation is authorized, using the repository's
+- [x] Commit this task when implementation is authorized, using the repository's
   existing commit style.
 
 ## Task 2: Shared normalization, primary ranking, and WordNet fallback
@@ -146,31 +146,31 @@ SynonymExpander, RetrievalSelection, and select_evidence interfaces above.
 Retain the original version-1 retrieve function for frozen baseline comparisons;
 the new runtime will call select_evidence explicitly.
 
-- [ ] Add test_cards_question_ignores_does_and_matches_card: select against the
+- [x] Add test_cards_question_ignores_does_and_matches_card: select against the
   authored corpus and assert Cedar/Hazel passages are found and no conflict
   document is selected only through auxiliary words. Do not require all three
   card-category documents in this step.
-- [ ] Add test_title_only_match, test_plural_forms_match,
+- [x] Add test_title_only_match, test_plural_forms_match,
   test_common_words_or_constraints_alone_select_nothing,
   test_product_names_and_numbers_preserved, test_negation_preserved,
   and test_retrieval_bounds_and_ties. Assert duplicate query concepts do not
   inflate scores, six-section/12,000-character bounds hold, and text/IDs are unchanged.
-- [ ] Add a counting fake expander: test_synonyms_only_after_empty_primary must
+- [x] Add a counting fake expander: test_synonyms_only_after_empty_primary must
   assert zero calls for nonempty primary selection and exactly one for empty
   selection. Test ambiguous senses, proper names, numeric terms, duplicate
   candidates, multiword exclusions, three-per-concept and twelve-total caps.
-- [ ] Run these focused tests and confirm the intended failures.
-- [ ] Implement the shared spaCy representation and ranking described in the
+- [x] Run these focused tests and confirm the intended failures.
+- [x] Implement the shared spaCy representation and ranking described in the
   design. Batch normalization, preserve constraints without allowing them to
   produce constraint-only relevance, and include title/heading terms once.
-- [ ] Implement the WordNet adapter behind the expander protocol. Filter by POS,
+- [x] Implement the WordNet adapter behind the expander protocol. Filter by POS,
   corpus vocabulary and unique surviving sense; apply deterministic caps and
   the same rank/budget policy to the single fallback pass. Do not call a model.
-- [ ] Run focused tests using fake WordNet candidates for policy edge cases and
+- [x] Run focused tests using fake WordNet candidates for policy edge cases and
   at least one actual local-resource normalization/WordNet smoke check.
   Expect pass without network. Document that no-evidence fallback does not
   repair a nonempty irrelevant result.
-- [ ] Commit the tested normalization and selection change.
+- [x] Commit the tested normalization and selection change.
 
 ## Task 3: Typed query rewriting and live/offline adapters
 
@@ -199,24 +199,26 @@ Use a root object wrapping the discriminated union for structured output.
 The deterministic adapter is an explicitly selected offline substitute with
 authored identity/follow-up/clarify cases, never a live failure fallback.
 
-- [ ] Write schema tests for missing/extra fields, malformed JSON, unsupported
+- [x] Write schema tests for missing/extra fields, malformed JSON, unsupported
   dispositions, empty/oversized query, and oversized history.
-- [ ] Write real-SDK mock-transport tests using the pinned SDK's transport type:
+- [x] Write real-SDK mock-transport tests using the pinned SDK's transport type:
   assert configured rewrite model, structured schema, tools=[], store=false,
   max_retries=0, max_output_tokens=2048, and a timeout capped at 10 seconds.
   Assert successful query, clarification, malformed output, timeout, and sanitized
   API failure results. No raw provider body may appear in errors.
-- [ ] Run the tests to establish failures, then implement the contract/adapters.
+- [x] Run the tests to establish failures, then implement the contract/adapters.
   Supply original message and role-separated history; instruct preservation of
   subject, numbers, negation and constraints, with clarification on ambiguity.
-  Populate model/usage from the SDK, never model-authored metadata.
-- [ ] Add authored tests for Cedar -> its replacement fee, two-card ambiguity,
+  Populate usage from the SDK and model identity from trusted adapter configuration,
+  never model-authored metadata. Separately auditing an alias's resolved snapshot
+  is deferred as recorded in the design.
+- [x] Add authored tests for Cedar -> its replacement fee, two-card ambiguity,
   topic changes, standalone queries, untrusted history instructions, and a
   reference whose antecedent is outside retained history. Treat deterministic
   cases as control-flow evidence, not proof of live rewriting quality.
-- [ ] Run the provider contracts and existing selected-citation tests; expect pass.
+- [x] Run the provider contracts and existing selected-citation tests; expect pass.
   Existing ProviderRequest callers remain valid through the optional field.
-- [ ] Commit the typed rewriting boundary.
+- [x] Commit the typed rewriting boundary.
 
 ## Task 4: Additive migration and durable one-call rewrite ledger
 
@@ -253,23 +255,23 @@ Reuse matching successful rows. A mismatched identity is incompatible_state;
 a reserved row without output is spent and yields a retry outcome.
 The existing answer attempts table and its ordinal limit remain unchanged.
 
-- [ ] Add native database tests for fresh install, version-1 upgrade, repeated
+- [x] Add native database tests for fresh install, version-1 upgrade, repeated
   migration, partial/unknown history rejection, checksum mismatch, and runtime-role
   privilege separation. Assert initial migration bytes/checksum are unchanged.
-- [ ] Add tests for reserve-before-dispatch, one-call enforcement, success reuse,
+- [x] Add tests for reserve-before-dispatch, one-call enforcement, success reuse,
   crash after success, crash before result persistence, changed model/digest,
   stale fence, and deadline expiration. Assert rewrite attempts never alter the
   count or outputs in support_app.attempts.
-- [ ] Run these cases against the dedicated test database to establish failures.
-- [ ] Extend the administrative migration runner to validate/apply a checksummed
+- [x] Run these cases against the dedicated test database to establish failures.
+- [x] Extend the administrative migration runner to validate/apply a checksummed
   ordered migration prefix. Runtime schema checks require the complete current
   ledger. Preserve the independent Chatwoot migration checks and grants.
-- [ ] Implement ledger/invocation behavior with one call capped by both 10 seconds
+- [x] Implement ledger/invocation behavior with one call capped by both 10 seconds
   and remaining database time. Use existing parent-before-job locks and sanitized
   failure handling. Persist structured results and observed usage.
-- [ ] Prove expired/deleted turns remove rewrite content and a late worker cannot
+- [x] Prove expired/deleted turns remove rewrite content and a late worker cannot
   recreate it; test ON DELETE CASCADE through the actual retention workflow.
-- [ ] Run migration, recovery, attempt, retention, and Chatwoot integration tests;
+- [x] Run migration, recovery, attempt, retention, and Chatwoot integration tests;
   expect pass without paid calls. Commit the storage/execution change.
 
 ## Task 5: Retrieval-version metadata and explicit corpus transition
@@ -291,18 +293,18 @@ Preserve version-1 canonical hash rules exactly when verifying historical manife
 Version 2 binds resource identity and normalization/synonym policy versions.
 Preparation defaults to version 2; approval remains an explicit existing hash action.
 
-- [ ] Freeze a version-1 fixture hash, then add tests proving old verification is
+- [x] Freeze a version-1 fixture hash, then add tests proving old verification is
   byte-identical. Test version-2 reproducibility, changed resource/policy identity,
   source drift, and resource/model mismatch.
-- [ ] Add tests asserting prepare never activates, startup never approves, and a
+- [x] Add tests asserting prepare never activates, startup never approves, and a
   v2 runtime rejects a v1 active corpus with a safe category. Verify old
   conversations cannot silently adopt the new corpus.
-- [ ] Run to confirm failures, then implement the new manifest variant and
+- [x] Run to confirm failures, then implement the new manifest variant and
   version-dispatched validation. Do not edit documents, parser output, section IDs,
   source permissions, or retained history to make migration pass.
-- [ ] Run corpus/management/source-isolation tests; expect pass. Record an explicit
+- [x] Run corpus/management/source-isolation tests; expect pass. Record an explicit
   maintenance rollout and new-conversation requirement in current documentation.
-- [ ] Commit versioning and rollout support. Do not approve the user's active
+- [x] Commit versioning and rollout support. Do not approve the user's active
   corpus while performing the implementation task.
 
 ## Task 6: Compose the complete RAG stage with existing workers
@@ -317,32 +319,32 @@ explicit RAGServices. Add tests/support/integration/test_rag_retrieval_pipeline.
 process_job and execute_job. Worker construction selects live or deterministic
 rewriting explicitly alongside its existing answer provider.
 
-- [ ] Write stage-spy tests proving every knowledge turn rewrites, including a
+- [x] Write stage-spy tests proving every knowledge turn rewrites, including a
   standalone question; human/operation routing still acts on original input.
   Original message and rewritten query remain distinct in the answer request.
-- [ ] Assert a rewrite error publishes exactly
+- [x] Assert a rewrite error publishes exactly
   "We couldn't prepare your question for search. Please try again."
   with no retrieval/answer calls; clarification also stops retrieval.
   Assert empty primary -> one synonym pass -> ordinary abstention when empty,
   and answer-model abstention never triggers another search.
-- [ ] Test history ownership/order/bounds, contradictory assistant text that is
+- [x] Test history ownership/order/bounds, contradictory assistant text that is
   not policy evidence, ambiguous products, timeout within the shared 60 seconds,
   deletion during rewriting, worker lease renewal during NLP inference, and
   recovery after journal persistence but before graph checkpoint progress.
-- [ ] Run these tests to establish failures. Implement explicit stage composition,
+- [x] Run these tests to establish failures. Implement explicit stage composition,
   use the configured rewrite model, and run synchronous NLP off the event loop.
   Avoid unnecessary query bodies in checkpoint state; recover from the ledger.
-- [ ] Keep per-stage model/usage/failure metadata in the rewrite row. Call the
+- [x] Keep per-stage model/usage/failure metadata in the rewrite row. Call the
   fenced record_retrieval interface to populate its existing selected-ID, mode,
   and expansion-count fields, including abstention outcomes. Do not edit the
   migration applied in Task 4.
-- [ ] Verify ordinary logs and optional exports contain no original question,
+- [x] Verify ordinary logs and optional exports contain no original question,
   rewritten query, history, source bodies, or raw provider errors. Retain answer
   citation validation and existing audit fields without falsely combining model usage.
-- [ ] Run the full offline support suite, including updated explicit offline
+- [x] Run the full offline support suite, including updated explicit offline
   dependency fixtures, restart cases and native Chatwoot handoff. Expect pass;
   do not substitute a fixture rewriter when live execution fails.
-- [ ] Commit the integrated step-1 RAG flow.
+- [x] Commit the integrated step-1 RAG flow.
 
 ## Task 7: Documentation, checks, and step-by-step handoff
 
@@ -350,11 +352,11 @@ rewriting explicitly alongside its existing answer provider.
 READMEs, docs/README, the current knowledge provider contract, and these planning
 documents. Preserve historical evidence statements and unrelated open tasks.
 
-- [ ] Document installation/check commands, independent rewrite_model configuration,
+- [x] Document installation/check commands, independent rewrite_model configuration,
   exact failure/clarify/abstain behavior, per-stage budgets, privacy, and version-2
   prepare/review/approval steps. Explain the existing-v1-conversation limitation.
 
-- [ ] Run the following existing checks and fix only relevant failures:
+- [x] Run the following existing checks and fix only relevant failures:
 
   ```
   uv lock --check
@@ -369,7 +371,7 @@ documents. Preserve historical evidence statements and unrelated open tasks.
   Full pytest requires the maintained dedicated native test database and installed
   local NLP resources. Missing prerequisites must be reported, not silently skipped.
 
-- [ ] Report exact focused/full test results and demonstrate the original cards
+- [x] Report exact focused/full test results and demonstrate the original cards
   query's selected source IDs with the offline retriever. Separately report which
   follow-up tests use a deterministic rewriter or mocked transport.
 
@@ -378,7 +380,7 @@ documents. Preserve historical evidence statements and unrelated open tasks.
   retry behavior via controlled offline failures, and cited policy answers. Record
   metadata and human review honestly; do not claim a full live grounding acceptance.
 
-- [ ] Finish this step before beginning category integration. Carry the untouched
+- [x] Finish this step before beginning category integration. Carry the untouched
   version-1 baseline and identified cases into steps 3-4. Commit documentation when
   execution is authorized and report material limitations.
 
@@ -396,9 +398,9 @@ documents. Preserve historical evidence statements and unrelated open tasks.
 
 The user's decisions are separated from proposed budgets, limits, resource packaging,
 and migration details in the design. Native implementation in the current session
-is recommended because normalization, ledger, corpus metadata and graph contracts
-are tightly connected. Review this design and plan before implementing task 1;
-implementation is not part of this planning deliverable.
+was selected because normalization, ledger, corpus metadata and graph contracts
+are tightly connected. The user approved implementation after planning; the
+execution record below distinguishes implementation from app activation.
 
 ## Execution record
 
@@ -418,3 +420,46 @@ implementation is not part of this planning deliverable.
   noun modifiers that spaCy may tag as common nouns; add the measured passage cache;
   advance the answer prompt metadata to knowledge-v2 because its search-metadata
   instructions changed.
+
+### Final review and activation boundary
+
+- The independent whole-branch review identified deadline/capacity accounting,
+  merged-concept protection, stopword-shaped product names, test-cache CLI
+  consistency, negative contractions, and sanitized resource errors. Each concrete
+  finding has a regression case observed failing before its fix and passing after.
+- Blocking source/NLP work now uses a bounded executor under the shared deadline.
+  Abandoned threads retain their capacity charge; a worker advertises readiness
+  again only when usable capacity returns. A permanently blocked thread requires
+  operator restart rather than pretending coroutine cancellation terminates it.
+- The load validator now isolates its generated owner's workload on the dedicated
+  loopback test database. This excludes unrelated stale test jobs from queue-time
+  measurements without deleting them or changing the five-second target, worker
+  cadence, concurrency, or normal application scheduling. Native tests prove that
+  foreign jobs remain untouched and application databases reject scoped workers.
+- The offline original query selects policy-03:0001 (Cedar card replacement fee)
+  and policy-08:0001 (Hazel card foreign fee) using primary normalized retrieval
+  with zero expanded terms. Complete Pine/category coverage belongs to step 2.
+- Follow-up control-flow tests use the explicit deterministic rewrite adapter;
+  wire/schema/error tests use the real SDK with a mocked transport. These prove
+  integration behavior, not live rewriting fidelity or human-reviewed grounding.
+- A version-2 synthetic corpus is prepared with hash
+  92126bf8d93182482cce66c599890de1db2f66e509dab2bb39a720e6056933b1.
+  The application still uses its original version-1 corpus. App database migration,
+  corpus approval, runtime activation, and paid live validation were not performed.
+- Recording provider-resolved model snapshots behind operator-configured aliases
+  remains a minor audit improvement; the current default uses a pinned model ID.
+
+### Final verification — 2026-11-01
+
+- Full offline suite with native PostgreSQL: **485 passed**, one Starlette/AnyIO
+  deprecation warning, in 324.87 seconds. No tests were skipped for missing
+  prerequisites. Paid provider calls were excluded.
+- Deterministic load: 30 turns, zero ownership leaks, queue-inclusive p95
+  **4.801 seconds**, passing the unchanged five-second target at the normal
+  one-second worker scan cadence. This is local offline evidence.
+- Focused review checks: 15 passed; scoped scheduling and load checks: 3 passed.
+- Locked dependencies, environment contract, local NLP resource verification,
+  Ruff format/lint, and strict mypy (147 source files) passed.
+- Documentation formatting and Git whitespace checks passed.
+- Tasks 1–7 are implemented and checked above; the optional live-validation item
+  remains unchecked because activation and paid calls were outside this execution.

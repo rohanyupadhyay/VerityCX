@@ -16,10 +16,8 @@ from veritycx.policy.sources import SourceError
 from veritycx.service.configuration import PROJECT_ROOT
 
 
-def source_mode(
-    mode: Literal["synthetic", "official"], *, validation: bool = False
-) -> tuple[Path, Path, str]:
-    """Resolve fixed source roots and verify the official pin and clean document subtree."""
+def corpus_cache(mode: Literal["synthetic", "official"], *, validation: bool = False) -> Path:
+    """Select the same fixed namespace for preparation, approval, and runtime reads."""
     try:
         database = conninfo_to_dict(os.environ.get("VERITYCX_DATABASE_URL", ""))
         validation = validation or (
@@ -29,7 +27,14 @@ def source_mode(
     except Exception:
         validation = bool(validation)
     cache_name = f"test-{mode}" if validation else mode
-    cache = PROJECT_ROOT / ".cache" / "support" / "corpora" / cache_name
+    return PROJECT_ROOT / ".cache" / "support" / "corpora" / cache_name
+
+
+def source_mode(
+    mode: Literal["synthetic", "official"], *, validation: bool = False
+) -> tuple[Path, Path, str]:
+    """Resolve fixed source roots and verify the official pin and clean document subtree."""
+    cache = corpus_cache(mode, validation=validation)
     if mode == "synthetic":
         return PROJECT_ROOT / "tests" / "support" / "fixtures" / "documents", cache, "synthetic-v1"
     configuration = load_tau3_config(PROJECT_ROOT)

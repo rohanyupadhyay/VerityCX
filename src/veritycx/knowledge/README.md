@@ -15,6 +15,12 @@ and sense grouping, excludes protected/multiword terms, and permits at most thre
 alternatives per concept and twelve in total. A shared reader is serialized across
 worker threads. These lexical tools never supply banking evidence.
 
+Negation includes straight and curly apostrophe contractions. Protected product
+terms survive stopword removal, and protection applies across every occurrence of
+a concept in the original and rewritten queries. A bounded passage-only cache
+holds at most 4096 representations per normalizer; queries and history are never
+cached, and source bytes are still verified for every retrieval.
+
 resources.py verifies exact installed package and model/archive bytes; nlp.py loads
 the required tagger/lemmatizer components once and batches inference off the worker
 event loop. The maintained setup helper installs data before requests; it never
@@ -25,6 +31,7 @@ hash verification stays unchanged, and public document browsing supports either
 version without loading NLP. Chat requires an explicitly approved version-2 corpus.
 Dedicated test-database processes use a fixed test corpus cache, protecting the
 normal app's active corpus. Category-aware selection remains a later step.
+Management preparation, approval, and runtime reads share this namespace selection.
 
 `documents.py` parses closed id/title/content JSON from at most 1 MiB of verified bytes.
 `manifest.py` prepares immutable hash inventories and activates only explicitly approved unchanged
