@@ -9,6 +9,7 @@ from pydantic import SecretStr
 
 from veritycx.knowledge.configuration import active_corpus, source_mode
 from veritycx.knowledge.manifest import approve, prepare
+from veritycx.orchestration.rag import deterministic_rag
 from veritycx.orchestration.worker import process_job
 from veritycx.persistence.attempts import AttemptLedger
 from veritycx.persistence.database import database_pool
@@ -71,7 +72,9 @@ def test_exhausted_key_is_stable(test_database_url: str) -> None:
             assert job is not None
             await ledger.reserve(job, "crashed-request")
             await ledger.reserve(job, "crashed-request")
-            await process_job(pool, job, Settings(), DeterministicProvider())
+            await process_job(
+                pool, job, Settings(), DeterministicProvider(), rag=deterministic_rag()
+            )
             repeated = await repo.accept(owner, parent.id, key, fixture_cases()[0].question)
             assert repeated.id == turn.id and repeated.status == "failed"
             assert (

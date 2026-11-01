@@ -26,6 +26,7 @@ class Settings(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True, hide_input_in_errors=True)
     provider: Literal["deterministic", "openai"] = "deterministic"
     model: Literal["gpt-4.1-mini-2025-04-14"] = "gpt-4.1-mini-2025-04-14"
+    rewrite_model: str | None = Field(default=None, min_length=1, max_length=200, pattern=r"^\S+$")
     corpus_mode: Literal["synthetic", "official"] = "synthetic"
     bind: Literal["127.0.0.1", "::1"] = "127.0.0.1"
     port: int = Field(default=8000, ge=1024, le=65535)
@@ -41,6 +42,11 @@ class Settings(BaseModel):
     retention_days: Literal[30] = 30
     purge_interval_seconds: Literal[3600] = 3600
     traces_enabled: bool = False
+
+    @property
+    def effective_rewrite_model(self) -> str:
+        """Resolve the independent rewrite setting without changing answer defaults."""
+        return self.rewrite_model if self.rewrite_model is not None else self.model
 
     @model_validator(mode="before")
     @classmethod

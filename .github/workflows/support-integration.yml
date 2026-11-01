@@ -38,6 +38,7 @@ jobs:
       - name: Synchronize locked environment and initialize dedicated roles
         run: |
           uv sync --locked
+          uv run python scripts/setup_retrieval_resources.py
           uv run python scripts/setup_support_ci.py
       - name: Record environment
         run: |

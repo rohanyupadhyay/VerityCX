@@ -2,6 +2,16 @@
 
 # τ³ Configuration
 
+## Retrieval language inventory
+
+[retrieval-resources.json](retrieval-resources.json) binds ranking version 2 to
+spaCy 3.8.18, English pipeline 3.8.0, NLTK 3.10.4, and the WordNet archive.
+It records immutable download URLs, archive hashes, and model-file hashes.
+Use the maintained setup/check helper; customer requests never download data.
+These are language-processing assets, not additional banking evidence.
+The optional rewrite_model support setting overrides rewriting only; omission
+inherits the existing answer model.
+
 ## Purpose and Responsibility
 
 `config/` owns reviewed, production-readable configuration for external data dependencies. For

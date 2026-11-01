@@ -1,5 +1,7 @@
 """Execute a knowledge-only graph while application rows remain authoritative."""
 
+import asyncio
+from functools import partial
 from uuid import UUID
 
 from langchain_core.runnables import RunnableConfig
@@ -9,8 +11,10 @@ from langsmith import tracing_context
 
 from veritycx.conversations.models import TurnResult
 from veritycx.knowledge.configuration import active_corpus
-from veritycx.knowledge.retrieval import recent_context, retrieve
+from veritycx.knowledge.retrieval import recent_context, select_evidence
 from veritycx.observability.audit import commit_result
+from veritycx.orchestration.inference import InferenceCapacityError
+from veritycx.orchestration.rag import RAGServices
 from veritycx.orchestration.router import route_intent
 from veritycx.orchestration.state import ConversationState
 from veritycx.persistence.attempts import AttemptLedger, BudgetError
@@ -24,6 +28,7 @@ from veritycx.persistence.escalations import (
 )
 from veritycx.persistence.models import TurnRow, WorkJob
 from veritycx.persistence.repository import RepositoryError, worker_guard
+from veritycx.persistence.rewrites import RewriteLedger
 from veritycx.policy.outputs import validate_result
 from veritycx.policy.sources import SourceError
 from veritycx.providers.execution import invoke_provider
@@ -33,11 +38,18 @@ from veritycx.providers.protocol import (
     ProviderError,
     ProviderRequest,
 )
+from veritycx.providers.rewrite import REWRITE_RETRY_TEXT, ClarifyRewrite, RewriteRequest
+from veritycx.providers.rewrite_execution import invoke_rewriter
 from veritycx.service.configuration import Settings
 
 
 async def execute_job(
-    pool: DatabasePool, job: WorkJob, settings: Settings, provider: KnowledgeProvider
+    pool: DatabasePool,
+    job: WorkJob,
+    settings: Settings,
+    provider: KnowledgeProvider,
+    *,
+    rag: RAGServices,
 ) -> None:
     """Execute or restore one fenced graph; HTTP state and provider output grant no authority."""
     async with transaction(pool) as conn:
@@ -89,13 +101,64 @@ async def execute_job(
         """Route accepted application input deterministically without any provider call."""
         return {**state, "route": route_intent(turn.text)}
 
-    async def knowledge(state: ConversationState) -> ConversationState:
+    knowledge_phase = "sources"
+
+    async def knowledge_flow(state: ConversationState) -> ConversationState:
         """Retrieve only reviewed evidence and use the durable provider attempt ledger."""
+        nonlocal knowledge_phase
         try:
-            manifest, corpus = active_corpus(settings.corpus_mode)
+            manifest, corpus = await rag.inference.run(partial(active_corpus, settings.corpus_mode))
             if manifest.corpus_version != parent.corpus_version:
                 raise SourceError("corpus_changed")
-            selected = retrieve(turn.text, corpus)
+            if manifest.retrieval_resources != rag.normalizer.identity:
+                raise SourceError("retrieval_upgrade_required")
+            rewrite_ledger = RewriteLedger(pool)
+            knowledge_phase = "rewrite"
+            try:
+                rewrite = await invoke_rewriter(
+                    rag.rewriter,
+                    rewrite_ledger,
+                    job,
+                    RewriteRequest(
+                        question=turn.text,
+                        context=recent_context(context),
+                        correlation_id=str(correlation),
+                        corpus_version=parent.corpus_version,
+                        remaining_seconds=60.0,
+                    ),
+                    settings.effective_rewrite_model,
+                )
+            except (ProviderError, BudgetError) as error:
+                category = error.category if isinstance(error, ProviderError) else str(error)
+                await commit_result(
+                    pool,
+                    job,
+                    TurnResult(
+                        kind="error",
+                        text=REWRITE_RETRY_TEXT,
+                        failure_category="rewrite_" + category,
+                    ),
+                    "knowledge",
+                )
+                return state
+            if isinstance(rewrite.result, ClarifyRewrite):
+                await commit_result(
+                    pool, job, TurnResult(kind="clarify", text=rewrite.result.text), "knowledge"
+                )
+                return state
+            knowledge_phase = "retrieval"
+            selection = await rag.inference.run(
+                partial(
+                    select_evidence,
+                    turn.text,
+                    rewrite.result.query,
+                    corpus,
+                    normalizer=rag.normalizer,
+                    expander=rag.expander,
+                )
+            )
+            await rewrite_ledger.record_retrieval(job, selection)
+            selected = selection.sections
             if not selected:
                 await commit_result(
                     pool,
@@ -106,9 +169,11 @@ async def execute_job(
                     "knowledge",
                 )
                 return state
+            knowledge_phase = "answer"
             request = ProviderRequest(
                 correlation_id=str(correlation),
                 question=turn.text,
+                rewritten_query=rewrite.result.query,
                 context=recent_context(context),
                 evidence=tuple(selected),
                 remaining_seconds=60.0,
@@ -120,7 +185,7 @@ async def execute_job(
                 "evidence_ids": [item.section_id for item in selected],
                 "provider_result_id": str(turn.id),
             }
-        except (SourceError, ProviderError, BudgetError) as error:
+        except (SourceError, ProviderError, BudgetError, InferenceCapacityError) as error:
             category = error.category if isinstance(error, ProviderError) else str(error)
             await commit_result(
                 pool,
@@ -132,6 +197,45 @@ async def execute_job(
                         "You may submit a new question to try again."
                     ),
                     failure_category=category,
+                ),
+                "knowledge",
+            )
+            return state
+
+    async def knowledge(state: ConversationState) -> ConversationState:
+        """Apply the original database-time deadline to source checks and NLP as well."""
+        nonlocal knowledge_phase
+        knowledge_phase = "sources"
+        async with transaction(pool) as connection:
+            await worker_guard(connection, job)
+            cursor = await connection.execute(
+                "SELECT EXTRACT(EPOCH FROM (deadline_at-clock_timestamp()))::double precision "
+                "AS remaining FROM support_app.turns WHERE id=%s AND status='running'",
+                (job.turn_id,),
+            )
+            budget = await cursor.fetchone()
+        remaining = budget.get("remaining") if budget else None
+        if not isinstance(remaining, float):
+            raise RepositoryError("incompatible_state")
+        try:
+            if remaining <= 0:
+                raise TimeoutError
+            async with asyncio.timeout(min(60.0, remaining)):
+                return await knowledge_flow(state)
+        except TimeoutError:
+            rewriting = knowledge_phase == "rewrite"
+            await commit_result(
+                pool,
+                job,
+                TurnResult(
+                    kind="error",
+                    text=REWRITE_RETRY_TEXT
+                    if rewriting
+                    else (
+                        "An answer could not be completed. "
+                        "You may submit a new question to try again."
+                    ),
+                    failure_category="rewrite_timeout" if rewriting else "timeout",
                 ),
                 "knowledge",
             )

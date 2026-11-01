@@ -57,6 +57,8 @@ jobs:
         run: |
           uv lock --check
           uv sync --locked
+      - name: Install and verify pinned retrieval resources
+        run: uv run python scripts/setup_retrieval_resources.py
       - name: Record network-independent first-acquisition duration
         timeout-minutes: 11
         run: uv run pytest -q -s tests/data_sources/test_tau3.py::test_first_install_promotes_only_a_fully_validated_checkout

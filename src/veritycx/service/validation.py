@@ -26,13 +26,14 @@ from pydantic import SecretStr
 from veritycx.conversations.models import AcceptanceResponse, ConversationView, CreateResponse
 from veritycx.knowledge.configuration import active_corpus, source_mode
 from veritycx.knowledge.manifest import approve, prepare
-from veritycx.orchestration.worker import process_job
+from veritycx.orchestration.rag import deterministic_rag
+from veritycx.orchestration.worker import configured_worker, process_job
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.repository import Repository
 from veritycx.providers.deterministic import DeterministicProvider, fixture_cases
 from veritycx.providers.protocol import ProviderRequest, ProviderResult
 from veritycx.service.app import create_app
-from veritycx.service.auth import init_demo, load_principals
+from veritycx.service.auth import authenticate, init_demo, load_principals
 from veritycx.service.configuration import PROJECT_ROOT, Settings, load_configuration
 from veritycx.service.runtime import run_async
 
@@ -120,6 +121,18 @@ def serve_test(port: int) -> None:
     run_async(server.serve())
 
 
+def serve_scoped_worker(owner: str) -> None:
+    """Run only a private validation session's workload; normal worker CLI stays unscoped."""
+    dedicated_database(os.environ.get("VERITYCX_DATABASE_URL", ""))
+    configuration = load_configuration(
+        Path("config/support.toml"),
+        os.environ,
+        provider=os.environ.get("VERITYCX_VALIDATION_PROVIDER", "deterministic"),
+        corpus_mode=os.environ.get("VERITYCX_VALIDATION_CORPUS", "synthetic"),
+    )
+    run_async(configured_worker(configuration, owner_scope=UUID(owner)))
+
+
 def wait_ready(client: httpx.Client, owner: ProcessOwner) -> None:
     """Wait at most 30 seconds for owned live processes and durable readiness."""
     deadline = time.monotonic() + 30
@@ -155,7 +168,7 @@ def poll_turn(client: httpx.Client, target: str, turn_id: str) -> ConversationVi
 def validate_offline(env: dict[str, str]) -> dict[str, int | str]:
     """Run synthetic supported/unsupported/conflicting questions through owned subprocesses."""
     dsn = dedicated_database(env.get("VERITYCX_TEST_DATABASE_URL", ""))
-    root, cache, pin = source_mode("synthetic")
+    root, cache, pin = source_mode("synthetic", validation=True)
     manifest = prepare(root, cache, "synthetic", pin)
     approve(root, cache, manifest.aggregate_hash)
     directory = PROJECT_ROOT / ".cache" / "support" / "validation" / str(uuid4())
@@ -262,7 +275,13 @@ def serve_paused_worker(target: str, sentinel: str) -> None:
             for _ in range(30):
                 job = await repo.claim(worker, conversation_id=UUID(target))
                 if job is not None:
-                    await process_job(pool, job, Settings(), PausingProvider(Path(sentinel)))
+                    await process_job(
+                        pool,
+                        job,
+                        Settings(),
+                        PausingProvider(Path(sentinel)),
+                        rag=deterministic_rag(),
+                    )
                     return
                 await asyncio.sleep(1)
         raise ValidationError("claim_timeout")
@@ -314,7 +333,7 @@ def validate_recovery(env: dict[str, str], scenario: str) -> dict[str, int | str
     if scenario not in {"after_acceptance", "before_commit", "after_commit", "retry", "concurrent"}:
         raise ValidationError("invalid_scenario")
     dsn = dedicated_database(env.get("VERITYCX_TEST_DATABASE_URL", ""))
-    root, cache, pin = source_mode("synthetic")
+    root, cache, pin = source_mode("synthetic", validation=True)
     manifest = prepare(root, cache, "synthetic", pin)
     approve(root, cache, manifest.aggregate_hash)
     directory = PROJECT_ROOT / ".cache" / "support" / "validation" / str(uuid4())
@@ -463,17 +482,18 @@ def owned_session(
     *,
     live: bool = False,
     corpus_mode: Literal["synthetic", "official"] = "synthetic",
+    isolate_owner: bool = False,
 ) -> Iterator[ValidationSession]:
     """Launch actual API/worker processes and guarantee handle-only cleanup on every exit."""
     dsn = dedicated_database(env.get("VERITYCX_TEST_DATABASE_URL", ""))
     if live and not env.get("OPENAI_API_KEY"):
         raise ValidationError("missing_provider_credential")
     if corpus_mode == "synthetic":
-        root, cache, pin = source_mode("synthetic")
+        root, cache, pin = source_mode("synthetic", validation=True)
         manifest = prepare(root, cache, "synthetic", pin)
         approve(root, cache, manifest.aggregate_hash)
     else:
-        active_corpus("official")
+        active_corpus("official", validation=True)
     directory = PROJECT_ROOT / ".cache" / "support" / "validation" / str(uuid4())
     auth, first, second = init_demo(directory)
     child_env = {
@@ -506,16 +526,22 @@ def owned_session(
         processes.launch(
             ["-c", f"from veritycx.service.validation import serve_test; serve_test({port})"]
         )
-        worker = processes.launch(
-            [
-                "-m",
-                "veritycx.orchestration.worker",
-                "--provider",
-                "openai" if live else "deterministic",
-                "--corpus-mode",
-                corpus_mode,
+        worker_args = [
+            "-m",
+            "veritycx.orchestration.worker",
+            "--provider",
+            "openai" if live else "deterministic",
+            "--corpus-mode",
+            corpus_mode,
+        ]
+        if isolate_owner:
+            owner = authenticate("Bearer " + first.read_text().strip(), load_principals(auth))
+            worker_args = [
+                "-c",
+                "from veritycx.service.validation import serve_scoped_worker; "
+                f"serve_scoped_worker('{owner}')",
             ]
-        )
+        worker = processes.launch(worker_args)
         with httpx.Client(
             base_url=f"http://127.0.0.1:{port}",
             timeout=10,
@@ -531,7 +557,7 @@ def owned_session(
 
 def validate_load(env: dict[str, str]) -> dict[str, int | float | str]:
     """Measure production-cadence queue-inclusive latency and check strict owner isolation."""
-    with owned_session(env) as session:
+    with owned_session(env, isolate_owner=True) as session:
 
         def conversation(index: int) -> list[float]:
             """Execute three turns for one owner/conversation without sharing customer context."""
@@ -622,7 +648,7 @@ def validate_handoff(env: dict[str, str], *, live: bool = False) -> dict[str, in
         parent = CreateResponse.model_validate_json(created.content)
         url = f"/conversations/{parent.conversation_id}"
         if live:
-            _, sections = active_corpus("official")
+            _, sections = active_corpus("official", validation=True)
             if not sections:
                 raise ValidationError("empty_corpus")
             question = f"What policy applies to {sections[0].title}?"
@@ -733,8 +759,8 @@ def validate_handoff(env: dict[str, str], *, live: bool = False) -> dict[str, in
     return {
         "suite": "demo" if live else "handoff",
         "model": Settings().model if live else "deterministic-fixture-v1",
-        "corpus_version": active_corpus(mode)[0].corpus_version,
-        "prompt_version": 1,
+        "corpus_version": active_corpus(mode, validation=True)[0].corpus_version,
+        "prompt_version": 2,
         "cases_passed": 6,
         "provider": provider,
         "delivery": "not_connected",
@@ -783,13 +809,13 @@ def validate_grounding(env: dict[str, str], *, live: bool) -> dict[str, object]:
                     "citation_count": len(result.citations) if result else 0,
                 }
             )
-    manifest, _ = active_corpus("synthetic")
+    manifest, _ = active_corpus("synthetic", validation=True)
     return {
         "suite": "grounding",
         "provider": "openai",
         "model": Settings().model,
         "corpus_version": manifest.corpus_version,
-        "prompt_version": 1,
+        "prompt_version": 2,
         "human_review": "pending",
         "usage": None,
         "cost": None,

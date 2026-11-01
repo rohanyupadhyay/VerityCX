@@ -18,6 +18,7 @@ from veritycx.knowledge.models import (
     KnowledgeDocument,
     ManifestEntry,
 )
+from veritycx.knowledge.resources import NLPResourceIdentity, configured_identity, verify_resources
 from veritycx.policy.sources import SourceError, verified_bytes
 
 
@@ -41,7 +42,14 @@ def document_paths(root: Path) -> list[str]:
     return sorted(paths)
 
 
-def build_manifest(root: Path, mode: Literal["synthetic", "official"], pin: str) -> CorpusManifest:
+def build_manifest(
+    root: Path,
+    mode: Literal["synthetic", "official"],
+    pin: str,
+    *,
+    ranking_version: Literal[1, 2] = 2,
+    resource_identity: NLPResourceIdentity | None = None,
+) -> CorpusManifest:
     """Bind hashes, unique IDs and deterministic section IDs to a reviewed provenance pin."""
     entries: list[ManifestEntry] = []
     identifiers: set[str] = set()
@@ -59,14 +67,18 @@ def build_manifest(root: Path, mode: Literal["synthetic", "official"], pin: str)
                 section_ids=tuple(s.section_id for s in sections(document, "pending")),
             )
         )
+    identity = (resource_identity or configured_identity()) if ranking_version == 2 else None
+    payload: dict[str, object] = {
+        "mode": mode,
+        "pin": pin,
+        "parser": 1,
+        "ranking": ranking_version,
+        "entries": [entry.model_dump() for entry in entries],
+    }
+    if identity is not None:
+        payload["retrieval_resources"] = identity.model_dump()
     canonical = json.dumps(
-        {
-            "mode": mode,
-            "pin": pin,
-            "parser": 1,
-            "ranking": 1,
-            "entries": [entry.model_dump() for entry in entries],
-        },
+        payload,
         sort_keys=True,
         separators=(",", ":"),
     )
@@ -75,6 +87,8 @@ def build_manifest(root: Path, mode: Literal["synthetic", "official"], pin: str)
         corpus_version=f"{mode}-{digest}",
         source_pin=pin,
         mode=mode,
+        ranking_version=ranking_version,
+        retrieval_resources=identity,
         entries=tuple(entries),
         aggregate_hash=digest,
     )
@@ -84,7 +98,7 @@ def prepare(
     root: Path, cache: Path, mode: Literal["synthetic", "official"], pin: str
 ) -> CorpusManifest:
     """Create an immutable pending manifest/index; no automatic activation is permitted."""
-    manifest = build_manifest(root, mode, pin)
+    manifest = build_manifest(root, mode, pin, resource_identity=verify_resources())
     directory = cache / manifest.aggregate_hash
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / "manifest.json"
@@ -120,7 +134,14 @@ def approve(root: Path, cache: Path, digest: str) -> None:
     manifest = load_manifest(cache / digest / "manifest.json")
     if (
         manifest.aggregate_hash != digest
-        or build_manifest(root, manifest.mode, manifest.source_pin) != manifest
+        or build_manifest(
+            root,
+            manifest.mode,
+            manifest.source_pin,
+            ranking_version=manifest.ranking_version,
+            resource_identity=manifest.retrieval_resources,
+        )
+        != manifest
     ):
         raise SourceError("corpus_changed")
     temporary = cache / "active.pending"
@@ -139,7 +160,14 @@ def read_active(root: Path, cache: Path) -> CorpusManifest:
     manifest = load_manifest(cache / digest / "manifest.json")
     if (
         manifest.aggregate_hash != digest
-        or build_manifest(root, manifest.mode, manifest.source_pin) != manifest
+        or build_manifest(
+            root,
+            manifest.mode,
+            manifest.source_pin,
+            ranking_version=manifest.ranking_version,
+            resource_identity=manifest.retrieval_resources,
+        )
+        != manifest
     ):
         raise SourceError("corpus_changed")
     return manifest

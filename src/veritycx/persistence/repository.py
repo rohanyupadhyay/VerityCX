@@ -190,7 +190,9 @@ class Repository:
             await insert_operation(conn, owner, key, "turn", conversation_id, digest, turn_id)
             return turn
 
-    async def claim(self, worker: UUID, *, conversation_id: UUID | None = None) -> WorkJob | None:
+    async def claim(
+        self, worker: UUID, *, conversation_id: UUID | None = None, owner_id: UUID | None = None
+    ) -> WorkJob | None:
         """Take one eligible job under its parent lock, preserving its first-claim deadline."""
         async with transaction(self.pool) as conn:
             cursor = await conn.execute(
@@ -199,9 +201,11 @@ class Repository:
                 "WHERE c.status<>'deleted' AND c.expires_at>clock_timestamp() "
                 "AND (j.status='accepted' OR (j.status='running' AND "
                 "j.lease_until<=clock_timestamp())) "
-                "AND (%s::uuid IS NULL OR c.id=%s) ORDER BY j.created_at LIMIT 1 FOR UPDATE OF "
+                "AND (%s::uuid IS NULL OR c.id=%s) "
+                "AND (%s::uuid IS NULL OR c.owner_id=%s) "
+                "ORDER BY j.created_at LIMIT 1 FOR UPDATE OF "
                 "c SKIP LOCKED",
-                (conversation_id, conversation_id),
+                (conversation_id, conversation_id, owner_id, owner_id),
             )
             row = await cursor.fetchone()
             if row is None:
@@ -234,6 +238,13 @@ class Repository:
                 "UPDATE support_app.jobs SET lease_until=clock_timestamp()+interval '30 seconds' "
                 "WHERE id=%s",
                 (job.id,),
+            )
+
+    async def withdraw_heartbeat(self, worker: UUID) -> None:
+        """Stop advertising this worker when no physical inference capacity remains."""
+        async with transaction(self.pool) as conn:
+            await conn.execute(
+                "DELETE FROM support_app.worker_heartbeats WHERE worker_id=%s", (worker,)
             )
 
     async def heartbeat(self, worker: UUID) -> None:

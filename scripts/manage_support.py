@@ -13,8 +13,9 @@ from veritycx.handoff.configuration import (
     load_chatwoot_configuration,
 )
 from veritycx.handoff.migrate import migrate_chatwoot
-from veritycx.knowledge.configuration import source_mode
+from veritycx.knowledge.configuration import corpus_cache, source_mode
 from veritycx.knowledge.manifest import approve, load_manifest, prepare
+from veritycx.knowledge.resources import ResourceError
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.maintenance import purge_expired
 from veritycx.persistence.migrate import MigrationError, migrate
@@ -64,18 +65,8 @@ def main() -> int:
                     or any(c not in "0123456789abcdef" for c in digest)
                 ):
                     raise SourceError("invalid_manifest_hash")
-                candidates = [
-                    (
-                        PROJECT_ROOT
-                        / ".cache"
-                        / "support"
-                        / "corpora"
-                        / mode
-                        / digest
-                        / "manifest.json"
-                    )
-                    for mode in ("synthetic", "official")
-                ]
+                modes: tuple[Literal["synthetic", "official"], ...] = ("synthetic", "official")
+                candidates = [corpus_cache(mode) / digest / "manifest.json" for mode in modes]
                 found = [path for path in candidates if path.is_file()]
                 if len(found) != 1:
                     raise SourceError("invalid_manifest_hash")
@@ -85,7 +76,7 @@ def main() -> int:
                     raise SourceError("corpus_changed")
                 approve(root, cache, digest)
                 print("corpus_approved")
-        except (SourceError, OSError):
+        except (SourceError, ResourceError, OSError):
             print("corpus_unavailable")
             return 1
         return 0

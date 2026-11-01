@@ -4,6 +4,17 @@
 
 Bounded knowledge-provider implementations.
 
+## Conversational rewriting
+
+rewrite.py defines separate bounded search/clarify results and live/offline
+QueryRewriter adapters. The live adapter uses the independently configured
+rewrite model, no tools, no storage, and no SDK retries, with a ten-second cap.
+rewrite_execution.py reserves one call in the separate rewrite ledger before
+dispatch and reuses validated results after restart. An uncertain reserved call
+is spent; a technical failure returns a retry message without raw-query fallback.
+The original question, rewritten search metadata, and authoritative evidence
+remain distinct in answer generation. WordNet does not make another model call.
+
 `protocol.py` defines closed requests/results and the `KnowledgeProvider` protocol.
 `deterministic.py` implements exactly the forty authored fixture cases and abstains outside them.
 `openai.py` adapts the pinned Responses SDK with structured output, no tools, store=false, 2048 output

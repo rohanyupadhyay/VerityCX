@@ -2,6 +2,22 @@
 
 # Developer Commands
 
+## Retrieval language resources
+
+Run the setup helper after syncing locked dependencies:
+
+```
+uv run python scripts/setup_retrieval_resources.py
+uv run python scripts/setup_retrieval_resources.py --check
+```
+
+It acquires only the reviewed WordNet archive and checks the English model installed
+from the locked wheel. The check mode performs no network requests or writes.
+Missing or mismatched assets return nlp_resources_unavailable. Data stays in the
+ignored support cache and installed environment; banking documents are unaffected.
+The [step 1 design](../docs/superpowers/specs/2026-10-30-rag-retrieval-step-1-design.md)
+describes the separate rewrite model, stage budgets, and corpus transition.
+
 ## Purpose and Structure
 
 `scripts/` contains thin, project-root-resolving entry points for the τ³-Banking dependency:

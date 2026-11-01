@@ -5,16 +5,19 @@ version = "0.1.0"
 description = "Reproducible external-data tooling for VerityCX"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "en-core-web-sm",
     "fastapi==0.141.1",
     "httpx==0.28.1",
     "langgraph==1.2.11",
     "langgraph-checkpoint-postgres==3.1.2",
     "langsmith==0.12.4",
+    "nltk==3.10.4",
     "openai==3.13.0",
     "psycopg-pool==3.3.1",
     "psycopg[binary]==3.3.5",
     "pydantic==2.13.5",
     "python-dotenv==1.2.3",
+    "spacy==3.8.18",
     "uvicorn==0.52.4",
 ]
 
@@ -33,6 +36,9 @@ build-backend = "uv_build"
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.uv.sources]
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
 
 [tool.pytest.ini_options]
 addopts = '-ra --strict-config --strict-markers -m "not live"'
@@ -69,6 +75,10 @@ warn_unreachable = true
 [tool.mdformat]
 wrap = 100
 number = false
+
+[[tool.mypy.overrides]]
+module = ["nltk.*"]
+ignore_missing_imports = true
 
 [tool.yamlfix]
 allow_duplicate_keys = false

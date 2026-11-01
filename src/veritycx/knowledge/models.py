@@ -2,9 +2,10 @@
 
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from veritycx.conversations.models import ClosedModel, VersionedModel
+from veritycx.knowledge.resources import NLPResourceIdentity
 
 
 class KnowledgeDocument(ClosedModel):
@@ -48,6 +49,14 @@ class CorpusManifest(VersionedModel):
     source_pin: str
     mode: Literal["synthetic", "official"]
     parser_version: Literal[1] = 1
-    ranking_version: Literal[1] = 1
+    ranking_version: Literal[1, 2] = 1
+    retrieval_resources: NLPResourceIdentity | None = None
     entries: tuple[ManifestEntry, ...]
     aggregate_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def versioned_resources(self) -> "CorpusManifest":
+        """A version-two identity cannot omit its language resources."""
+        if (self.ranking_version == 2) != (self.retrieval_resources is not None):
+            raise ValueError("invalid_retrieval_identity")
+        return self
