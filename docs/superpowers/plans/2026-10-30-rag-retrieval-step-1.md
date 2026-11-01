@@ -482,3 +482,9 @@ execution record below distinguishes implementation from app activation.
   workflows; fresh runners otherwise lack the WordNet archive used by NLP tests.
 - The user subsequently authorized pushing, PR review/merge, synchronization and
   restart, including the documented local version-2 maintenance transition.
+- Hosted native tests passed, but the subsequent standalone validator exposed a
+  parent-side metadata lookup still using the application corpus cache. The native
+  regression reproduced this with no runtime DSN, after a successful handoff.
+  Validation metadata now explicitly selects the fixed test namespace, preserving
+  the application's active pointer. The same correction applies to official and
+  grounding metadata reads.

@@ -493,7 +493,7 @@ def owned_session(
         manifest = prepare(root, cache, "synthetic", pin)
         approve(root, cache, manifest.aggregate_hash)
     else:
-        active_corpus("official")
+        active_corpus("official", validation=True)
     directory = PROJECT_ROOT / ".cache" / "support" / "validation" / str(uuid4())
     auth, first, second = init_demo(directory)
     child_env = {
@@ -648,7 +648,7 @@ def validate_handoff(env: dict[str, str], *, live: bool = False) -> dict[str, in
         parent = CreateResponse.model_validate_json(created.content)
         url = f"/conversations/{parent.conversation_id}"
         if live:
-            _, sections = active_corpus("official")
+            _, sections = active_corpus("official", validation=True)
             if not sections:
                 raise ValidationError("empty_corpus")
             question = f"What policy applies to {sections[0].title}?"
@@ -759,7 +759,7 @@ def validate_handoff(env: dict[str, str], *, live: bool = False) -> dict[str, in
     return {
         "suite": "demo" if live else "handoff",
         "model": Settings().model if live else "deterministic-fixture-v1",
-        "corpus_version": active_corpus(mode)[0].corpus_version,
+        "corpus_version": active_corpus(mode, validation=True)[0].corpus_version,
         "prompt_version": 2,
         "cases_passed": 6,
         "provider": provider,
@@ -809,7 +809,7 @@ def validate_grounding(env: dict[str, str], *, live: bool) -> dict[str, object]:
                     "citation_count": len(result.citations) if result else 0,
                 }
             )
-    manifest, _ = active_corpus("synthetic")
+    manifest, _ = active_corpus("synthetic", validation=True)
     return {
         "suite": "grounding",
         "provider": "openai",

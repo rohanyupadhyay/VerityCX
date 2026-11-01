@@ -77,9 +77,11 @@ def source_mode(
 
 def active_corpus(
     mode: Literal["synthetic", "official"],
+    *,
+    validation: bool = False,
 ) -> tuple[CorpusManifest, list[EvidenceSection]]:
     """Return only revalidated reviewed sources bound to the configured mode and pin."""
-    root, cache, pin = source_mode(mode)
+    root, cache, pin = source_mode(mode, validation=True) if validation else source_mode(mode)
     manifest = read_active(root, cache)
     if manifest.source_pin != pin or manifest.mode != mode:
         raise SourceError("corpus_changed")

@@ -32,6 +32,9 @@ version without loading NLP. Chat requires an explicitly approved version-2 corp
 Dedicated test-database processes use a fixed test corpus cache, protecting the
 normal app's active corpus. Category-aware selection remains a later step.
 Management preparation, approval, and runtime reads share this namespace selection.
+Parent-side validation metadata reads explicitly select the same test namespace,
+even when the parent has no runtime database environment. Official live validation
+requires its separately reviewed test-cache corpus as well.
 
 `documents.py` parses closed id/title/content JSON from at most 1 MiB of verified bytes.
 `manifest.py` prepares immutable hash inventories and activates only explicitly approved unchanged
