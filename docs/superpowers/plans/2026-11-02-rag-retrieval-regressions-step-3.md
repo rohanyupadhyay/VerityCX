@@ -103,17 +103,17 @@ retrieval-replays.json. Existing production retrieval/provider contracts stay in
   load_replays(cases: RegressionSet, manifest: CorpusManifest)
   -> dict\[tuple[str, str], ReplayTurn\]. Use fixed repository-owned paths only.
 
-- [ ] Write test_retrieval_cases.py first: assert 24 scenarios, 31 turns and family
+- [x] Write test_retrieval_cases.py first: assert 24 scenarios, 31 turns and family
   scenario counts 4/6/5/5/4; select_cases rejects unknown/duplicate IDs and retains
   catalog order; reject extra/duplicate JSON keys, unknown aliases/categories,
   duplicate turn IDs and nonexistent source references. Assert replay keys are a
   bijection over the 31 turns, with no replay payload on model-free branches.
   Confirm the existing fixture_cases() still returns exactly 40 original cases.
 
-- [ ] Run uv run pytest tests/support/unit/test_retrieval_cases.py -q.
+- [x] Run uv run pytest tests/support/unit/test_retrieval_cases.py -q.
   Expected: RED missing retrieval_cases interfaces, before implementing them.
 
-- [ ] Implement the types/loaders and author both JSON fixtures independently.
+- [x] Implement the types/loaders and author both JSON fixtures independently.
   Validate source references against manifest entries/section IDs. Do not construct
   expectations from current selector output or have replay providers read them.
   Freeze this inventory, verifying each fact against its source:
@@ -132,7 +132,7 @@ retrieval-replays.json. Existing production retrieval/provider contracts stay in
   | broad-cards-options | What card options are available? | overview cards; exactly 03/08/16 |
   | broad-savings | What savings products are documented? | overview savings; exactly 01/06/17 |
   | broad-accounts | What account policies are documented? | six of 02/07/09/11/14/15/19; coverage 7/6/truncated |
-  | broad-accounts-cards | Show accounts and cards | six documents: three accounts and all three cards; coverage 10/6/truncated |
+  | broad-accounts-cards | Which accounts and cards are documented? | six documents: three accounts and all three cards; coverage 10/6/truncated |
   | followup-cedar | Cedar replacement fee -> its replacement fee | 2 turns, policy-03 both |
   | followup-topic-change | Cedar fee -> Alder opening deposit -> its opening deposit | 3 turns, 03 then 01 then 01 |
   | followup-ambiguous | Cedar and Hazel card fees -> What is its fee? | 2 turns: 03/08 then clarify without answer call |
@@ -140,8 +140,8 @@ retrieval-replays.json. Existing production retrieval/provider contracts stay in
   | followup-interleaved | A:Cedar fee, B:Hazel fee, A:its replacement fee, B:its foreign fee | 4 turns, same owner/two conversations; 03/08/03/08 |
   | unsupported-product | What is the Martian asteroid vault fee? | similar fee evidence may exist; abstain/clarify, no invented fee |
   | unsupported-business | Which VerityCX cards are eligible for businesses? | cards evidence may exist; abstain/clarify, no easier product list |
-  | unsupported-attribute | Does the Cedar card include cryptocurrency insurance? | preserve Cedar/qualifier; abstain/clarify |
-  | unsupported-absent | Quasar hyperdrive warranty? | raw focused probe empty; pipeline abstain/clarify |
+  | unsupported-attribute | What cryptocurrency insurance does the Cedar card include? | preserve Cedar/qualifier; abstain/clarify |
+  | unsupported-absent | What is the quasar hyperdrive warranty? | raw focused probe empty; pipeline abstain/clarify |
 
   In the table, numeric IDs abbreviate policy-NN. Successful overviews require
   their scope note; all answer facts/citations are authored from the source.
@@ -149,7 +149,7 @@ retrieval-replays.json. Existing production retrieval/provider contracts stay in
   instead requires no selected evidence or answer attempt. Unsupported live cases
   need not retrieve zero documents to pass; the raw empty probe is a separate check.
 
-- [ ] Re-run the task tests. Expected: GREEN; Ruff and strict typing on the new
+- [x] Re-run the task tests. Expected: GREEN; Ruff and strict typing on the new
   module/test also pass. Commit the tested fixture/loader deliverable.
 
 ## Task 2: Independent judgments, raw retrieval cases and budget boundary
@@ -178,15 +178,15 @@ retrieval-replays.json. Existing production retrieval/provider contracts stay in
   and RegressionRun(mode, metadata, scenarios),
   preserving observations/verdicts and explicit dependent not-run turns.
 
-- [ ] Write unit/test_retrieval_regressions.py before the judgment implementation.
+- [x] Write unit/test_retrieval_regressions.py before the judgment implementation.
   Pin tests rejecting wrong/missing evidence, forbidden/out-of-set documents,
   false coverage, wrong citation, lost/foreign history, changed original input,
   incorrect disposition, missing scope note and exhausted budgets. An error must
   not pass as abstention, and a failed turn must make RegressionRun fail.
 
-- [ ] Run that module: expected RED missing judgment interfaces.
+- [x] Run that module: expected RED missing judgment interfaces.
 
-- [ ] Implement independent checks from fixture expectations and observations.
+- [x] Implement independent checks from fixture expectations and observations.
   Compare the exact original question and role-separated expected completed
   same-conversation messages. All scenario histories fit within 16,000 characters;
   assert that bound and compare the full expected list independently of the
@@ -195,20 +195,20 @@ retrieval-replays.json. Existing production retrieval/provider contracts stay in
   membership/required support and scope/count honesty against the approved index.
   Treat semantic fact checking as pending, not substring-based model grading.
 
-- [ ] Parameterize real raw probes across standalone scenarios with the pinned
+- [x] Parameterize real raw probes across standalone scenarios with the pinned
   TextNormalizer/WordNetExpander and select_scoped_evidence; no fake NLP. Require
   the expected policy IDs and test that the query "does" yields no evidence.
   Empty results alone may invoke WordNet; overviews must not use it. Do not assert
   an arbitrary focused ranking tie or force unsupported evidence to be empty.
 
-- [ ] Add test_multicategory_related_pair_is_deferred_with_one_slot_remaining
+- [x] Add test_multicategory_related_pair_is_deferred_with_one_slot_remaining
   to unit/test_category_retrieval.py. Construct five earlier singleton groups
   across accounts/cards, then a lower-priority two-document related group with
   one member in each category. Assert both pair members absent, five represented,
   seven eligible, coverage truncated, no duplicate selections and stable ordering.
   This adds coverage to existing behavior; no production change is expected.
 
-- [ ] Run uv run pytest tests/support/unit/test_retrieval_cases.py
+- [x] Run uv run pytest tests/support/unit/test_retrieval_cases.py
   tests/support/unit/test_retrieval_regressions.py
   tests/support/unit/test_category_retrieval.py -q. Expected: GREEN, including
   deliberately corrupted observations producing failed verdicts. Commit.
@@ -234,7 +234,7 @@ Mapping\[tuple[str, str], ReplayTurn\]) -> ProviderFactory. retrieval_runner.py 
   to the dedicated database; reject incompatible configuration before accepting
   work. It does not load dotenv or start an unscoped worker loop.
 
-- [ ] Write integration/test_retrieval_regressions.py against these interfaces.
+- [x] Write integration/test_retrieval_regressions.py against these interfaces.
   Run the full 24-scenario/31-turn inventory offline with real storage, RAG
   dependencies, Repository.accept/claim and process_job; use fresh owners and
   conversations, with one owner per scenario and two aliases in the interleaved one.
@@ -242,9 +242,9 @@ Mapping\[tuple[str, str], ReplayTurn\]) -> ProviderFactory. retrieval_runner.py 
   at most two answer attempts, and zero answer calls after rewrite clarification
   or empty retrieval. Verify 03/08/16 and scope note for the original question.
 
-- [ ] Run that module. Expected: RED missing runner/providers.
+- [x] Run that module. Expected: RED missing runner/providers.
 
-- [ ] Implement scoped sequential execution; claim only the current conversation.
+- [x] Implement scoped sequential execution; claim only the current conversation.
   Initialize one owned normalizer/WordNet/inference bundle before claiming work,
   reuse it across the run and close only that run's inference capacity. Do not
   close the shared memoized deterministic_rag instance used by other tests.
@@ -256,14 +256,14 @@ Mapping\[tuple[str, str], ReplayTurn\]) -> ProviderFactory. retrieval_runner.py 
   Record configured models separately from adapter-reported model metadata;
   unavailable observed identities/usage remain unknown rather than invented.
 
-- [ ] Add native detector tests: monkeypatch graph.select_scoped_evidence to omit
+- [x] Add native detector tests: monkeypatch graph.select_scoped_evidence to omit
   Pine while retaining the other cards, and graph.recent_context to return ().
   The original-card and follow-up/interleaved runs must respectively report
   missing evidence and history mismatch, despite scripted answers being available.
   Restore monkeypatches; ordinary runs remain green. These are controlled tests
   of the detector, not changes to expected outcomes or production policy.
 
-- [ ] Add integration/test_historical_prompt_recovery.py: commit an owned result
+- [x] Add integration/test_historical_prompt_recovery.py: commit an owned result
   with null audit prompt_version, expire only its owned job lease, reclaim with a
   new fence, and call process_job with providers that fail if invoked. Assert no
   provider calls, unchanged completed result and audit provenance, finished job,
@@ -271,7 +271,7 @@ Mapping\[tuple[str, str], ReplayTurn\]) -> ProviderFactory. retrieval_runner.py 
   Never downgrade a database or overwrite any unrelated row. Existing guards
   should pass this added coverage without a production implementation change.
 
-- [ ] Run uv run pytest tests/support/integration/test_retrieval_regressions.py
+- [x] Run uv run pytest tests/support/integration/test_retrieval_regressions.py
   tests/support/integration/test_historical_prompt_recovery.py
   tests/support/integration/test_category_rag.py
   tests/support/integration/test_rewrite_recovery.py -q.
@@ -288,7 +288,7 @@ AsyncOpenAI, settings: Settings) -> ProviderFactory in retrieval_providers.py.
 CLI adds --suite retrieval and repeatable
 --case ID, valid only with that suite. Existing offline/grounding/demo behavior stays.
 
-- [ ] Write unit/test_retrieval_reports.py and
+- [x] Write unit/test_retrieval_reports.py and
   contract/test_retrieval_regressions_cli.py first. Assert raw questions, histories,
   body/answer/exception/credential/DSN canaries are absent from stdout summaries;
   private review data contains the required synthetic material and no raw errors.
@@ -296,8 +296,8 @@ CLI adds --suite retrieval and repeatable
   remain under the fixed ignored evidence root, with fresh non-overwriting run IDs.
   Unknown/duplicate cases, missing live credentials and app/unsafe DSNs must fail
   before model construction, database writes or child startup.
-- [ ] Run the new modules. Expected: RED missing CLI/report interfaces.
-- [ ] Implement the parent orchestration and fixed owned subprocess. Validate
+- [x] Run the new modules. Expected: RED missing CLI/report interfaces.
+- [x] Implement the parent orchestration and fixed owned subprocess. Validate
   cases and dedicated storage first with existing dedicated_database (only
   veritycx_support_test on literal 127.0.0.1/::1, with its existing option allowlist),
   then use child-only runtime DSN equal to
@@ -307,24 +307,24 @@ CLI adds --suite retrieval and repeatable
   Capture child output; only a validated bounded summary may reach parent stdout.
   Never forward raw child stderr on failure. Close only the child handle owned by
   this invocation; interruption must terminate/reap it.
-- [ ] The child prepares/approves only test-synthetic and verifies schema 3 before
+- [x] The child prepares/approves only test-synthetic and verifies schema 3 before
   work. Load the fixed support.toml Settings with explicit execution provider;
   retain configured model/rewrite_model and all existing budgets. Offline loads
   only the separate replay file; live never loads replays or passes expectations
   to a provider. Construct one AsyncOpenAI client with max_retries=0 and existing
   OpenAIQueryRewriter/OpenAIProvider adapters for live operation. No external
   trace exporter, Chatwoot bridge, browser, API server or unscoped work loop.
-- [ ] Produce public case/boundary verdicts, IDs, scope/coverage, versions, model
+- [x] Produce public case/boundary verdicts, IDs, scope/coverage, versions, model
   metadata and available usage; cost stays null when unavailable. The fixed
   private directory is .cache/support/evidence/retrieval-regressions/<run-uuid>/,
   with review.json containing synthetic inputs, actual rewrites/results, expected
   authored facts and citation IDs. Never include credentials or raw exceptions.
   Semantic review remains pending, and evidence_kind distinguishes scripted/live.
-- [ ] Pin exits: 0 for offline automated pass; 1 for failed cases or execution;
+- [x] Pin exits: 0 for offline automated pass; 1 for failed cases or execution;
   2 for live automated pass with semantic acceptance still pending. Do not treat
   not_run/dependent failures or provider errors as successful abstention. Report
   case failures individually; never rerun them implicitly.
-- [ ] Test real SDK mock transports through the live path with no paid network.
+- [x] Test real SDK mock transports through the live path with no paid network.
   Assert expected facts/replay payloads never appear in requests, while actual
   completed response history does; assert one rewrite and bounded answers.
   Place native mock-live coverage in integration/test_retrieval_live_contract.py
@@ -335,7 +335,7 @@ CLI adds --suite retrieval and repeatable
   Use spies or temporary stand-ins for a bad parent pointer; never edit the actual
   app pointer, even temporarily, to test isolation.
   New ordinary tests must not carry the live marker or require real credentials.
-- [ ] Run uv run pytest tests/support/unit/test_retrieval_reports.py
+- [x] Run uv run pytest tests/support/unit/test_retrieval_reports.py
   tests/support/contract/test_retrieval_regressions_cli.py
   tests/support/integration/test_retrieval_live_contract.py
   tests/support/contract/test_validation_cli.py
@@ -350,7 +350,7 @@ CLI adds --suite retrieval and repeatable
 tests/support/README.md, fixtures/README.md, affected unit/integration/contract
 READMEs, docs/README.md, this plan and the approved design execution record.
 
-- [ ] Document inventory, raw/replay/live distinctions, guard prerequisites,
+- [x] Document inventory, raw/replay/live distinctions, guard prerequisites,
   private review material, exit 0/1/2, named subsets and the 93-request ceiling.
   Explain pending semantic review and step-4 boundaries; preserve dated evidence.
   No app migration, source reapproval or frontend rebuild is required by this work.
@@ -408,5 +408,4 @@ READMEs, docs/README.md, this plan and the approved design execution record.
   judge, runner and CLI code each has its own observed failing test cycle.
 - Existing immutable source, schema, language and prompt policies do not change.
   No production retrieval tuning or semantic-search implementation is hidden here.
-- Plan review is pending before implementation; native execution will follow once
-  the user confirms that this plan captures the approved design.
+- The user approved this plan for native implementation on 2026-11-02.

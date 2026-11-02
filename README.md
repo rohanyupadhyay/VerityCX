@@ -258,6 +258,21 @@ must never acquire the official upstream checkout or commit upstream content. Ro
 prevent reintroducing a nested project. The complete Markdown/YAML and CI verification commands
 are in the [Spec Kit quickstart](specs/001-acquire-tau3-banking/quickstart.md).
 
+The retrieval regression suite adds 24 authored scenarios over 31 turns without
+changing the existing 40-case grounding fixture or source policies:
+
+```bash
+uv run python scripts/validate_support.py --suite retrieval
+uv run python scripts/validate_support.py --suite retrieval --case broad-cards-original
+```
+
+These commands require the dedicated test environment above and use scripted
+providers with real retrieval and durable worker execution. Exit 0 means those
+automated contracts passed. Private synthetic review material is written under
+`.cache/support/evidence/retrieval-regressions/<report-id>/review.json`; stdout
+contains sanitized verdict metadata only. See the [validation command guide](scripts/README.md#retrieval-regression-validation)
+for separately authorized live execution, exit codes and current limitations.
+
 ## Project Areas
 
 - `config/`: reviewed immutable dependency configuration

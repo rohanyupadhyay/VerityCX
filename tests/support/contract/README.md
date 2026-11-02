@@ -39,3 +39,9 @@ containment and the disabled widget contract. `test_chatwoot_runtime_configurati
 checks optional channel configuration and pool requirements. `test_chatwoot_setup.py`
 checks private owned Docker provisioning without requiring a real Docker daemon;
 `test_run_support.py` checks launcher discovery, listener preservation and owned cleanup.
+
+`test_retrieval_regressions_cli.py` covers explicit live gating, bounded unique
+scenario selection, child-only test configuration, inherited credential/tracing
+removal, complete summary validation and owned cleanup on interruption. It checks
+that child startup exceptions and stdout/stderr cannot expose private canaries.
+The existing offline/grounding/demo command contracts remain in place.

@@ -19,3 +19,12 @@ or subprocess handles created by that test; it must never reset unrelated databa
 ## Current files
 
 `grounding.json`, `security.json`.
+
+`retrieval-regressions.json` contains 24 authored scenarios with 31 turns and
+independent expected evidence/dispositions. `retrieval-replays.json` separately
+contains finite scripted rewrite/answer outputs. Neither changes the original
+grounding inventory or the 40 document files. Partial-overview replays may choose
+from authored claims whose citations occur in supplied evidence; gold coverage
+checks remain independent of that choice. Live providers never load replay data.
+Expected fact text supports human semantic review; automated judgments do not
+grade generated wording by exact-string matching.

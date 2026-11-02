@@ -202,3 +202,13 @@ A fresh read-only software-engineering check found nothing important left
 unanswered for implementation planning. The scenario counts and file boundaries
 remain proposed defaults and builder choices as stated above. The user approved
 the design on 2026-11-02; implementation planning follows that approval.
+
+## Implementation progress
+
+The user approved the native implementation plan on 2026-11-02. Tasks 1–4
+have passed their focused checks, including the complete 24-scenario/31-turn
+offline worker run and actual SDK transports intercepted by tests. Full maintained
+verification and final whole-branch review are in progress. No paid provider
+execution or app change has been performed. The implementation record preserves
+the builder rulings about partial-overview replay claims and explicit question
+grammar needed to exercise retrieval after the unchanged intake router.

@@ -62,6 +62,17 @@ only aggregate evidence; `uv run python scripts/validate_support.py --suite offl
 HTTP knowledge/handoff cases. Grounding requires `--live` and remains pending human review;
 the official demo requires a previously reviewed corpus and explicit live credentials. The validation driver never kills by arbitrary PID or resets a database.
 
+The retrieval validation modules keep authored inputs/expectations (`retrieval_cases.py`)
+separate from replay/recording adapters (`retrieval_providers.py`) and independent
+verdicts (`retrieval_checks.py`). `retrieval_runner.py` invokes actual fenced
+worker processing on fresh synthetic conversations and scoped claims. It checks
+same-owner conversation isolation and never reads expected facts into model requests.
+`retrieval_command.py` owns a test-only child without reloading root dotenv there;
+`retrieval_reports.py` constructs an allowlisted summary and private review artifact.
+The command has no app migration or activation side effect. See the
+[command guide](../../../scripts/README.md#retrieval-regression-validation) for
+offline/live opt-in, exit 0/1/2 and the 31-turn/93-request bound.
+
 Dependencies are pinned in root `pyproject.toml`; install with `uv sync --locked --link-mode=copy`.
 Run `uv run ruff check src/veritycx/service`, `uv run mypy` and
 `uv run pytest tests/support -m "not support_db and not live"` from the repository root.

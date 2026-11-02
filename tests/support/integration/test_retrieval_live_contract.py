@@ -1,6 +1,7 @@
 """Exercise the live adapters and real pipeline using only intercepted SDK transports."""
 
 import json
+from pathlib import Path
 
 import httpx2
 import pytest
@@ -139,10 +140,11 @@ def test_live_path_never_sends_gold_and_uses_observed_history(
 
 
 def test_live_provider_failure_is_an_execution_failure(
-    test_database_url: str, monkeypatch: pytest.MonkeyPatch
+    test_database_url: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """The actual child live branch uses the SDK and never substitutes replay output."""
-    from veritycx.service import retrieval_command
+    import veritycx.service.retrieval_command as retrieval_command
+    import veritycx.service.retrieval_reports as retrieval_reports
     from veritycx.service.retrieval_reports import exit_status
 
     calls: list[httpx2.Request] = []
@@ -167,6 +169,8 @@ def test_live_provider_failure_is_an_execution_failure(
         """Loading replay outputs in the live child is a contract violation."""
         raise AssertionError("live replay access")
 
+    monkeypatch.setattr(retrieval_reports, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(retrieval_reports, "EVIDENCE_ROOT", tmp_path / "mock-sdk-reports")
     monkeypatch.setenv("OPENAI_API_KEY", "offline-test")
     monkeypatch.setattr(retrieval_command, "AsyncOpenAI", client_factory)
     monkeypatch.setattr(retrieval_command, "load_replays", forbidden)

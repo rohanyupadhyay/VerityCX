@@ -39,6 +39,13 @@ classification are documentation failures; formatting alone does not establish t
 
 ## Feature 002 implementation
 
+The approved [RAG step 3 design](superpowers/specs/2026-11-02-rag-retrieval-regressions-step-3-design.md)
+and [implementation plan](superpowers/plans/2026-11-02-rag-retrieval-regressions-step-3.md)
+add authored linguistic/conversational regression cases, independent evidence and
+publication checks, and guarded opt-in live validation. Scripted CI evidence and
+pending human semantic acceptance remain explicitly distinct. Step 4 retains
+comparative measurement and semantic-search decisions.
+
 The approved [RAG step 2 design](superpowers/specs/2026-11-02-rag-category-retrieval-step-2-design.md)
 and [implementation plan](superpowers/plans/2026-11-02-rag-category-retrieval-step-2.md)
 connect chat to the bank pages' shared categories through typed rewrite intent.
