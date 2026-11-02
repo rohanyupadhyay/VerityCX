@@ -31,7 +31,9 @@ def test_rewrite_reservation_reuse_and_independent_answer_budget(test_database_u
             with pytest.raises(BudgetError, match="rewrite_attempt_exhausted"):
                 await ledger.reserve(job, "fixture", "rewrite-fixture", 1)
             expected = RewriteResult(
-                result=SearchRewrite(disposition="search", query="Cedar card"),
+                result=SearchRewrite(
+                    disposition="search", query="Cedar card", scope="focused", categories=()
+                ),
                 model="rewrite-fixture",
             )
             await ledger.save(job, expected)

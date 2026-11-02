@@ -50,7 +50,12 @@ class RecordingRewrite:
         if self.fail:
             raise ProviderError("provider_unavailable")
         return RewriteResult(
-            result=SearchRewrite(disposition="search", query="Cedar card replacement fee"),
+            result=SearchRewrite(
+                disposition="search",
+                query="Cedar card replacement fee",
+                scope="focused",
+                categories=(),
+            ),
             model="rewrite-fixture",
         )
 

@@ -160,7 +160,7 @@ and nonblank query; search_scope() -> SearchScope returns just its scope fields.
 RewriteRequest adds available_categories: tuple[CategoryHint, ...] bounded at six
 and prompt_version: Literal[2] = 2. ClarifyRewrite and QueryRewriter signatures stay.
 
-- [ ] Add tests with concrete schema assertions:
+- [x] Add tests with concrete schema assertions:
 
   ```python
   result = SearchRewrite(
@@ -177,9 +177,9 @@ and prompt_version: Literal[2] = 2. ClarifyRewrite and QueryRewriter signatures 
   Assert canonical category order and unchanged question/history bounds.
   Test malformed provider output and clear sanitized failure categories.
 
-- [ ] Run both rewrite test modules and observe intended RED failures.
+- [x] Run both rewrite test modules and observe intended RED failures.
 
-- [ ] Extend the single structured request and instructions to distinguish
+- [x] Extend the single structured request and instructions to distinguish
   overviews from focused lookups, retain qualifiers, honor topic changes, and
   clarify missing/ambiguous antecedents. Include server-derived hints without
   authorizing unsupported facts. Keep tools=[], store=false, retries=0,
@@ -189,12 +189,12 @@ and prompt_version: Literal[2] = 2. ClarifyRewrite and QueryRewriter signatures 
   default missing fields. Add authored offline cards and multi-category overview
   cases; retain the authored Cedar follow-up and ordinary focused fixture behavior.
 
-- [ ] Run real-SDK mocked transport tests for focused, overview, clarification,
+- [x] Run real-SDK mocked transport tests for focused, overview, clarification,
   invalid schema, timeout, and API failure. Assert exactly one request and
   scope/qualifier instructions. Include business-card eligibility and a Martian
   product question as control-flow cases; do not label mocked output live fidelity.
 
-- [ ] Commit the tested rewrite boundary. Native persistence prompt-version
+- [x] Commit the tested rewrite boundary. Native persistence prompt-version
   changes and full graph tests are completed together in Task 5.
 
 ## Task 3: Coverage-first bounded category selection
