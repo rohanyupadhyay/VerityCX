@@ -22,7 +22,9 @@ def metadata(event: AuditEventRow, provider: str) -> dict[str, object]:
         "model": event.model,
         "input_tokens": event.input_tokens,
         "output_tokens": event.output_tokens,
-        "prompt_version": "knowledge-v2",
+        "prompt_version": (
+            f"knowledge-v{event.prompt_version}" if event.prompt_version else "unknown"
+        ),
     }
 
 

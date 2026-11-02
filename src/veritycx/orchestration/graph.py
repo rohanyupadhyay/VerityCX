@@ -10,8 +10,10 @@ from langgraph.types import Command, interrupt
 from langsmith import tracing_context
 
 from veritycx.conversations.models import TurnResult
+from veritycx.knowledge.category_retrieval import select_scoped_evidence
 from veritycx.knowledge.configuration import active_corpus
-from veritycx.knowledge.retrieval import recent_context, select_evidence
+from veritycx.knowledge.retrieval import recent_context
+from veritycx.knowledge.scope import category_hints
 from veritycx.observability.audit import commit_result
 from veritycx.orchestration.inference import InferenceCapacityError
 from veritycx.orchestration.rag import RAGServices
@@ -110,7 +112,10 @@ async def execute_job(
             manifest, corpus = await rag.inference.run(partial(active_corpus, settings.corpus_mode))
             if manifest.corpus_version != parent.corpus_version:
                 raise SourceError("corpus_changed")
-            if manifest.retrieval_resources != rag.normalizer.identity:
+            if (
+                manifest.retrieval_resources != rag.normalizer.identity
+                or manifest.catalog_index is None
+            ):
                 raise SourceError("retrieval_upgrade_required")
             rewrite_ledger = RewriteLedger(pool)
             knowledge_phase = "rewrite"
@@ -125,6 +130,7 @@ async def execute_job(
                         correlation_id=str(correlation),
                         corpus_version=parent.corpus_version,
                         remaining_seconds=60.0,
+                        available_categories=category_hints(manifest.catalog_index),
                     ),
                     settings.effective_rewrite_model,
                 )
@@ -149,10 +155,12 @@ async def execute_job(
             knowledge_phase = "retrieval"
             selection = await rag.inference.run(
                 partial(
-                    select_evidence,
+                    select_scoped_evidence,
                     turn.text,
                     rewrite.result.query,
                     corpus,
+                    search_scope=rewrite.result.search_scope(),
+                    catalog_index=manifest.catalog_index,
                     normalizer=rag.normalizer,
                     expander=rag.expander,
                 )
@@ -160,11 +168,22 @@ async def execute_job(
             await rewrite_ledger.record_retrieval(job, selection)
             selected = selection.sections
             if not selected:
+                needs_narrower_scope = (
+                    selection.context is not None
+                    and selection.context.coverage is not None
+                    and selection.context.coverage.eligible_document_count > 0
+                )
                 await commit_result(
                     pool,
                     job,
                     TurnResult(
-                        kind="abstain", text="The approved sources do not support an answer."
+                        kind="clarify" if needs_narrower_scope else "abstain",
+                        text=(
+                            "Please narrow the category or policy question so I can cite "
+                            "the relevant sources."
+                        )
+                        if needs_narrower_scope
+                        else "The approved sources do not support an answer.",
                     ),
                     "knowledge",
                 )
@@ -177,9 +196,17 @@ async def execute_job(
                 context=recent_context(context),
                 evidence=tuple(selected),
                 remaining_seconds=60.0,
+                search_context=selection.context,
             )
             result = await invoke_provider(provider, AttemptLedger(pool), job, request)
-            await commit_result(pool, job, validate_result(request, result), "knowledge", result)
+            await commit_result(
+                pool,
+                job,
+                validate_result(request, result),
+                "knowledge",
+                result,
+                prompt_version=request.prompt_version,
+            )
             return {
                 **state,
                 "evidence_ids": [item.section_id for item in selected],
@@ -199,6 +226,7 @@ async def execute_job(
                     failure_category=category,
                 ),
                 "knowledge",
+                prompt_version=3 if knowledge_phase == "answer" else None,
             )
             return state
 
@@ -238,6 +266,7 @@ async def execute_job(
                     failure_category="rewrite_timeout" if rewriting else "timeout",
                 ),
                 "knowledge",
+                prompt_version=3 if knowledge_phase == "answer" else None,
             )
             return state
 

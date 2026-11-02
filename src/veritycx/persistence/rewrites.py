@@ -5,9 +5,12 @@ from typing import Literal
 from uuid import UUID
 
 from psycopg.types.json import Jsonb
+from pydantic import Field, ValidationError, model_validator
 
 from veritycx.conversations.models import ClosedModel
+from veritycx.knowledge.catalog import CategoryKey
 from veritycx.knowledge.retrieval import RetrievalSelection
+from veritycx.knowledge.scope import CategoryCoverage, SearchScope
 from veritycx.persistence.attempts import BudgetError, Reservation
 from veritycx.persistence.database import DatabasePool, transaction
 from veritycx.persistence.models import WorkJob
@@ -21,7 +24,7 @@ class RewriteRow(ClosedModel):
     turn_id: UUID
     request_digest: str
     model: str
-    prompt_version: Literal[1]
+    prompt_version: Literal[1, 2]
     status: Literal["reserved", "succeeded", "failed"]
     result_json: str | None
     failure_category: str | None
@@ -30,8 +33,43 @@ class RewriteRow(ClosedModel):
     started_at: datetime
     ended_at: datetime | None
     selected_source_ids: list[str]
-    retrieval_mode: Literal["primary", "synonym", "empty"] | None
+    retrieval_mode: Literal["primary", "synonym", "category", "empty"] | None
     expanded_term_count: int
+    search_scope: Literal["focused", "category_overview"] | None = None
+    category_keys: list[CategoryKey] | None = Field(default=None, max_length=6)
+    eligible_document_count: int | None = Field(default=None, ge=0)
+    represented_document_count: int | None = Field(default=None, ge=0)
+    coverage_truncated: bool | None = None
+
+    @model_validator(mode="after")
+    def consistent_diagnostics(self) -> "RewriteRow":
+        """Treat old unknown metadata distinctly from measured current scope."""
+        coverage = (
+            self.eligible_document_count,
+            self.represented_document_count,
+            self.coverage_truncated,
+        )
+        if self.search_scope is None:
+            if self.category_keys is not None or any(value is not None for value in coverage):
+                raise ValueError("invalid_unknown_scope")
+            return self
+        if self.category_keys is None:
+            raise ValueError("missing_category_keys")
+        SearchScope(scope=self.search_scope, categories=tuple(self.category_keys))
+        if self.search_scope == "focused":
+            if any(value is not None for value in coverage):
+                raise ValueError("invalid_focused_coverage")
+        else:
+            if any(value is None for value in coverage):
+                raise ValueError("missing_category_coverage")
+            CategoryCoverage.model_validate(
+                {
+                    "eligible_document_count": self.eligible_document_count,
+                    "represented_document_count": self.represented_document_count,
+                    "coverage_truncated": self.coverage_truncated,
+                }
+            )
+        return self
 
 
 class RewriteLedger:
@@ -51,7 +89,10 @@ class RewriteLedger:
             raw = await cursor.fetchone()
             if raw is None:
                 return None
-            row = RewriteRow.model_validate(raw)
+            try:
+                row = RewriteRow.model_validate(raw)
+            except ValidationError:
+                raise RepositoryError("incompatible_state") from None
             if row.request_digest != digest:
                 raise RepositoryError("incompatible_state")
             return row
@@ -118,13 +159,23 @@ class RewriteLedger:
         """Keep selected IDs and bounded diagnostics even when answer generation abstains."""
         async with transaction(self.pool) as conn:
             await worker_guard(conn, job)
+            context = selection.context
+            scope = context.search_scope if context else None
+            coverage = context.coverage if context else None
             cursor = await conn.execute(
                 "UPDATE support_app.query_rewrites SET selected_source_ids=%s,retrieval_mode=%s,"
-                "expanded_term_count=%s WHERE turn_id=%s AND status='succeeded' RETURNING turn_id",
+                "expanded_term_count=%s,search_scope=%s,category_keys=%s,"
+                "eligible_document_count=%s,represented_document_count=%s,coverage_truncated=%s "
+                "WHERE turn_id=%s AND status='succeeded' RETURNING turn_id",
                 (
                     Jsonb([item.section_id for item in selection.sections]),
                     selection.mode,
                     selection.expanded_term_count,
+                    scope.scope if scope else None,
+                    Jsonb(list(scope.categories)) if scope else None,
+                    coverage.eligible_document_count if coverage else None,
+                    coverage.represented_document_count if coverage else None,
+                    coverage.coverage_truncated if coverage else None,
                     job.turn_id,
                 ),
             )

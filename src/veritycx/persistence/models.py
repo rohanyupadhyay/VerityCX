@@ -131,3 +131,4 @@ class AuditEventRow(ClosedModel):
     model: str | None = None
     input_tokens: int | None = Field(default=None, ge=0)
     output_tokens: int | None = Field(default=None, ge=0)
+    prompt_version: Literal[1, 2, 3] | None = None

@@ -189,7 +189,7 @@ def test_nlp_does_not_block_lease_renewal(
         assert released.wait(3), "event loop blocked by synchronous NLP"
         return RetrievalSelection((), "empty")
 
-    monkeypatch.setattr(graph, "select_evidence", slow_select)
+    monkeypatch.setattr(graph, "select_scoped_evidence", slow_select)
 
     async def exercise() -> None:
         """Run selection concurrently with a real fenced lease renewal."""
@@ -237,7 +237,7 @@ def test_nlp_selection_obeys_shared_turn_deadline(
         assert released.wait(4)
         return RetrievalSelection((), "empty")
 
-    monkeypatch.setattr(graph, "select_evidence", delayed_select)
+    monkeypatch.setattr(graph, "select_scoped_evidence", delayed_select)
 
     async def exercise() -> None:
         """Control database time while keeping this test's worker lease live."""

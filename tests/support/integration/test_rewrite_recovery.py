@@ -4,6 +4,8 @@ from uuid import uuid4
 
 import pytest
 
+from veritycx.knowledge.retrieval import RetrievalSelection
+from veritycx.knowledge.scope import CategoryCoverage, SearchContext, SearchScope
 from veritycx.persistence.attempts import BudgetError
 from veritycx.persistence.database import database_pool
 from veritycx.persistence.maintenance import purge_expired
@@ -59,6 +61,24 @@ def test_rewrite_reservation_reuse_and_independent_answer_budget(test_database_u
             assert restored is not None and restored.status == "succeeded"
             with pytest.raises(RepositoryError, match="stale_worker"):
                 await ledger.save(job, expected)
+            with pytest.raises(RepositoryError, match="stale_worker"):
+                await ledger.record_retrieval(
+                    job,
+                    RetrievalSelection(
+                        (),
+                        "empty",
+                        context=SearchContext(
+                            search_scope=SearchScope(
+                                scope="category_overview", categories=("cards",)
+                            ),
+                            coverage=CategoryCoverage(
+                                eligible_document_count=0,
+                                represented_document_count=0,
+                                coverage_truncated=False,
+                            ),
+                        ),
+                    ),
+                )
             await repo.delete(owner, parent.id, uuid4())
             assert await purge_expired(pool, target=parent.id) == 1
             async with pool.connection() as conn:
