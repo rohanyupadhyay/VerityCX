@@ -207,8 +207,9 @@ the design on 2026-11-02; implementation planning follows that approval.
 
 The user approved the native implementation plan on 2026-11-02. Tasks 1–4
 have passed their focused checks, including the complete 24-scenario/31-turn
-offline worker run and actual SDK transports intercepted by tests. Full maintained
-verification and final whole-branch review are in progress. No paid provider
+offline worker run and actual SDK transports intercepted by tests. The full offline
+suite passed 625 tests, and maintained standalone gates passed after one recorded
+load-check retry. Final whole-branch review is in progress. No paid provider
 execution or app change has been performed. The implementation record preserves
 the builder rulings about partial-overview replay claims and explicit question
 grammar needed to exercise retrieval after the unchanged intake router.

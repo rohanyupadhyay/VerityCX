@@ -355,7 +355,7 @@ READMEs, docs/README.md, this plan and the approved design execution record.
   Explain pending semantic review and step-4 boundaries; preserve dated evidence.
   No app migration, source reapproval or frontend rebuild is required by this work.
 
-- [ ] Run all maintained commands from the repository root:
+- [x] Run all maintained commands from the repository root:
 
   ```text
   uv lock --check
@@ -375,13 +375,13 @@ READMEs, docs/README.md, this plan and the approved design execution record.
   all checks pass; unchanged 30-turn load target p95 \<= 5 seconds, zero leaks,
   one-second scan cadence. Record any failure before a justified retry.
 
-- [ ] Run the standalone commands serially: uv run python scripts/validate_support.py
+- [x] Run the standalone commands serially: uv run python scripts/validate_support.py
   --suite offline, then --suite retrieval. Expected: exit 0 for each, existing
   knowledge/handoff outcomes plus all 24 new scenarios/31 turns. Test named
   offline --case broad-cards-original selects exactly one scenario/one turn.
   No actual paid live test is part of this implementation gate.
 
-- [ ] Verify unchanged 40-case grounding fixture and source manifest hash
+- [x] Verify unchanged 40-case grounding fixture and source manifest hash
   327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c; app cache/
   environment are untouched. Establish test-only database usage through DSN and
   scope guards, without querying customer records. Report control-flow evidence honestly.
@@ -409,3 +409,39 @@ READMEs, docs/README.md, this plan and the approved design execution record.
 - Existing immutable source, schema, language and prompt policies do not change.
   No production retrieval tuning or semantic-search implementation is hidden here.
 - The user approved this plan for native implementation on 2026-11-02.
+
+## Verification record (2026-11-02)
+
+- Baseline: 445 database-free tests passed, 111 deselected, one existing warning.
+- Focused task gates: 12 fixture checks; 57 independent/raw-selector checks;
+  14 native inventory/recovery checks; 31 CLI/report/mock-live checks passed.
+- Maintained lock, resource, environment, Ruff (192 files), strict mypy
+  (168 files), Markdown and two workflow YAML checks passed. A supplemental
+  narrow mypy invocation omitted the source tree and reported eight untyped
+  imports; the full scan then identified one package import corrected to an
+  explicit module import. No type suppression or source-layout change was made.
+- Full offline suite: **625 passed**, one existing Starlette/AnyIO deprecation
+  warning, 394.55 seconds. The unchanged 30-turn load gate measured p95
+  **4.882664 seconds**, zero leaks, one-second scan cadence and five-second target.
+- The first standalone offline validator failed `offline_checks_failed`. Its
+  new failing-test cache entry was
+  `tests/support/acceptance/test_load.py::test_deterministic_load`; its exact
+  inner exception/client p95 was not retained by the existing driver. A stale
+  uncollected Chatwoot cache entry predated this run and was not a new failure.
+- An unchanged isolated load diagnostic passed at p95 **2.604949 seconds**,
+  30 turns and zero leaks. The standalone gate was retried once without changing
+  runtime code, cadence, concurrency, caching or target. The retry passed its
+  subprocess checks, three knowledge and six handoff cases.
+- Both new standalone retrieval invocations passed: 24 scenarios/31 turns and
+  the named original-cards subset of one scenario/one turn. Offline evidence is
+  explicitly scripted; actual live-path tests use intercepted SDK transports.
+- The 40 source entries, original 40 grounding cases and v3 manifest hash
+  `327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c`
+  are unchanged. A read-only check confirmed the app environment digest was
+  unchanged and readiness returned HTTP 200. Test guards target dedicated storage.
+- No paid acceptance run, app migration/activation, push or merge was performed.
+  Local timing variability and pending human semantic review remain explicit.
+  Final whole-branch review follows these completed implementation/test gates.
+
+The standalone retry load evidence measured p95 **4.937324 seconds**,
+with zero leaks; this does not establish a production latency guarantee.
