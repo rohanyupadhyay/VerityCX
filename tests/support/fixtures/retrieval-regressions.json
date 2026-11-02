@@ -1,0 +1,1726 @@
+{
+  "schema_version": 1,
+  "provenance": "project-authored synthetic; not benchmark evaluation",
+  "scenarios": [
+    {
+      "id": "plural-cedar-card",
+      "family": "plurals",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Tell me about the Cedar card.",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "plural-cedar-cards",
+      "family": "plurals",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Tell me about the Cedar cards.",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "plural-hazel-fee",
+      "family": "plurals",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What is the Hazel foreign fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-08:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Hazel card foreign fee is 2 percent."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "plural-hazel-fees",
+      "family": "plurals",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What are the Hazel foreign fees?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-08:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Hazel card foreign fee is 2 percent."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "para-cedar-replacement",
+      "family": "paraphrases",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "How much is a new Cedar card after losing mine?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "para-hazel-abroad",
+      "family": "paraphrases",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Using Hazel abroad, what extra charge applies?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-08:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Hazel card foreign fee is 2 percent."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "para-alder-opening",
+      "family": "paraphrases",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "How much do I need to start Alder savings?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-01"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-01:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Alder savings opening deposit is 50 synthetic dollars."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-01"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "para-dogwood-cash",
+      "family": "paraphrases",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "How much cash can I withdraw each day at a Dogwood ATM?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-04"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-04:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Dogwood ATM daily limit is 300 synthetic dollars."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-04"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "para-elm-cutoff",
+      "family": "paraphrases",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "When must I send an Elm wire?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-05"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-05:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Elm wire transfer cutoff is 14:00 local time."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-05"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "para-grove-statements",
+      "family": "paraphrases",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "How often are Grove statements sent?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-07"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-07:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Grove statement delivery is monthly."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-07"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "broad-cards-original",
+      "family": "broad",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What cards does VerityCX offers?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "category_overview",
+                "categories": [
+                  "cards"
+                ]
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "allowed_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001",
+              "policy-08:0001",
+              "policy-16:0001"
+            ],
+            "coverage": {
+              "eligible_document_count": 3,
+              "represented_document_count": 3,
+              "coverage_truncated": false
+            },
+            "minimum_category_documents": {},
+            "require_scope_note": true,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+              "The synthetic Hazel card foreign fee is 2 percent.",
+              "The synthetic Pine debit activation period is 30 days."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "category_overview",
+              "categories": [
+                "cards"
+              ]
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "allowed_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "broad-cards-options",
+      "family": "broad",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What card options are available?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "category_overview",
+                "categories": [
+                  "cards"
+                ]
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "allowed_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001",
+              "policy-08:0001",
+              "policy-16:0001"
+            ],
+            "coverage": {
+              "eligible_document_count": 3,
+              "represented_document_count": 3,
+              "coverage_truncated": false
+            },
+            "minimum_category_documents": {},
+            "require_scope_note": true,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+              "The synthetic Hazel card foreign fee is 2 percent.",
+              "The synthetic Pine debit activation period is 30 days."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "category_overview",
+              "categories": [
+                "cards"
+              ]
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "allowed_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "broad-savings",
+      "family": "broad",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What savings products are documented?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "category_overview",
+                "categories": [
+                  "savings"
+                ]
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-01",
+                "policy-06",
+                "policy-17"
+              ],
+              "allowed_documents": [
+                "policy-01",
+                "policy-06",
+                "policy-17"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-01:0001",
+              "policy-06:0001",
+              "policy-17:0001"
+            ],
+            "coverage": {
+              "eligible_document_count": 3,
+              "represented_document_count": 3,
+              "coverage_truncated": false
+            },
+            "minimum_category_documents": {},
+            "require_scope_note": true,
+            "required_facts": [
+              "The synthetic Alder savings opening deposit is 50 synthetic dollars.",
+              "The synthetic Fir savings withdrawal notice is 2 business days.",
+              "The synthetic Quince savings interest posting is monthly."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "category_overview",
+              "categories": [
+                "savings"
+              ]
+            },
+            "expected": {
+              "required_documents": [
+                "policy-01",
+                "policy-06",
+                "policy-17"
+              ],
+              "allowed_documents": [
+                "policy-01",
+                "policy-06",
+                "policy-17"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "broad-accounts",
+      "family": "broad",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What account policies are documented?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "category_overview",
+                "categories": [
+                  "accounts"
+                ]
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [],
+              "allowed_documents": [
+                "policy-02",
+                "policy-07",
+                "policy-09",
+                "policy-11",
+                "policy-14",
+                "policy-15",
+                "policy-19"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": {
+              "eligible_document_count": 7,
+              "represented_document_count": 6,
+              "coverage_truncated": true
+            },
+            "minimum_category_documents": {
+              "accounts": 6
+            },
+            "require_scope_note": true,
+            "required_facts": []
+          },
+          "probe": {
+            "scope": {
+              "scope": "category_overview",
+              "categories": [
+                "accounts"
+              ]
+            },
+            "expected": {
+              "required_documents": [],
+              "allowed_documents": [
+                "policy-02",
+                "policy-07",
+                "policy-09",
+                "policy-11",
+                "policy-14",
+                "policy-15",
+                "policy-19"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "broad-accounts-cards",
+      "family": "broad",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Show accounts and cards",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "category_overview",
+                "categories": [
+                  "accounts",
+                  "cards"
+                ]
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "allowed_documents": [
+                "policy-02",
+                "policy-07",
+                "policy-09",
+                "policy-11",
+                "policy-14",
+                "policy-15",
+                "policy-19",
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": {
+              "eligible_document_count": 10,
+              "represented_document_count": 6,
+              "coverage_truncated": true
+            },
+            "minimum_category_documents": {
+              "accounts": 3,
+              "cards": 3
+            },
+            "require_scope_note": true,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+              "The synthetic Hazel card foreign fee is 2 percent.",
+              "The synthetic Pine debit activation period is 30 days."
+            ]
+          },
+          "probe": {
+            "scope": {
+              "scope": "category_overview",
+              "categories": [
+                "accounts",
+                "cards"
+              ]
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "allowed_documents": [
+                "policy-02",
+                "policy-07",
+                "policy-09",
+                "policy-11",
+                "policy-14",
+                "policy-15",
+                "policy-19",
+                "policy-03",
+                "policy-08",
+                "policy-16"
+              ],
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "followup-cedar",
+      "family": "followups",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What is the Cedar card replacement fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t2",
+          "conversation": "a",
+          "question": "What is its replacement fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": null
+        }
+      ]
+    },
+    {
+      "id": "followup-topic-change",
+      "family": "followups",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What is the Cedar card replacement fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t2",
+          "conversation": "a",
+          "question": "What is the Alder savings opening deposit?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-01"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-01:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Alder savings opening deposit is 50 synthetic dollars."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t3",
+          "conversation": "a",
+          "question": "What is its opening deposit?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-01"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-01:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Alder savings opening deposit is 50 synthetic dollars."
+            ]
+          },
+          "probe": null
+        }
+      ]
+    },
+    {
+      "id": "followup-ambiguous",
+      "family": "followups",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Tell me about Cedar and Hazel card fees.",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03",
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001",
+              "policy-08:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+              "The synthetic Hazel card foreign fee is 2 percent."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t2",
+          "conversation": "a",
+          "question": "What is its fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "clarify"
+            ],
+            "scopes": [],
+            "result_kinds": [
+              "clarify"
+            ],
+            "evidence": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": []
+          },
+          "probe": null
+        }
+      ]
+    },
+    {
+      "id": "followup-missing",
+      "family": "followups",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What is its replacement fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "clarify"
+            ],
+            "scopes": [],
+            "result_kinds": [
+              "clarify"
+            ],
+            "evidence": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": []
+          },
+          "probe": null
+        }
+      ]
+    },
+    {
+      "id": "followup-interleaved",
+      "family": "followups",
+      "conversations": [
+        "a",
+        "b"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What is the Cedar card replacement fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t2",
+          "conversation": "b",
+          "question": "What is the Hazel card foreign fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-08:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Hazel card foreign fee is 2 percent."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t3",
+          "conversation": "a",
+          "question": "What is its replacement fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-03:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Cedar card replacement fee is 7 synthetic dollars."
+            ]
+          },
+          "probe": null
+        },
+        {
+          "id": "t4",
+          "conversation": "b",
+          "question": "What is its foreign fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "answer"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-08"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [
+              "policy-08:0001"
+            ],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": [
+              "The synthetic Hazel card foreign fee is 2 percent."
+            ]
+          },
+          "probe": null
+        }
+      ]
+    },
+    {
+      "id": "unsupported-product",
+      "family": "unsupported",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "What is the Martian asteroid vault fee?",
+          "expected": {
+            "rewrite_kinds": [
+              "search",
+              "clarify"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "abstain",
+              "clarify"
+            ],
+            "evidence": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": []
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-business",
+      "family": "unsupported",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Which VerityCX cards are eligible for businesses?",
+          "expected": {
+            "rewrite_kinds": [
+              "search",
+              "clarify"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "abstain",
+              "clarify"
+            ],
+            "evidence": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": []
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-attribute",
+      "family": "unsupported",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Does the Cedar card include cryptocurrency insurance?",
+          "expected": {
+            "rewrite_kinds": [
+              "search",
+              "clarify"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "abstain",
+              "clarify"
+            ],
+            "evidence": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": []
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [
+                "policy-03"
+              ],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-absent",
+      "family": "unsupported",
+      "conversations": [
+        "a"
+      ],
+      "turns": [
+        {
+          "id": "t1",
+          "conversation": "a",
+          "question": "Quasar hyperdrive warranty?",
+          "expected": {
+            "rewrite_kinds": [
+              "search",
+              "clarify"
+            ],
+            "scopes": [
+              {
+                "scope": "focused",
+                "categories": []
+              }
+            ],
+            "result_kinds": [
+              "abstain",
+              "clarify"
+            ],
+            "evidence": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "required_citations": [],
+            "coverage": null,
+            "minimum_category_documents": {},
+            "require_scope_note": false,
+            "required_facts": []
+          },
+          "probe": {
+            "scope": {
+              "scope": "focused",
+              "categories": []
+            },
+            "expected": {
+              "required_documents": [],
+              "allowed_documents": null,
+              "forbidden_documents": [],
+              "required_sections": []
+            },
+            "empty": true
+          }
+        }
+      ]
+    }
+  ]
+}
