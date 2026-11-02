@@ -31,6 +31,26 @@ def test_export_allowlist() -> None:
     assert str(event.conversation_id) not in encoded and str(event.turn_id) not in encoded
     assert payload["input_tokens"] is None
     assert "summary" not in payload and "inputs" not in payload
+    assert payload["prompt_version"] == "unknown"
+
+
+def test_export_uses_event_prompt_version_without_relabeling_history() -> None:
+    """Recovered old rows retain unknown provenance; current rows report their own prompt."""
+    event = AuditEventRow(
+        id=uuid4(),
+        conversation_id=uuid4(),
+        turn_id=uuid4(),
+        correlation_id=uuid4(),
+        stage="result",
+        outcome="answer",
+        route="knowledge",
+        source_ids=[],
+        elapsed_ms=0,
+        prompt_version=3,
+    )
+    assert metadata(event, "fixture")["prompt_version"] == "knowledge-v3"
+    historical = event.model_copy(update={"prompt_version": 2})
+    assert metadata(historical, "fixture")["prompt_version"] == "knowledge-v2"
 
 
 def test_export_failure_isolation() -> None:

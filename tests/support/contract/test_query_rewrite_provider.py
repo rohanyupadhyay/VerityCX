@@ -6,6 +6,7 @@ import httpx2
 import pytest
 from openai import AsyncOpenAI
 
+from veritycx.knowledge.scope import CategoryHint
 from veritycx.providers.protocol import ProviderError
 from veritycx.providers.rewrite import OpenAIQueryRewriter, RewriteRequest
 from veritycx.service.runtime import run_async
@@ -23,6 +24,11 @@ def test_rewrite_request_and_sanitized_failure() -> None:
         assert payload["tools"] == []
         assert payload["max_output_tokens"] == 2048
         assert payload["text"]["format"]["strict"] is True
+        search_input = json.loads(payload["input"])
+        assert search_input["prompt_version"] == 2
+        assert search_input["available_categories"] == [{"key": "cards", "label": "Cards"}]
+        assert "category_overview" in payload["instructions"]
+        assert "qualifiers" in payload["instructions"]
         return httpx2.Response(
             401,
             json={"error": {"message": "secret-rewrite-canary", "type": "invalid_request_error"}},
@@ -43,6 +49,7 @@ def test_rewrite_request_and_sanitized_failure() -> None:
                         correlation_id="fixture",
                         corpus_version="v2",
                         remaining_seconds=10.0,
+                        available_categories=(CategoryHint(key="cards", label="Cards"),),
                     )
                 )
             assert "secret-rewrite-canary" not in str(error.value)
@@ -52,18 +59,50 @@ def test_rewrite_request_and_sanitized_failure() -> None:
 
 
 @pytest.mark.parametrize(
-    "wire",
+    "wire,valid",
     [
-        {"disposition": "search", "query": "Cedar card replacement fee"},
-        {"disposition": "clarify", "text": "Which card?"},
-        {"disposition": "search", "query": ""},
+        (
+            {
+                "disposition": "search",
+                "query": "Cedar card replacement fee",
+                "scope": "focused",
+                "categories": [],
+            },
+            True,
+        ),
+        (
+            {
+                "disposition": "search",
+                "query": "Cards offered",
+                "scope": "category_overview",
+                "categories": ["cards"],
+            },
+            True,
+        ),
+        ({"disposition": "clarify", "text": "Which card?"}, True),
+        ({"disposition": "search", "query": "", "scope": "focused", "categories": []}, False),
+        ({"disposition": "search", "query": "cards"}, False),
+        (
+            {
+                "disposition": "search",
+                "query": "cards",
+                "scope": "category_overview",
+                "categories": ["unknown"],
+            },
+            False,
+        ),
     ],
 )
-def test_rewrite_real_sdk_parses_success_or_rejects_invalid(wire: dict[str, str]) -> None:
+def test_rewrite_real_sdk_parses_success_or_rejects_invalid(
+    wire: dict[str, object], valid: bool
+) -> None:
     """Observed SDK metadata stays separate from untrusted structured output."""
+    calls = 0
 
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Return a minimal real Responses envelope with authored data."""
+        nonlocal calls
+        calls += 1
         return httpx2.Response(
             200,
             json={
@@ -111,7 +150,7 @@ def test_rewrite_real_sdk_parses_success_or_rejects_invalid(wire: dict[str, str]
                 corpus_version="v2",
                 remaining_seconds=10.0,
             )
-            if wire.get("query") == "":
+            if not valid:
                 with pytest.raises(ProviderError, match="invalid_output"):
                     await rewriter.rewrite(request)
             else:
@@ -121,6 +160,7 @@ def test_rewrite_real_sdk_parses_success_or_rejects_invalid(wire: dict[str, str]
                 assert result.usage is not None and result.usage.input_tokens == 19
 
     run_async(exercise())
+    assert calls == 1
 
 
 def test_rewrite_timeout_is_sanitized_without_retry() -> None:

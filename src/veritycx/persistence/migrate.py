@@ -8,7 +8,11 @@ from psycopg import AsyncConnection, sql
 from psycopg.rows import dict_row
 
 MIGRATION = Path(__file__).parent / "migrations" / "001_support.sql"
-MIGRATIONS = (MIGRATION, MIGRATION.with_name("002_query_rewrites.sql"))
+MIGRATIONS = (
+    MIGRATION,
+    MIGRATION.with_name("002_query_rewrites.sql"),
+    MIGRATION.with_name("003_category_retrieval.sql"),
+)
 MIGRATION_LOCK = 724063812
 
 

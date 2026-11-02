@@ -4,7 +4,7 @@
 
 Typed intent routing and fenced knowledge graph execution.
 
-## Retrieval version 2
+## Retrieval version 3
 
 RAGServices explicitly supplies the rewrite provider, shared English normalizer,
 and WordNet expander. Every knowledge turn rewrites original input plus recent
@@ -14,7 +14,15 @@ Clarification stops before retrieval; rewrite errors return a clear retry.
 Successful rewriting is durable, and NLP work runs outside the event loop so lease
 renewal can continue. The ten-second rewrite stage and two answer attempts share
 the existing 60-second turn deadline. Startup verifies pinned local assets and a
-version-2 approved corpus before publishing worker readiness.
+version-3 approved corpus before publishing worker readiness.
+
+The approved catalog snapshot supplies shared category hints to rewrite prompt 2.
+Its focused scope keeps the v2 lexical selector; category_overview uses complete
+related-title groups and document coverage under the same evidence budget.
+The graph records local scope/coverage diagnostics and passes them to answer
+prompt 3 as discovery metadata. Empty categories abstain; a nonempty category with
+no group fitting the budget requests a narrower question. Original questions and
+qualifiers remain authoritative. Old conversations never silently rebind to v3.
 
 The shared database deadline also bounds source verification and lexical selection.
 [inference.py](./inference.py) runs this blocking work in a bounded executor. A timed-out

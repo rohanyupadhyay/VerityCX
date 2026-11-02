@@ -1,5 +1,7 @@
 """Commit bounded customer results and sanitized local audit in the same fenced transaction."""
 
+from typing import Literal
+
 from psycopg.types.json import Jsonb
 
 from veritycx.conversations.models import TurnResult
@@ -16,10 +18,12 @@ async def commit_result(
     result: TurnResult,
     route: str,
     provider: ProviderResult | None = None,
+    *,
+    prompt_version: Literal[1, 2, 3] | None = None,
 ) -> None:
     """Publish once while holding the parent/fence guard; never overwrite terminal results."""
     async with transaction(pool) as conn:
-        await commit_result_on(conn, job, result, route, provider)
+        await commit_result_on(conn, job, result, route, provider, prompt_version=prompt_version)
 
 
 async def commit_result_on(
@@ -28,6 +32,8 @@ async def commit_result_on(
     result: TurnResult,
     route: str,
     provider: ProviderResult | None = None,
+    *,
+    prompt_version: Literal[1, 2, 3] | None = None,
 ) -> None:
     """Publish within an existing parent transaction, including atomic escalation transitions."""
     await worker_guard(conn, job)
@@ -45,7 +51,7 @@ async def commit_result_on(
     usage = provider.usage if provider else None
     await conn.execute(
         "UPDATE support_app.audit SET stage='result',outcome=%s,route=%s,source_ids=%s, "
-        "failure_category=%s,model=%s,input_tokens=%s,output_tokens=%s,elapsed_ms="
+        "failure_category=%s,model=%s,input_tokens=%s,output_tokens=%s,prompt_version=%s,elapsed_ms="
         "GREATEST(0,(SELECT EXTRACT(EPOCH FROM (clock_timestamp()-created_at))*1000 "
         "FROM support_app.turns WHERE id=%s)) WHERE turn_id=%s",
         (
@@ -56,6 +62,7 @@ async def commit_result_on(
             provider.model if provider else None,
             usage.input_tokens if usage else None,
             usage.output_tokens if usage else None,
+            prompt_version,
             job.turn_id,
             job.turn_id,
         ),

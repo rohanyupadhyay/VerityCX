@@ -6,6 +6,7 @@ from pydantic import Field, model_validator
 
 from veritycx.conversations.models import ClosedModel, VersionedModel
 from veritycx.knowledge.models import EvidenceSection
+from veritycx.knowledge.scope import OVERVIEW_SCOPE_NOTE, SearchContext
 
 
 class ContextMessage(ClosedModel):
@@ -24,7 +25,17 @@ class ProviderRequest(VersionedModel):
     context: tuple[ContextMessage, ...] = ()
     evidence: tuple[EvidenceSection, ...] = Field(max_length=6)
     remaining_seconds: float = Field(gt=0, le=60)
-    prompt_version: Literal[2] = 2
+    search_context: SearchContext | None = None
+    prompt_version: Literal[3] = 3
+
+    @property
+    def answer_text_limit(self) -> int:
+        """Reserve publication space for the application-owned overview scope note."""
+        overview = (
+            self.search_context is not None
+            and self.search_context.search_scope.scope == "category_overview"
+        )
+        return 8000 - len(OVERVIEW_SCOPE_NOTE) - 1 if overview else 8000
 
     @model_validator(mode="after")
     def bounded_context(self) -> Self:

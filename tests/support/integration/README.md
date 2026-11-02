@@ -26,3 +26,12 @@ reconciliation, actual graph handoff/resume, terminal
 intake limits and human-ownership fences. It uses the explicitly dedicated runtime and
 migration DSNs plus mock remote HTTP; these tests do not prove a real Chatwoot deployment.
 Run database suites sequentially against their shared dedicated test database.
+
+## Category storage and recovery
+
+Category graph cases cover three-card selection, current answer provenance,
+scoped abstention/clarification, unsupported qualifiers, owner isolation and
+one-call rewrite recovery. Fresh/v2-prefix migration tests use a private native
+PostgreSQL cluster through migration_harness and stop only their owned process.
+They never downgrade/reset shared test or application storage. Missing native
+binaries are an explicit prerequisite failure rather than a silent skip.

@@ -15,6 +15,7 @@ def test_handoff_subprocesses(test_database_url: str) -> None:
     result = validate_handoff(dict(os.environ, VERITYCX_TEST_DATABASE_URL=test_database_url))
     assert result["cases_passed"] == 6
     assert result["delivery"] == "not_connected"
+    assert result["prompt_version"] == 3
 
 
 def test_handoff_metadata_uses_test_corpus_without_runtime_environment(

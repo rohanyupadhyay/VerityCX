@@ -17,6 +17,12 @@ Missing or mismatched assets return nlp_resources_unavailable. Data stays in the
 ignored support cache and installed environment; banking documents are unaffected.
 The [step 1 design](../docs/superpowers/specs/2026-10-30-rag-retrieval-step-1-design.md)
 describes the separate rewrite model, stage budgets, and corpus transition.
+The [step 2 design](../docs/superpowers/specs/2026-11-02-rag-category-retrieval-step-2-design.md)
+adds shared categories without new language assets or model calls. Its maintenance
+transition applies migration 003 and prepares/reviews/approves a version-3 corpus
+before restarting owned workers. Preparing a corpus never activates it.
+Run test-only bootstrap without --app when updating native test storage; keep the
+application database and active pointer unchanged during implementation.
 
 ## Purpose and Structure
 

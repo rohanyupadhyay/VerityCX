@@ -1,12 +1,21 @@
 """Project approved bank documents into public service categories without altering policy facts."""
 
+from __future__ import annotations
+
+import json
 import re
-from typing import Literal
+from hashlib import sha256
+from typing import TYPE_CHECKING, Literal
+
+from pydantic import Field
 
 from veritycx.conversations.models import ClosedModel
-from veritycx.knowledge.models import KnowledgeDocument
 
-CATEGORIES: dict[str, str] = {
+if TYPE_CHECKING:
+    from veritycx.knowledge.models import KnowledgeDocument
+
+CategoryKey = Literal["accounts", "savings", "cards", "payments", "deposits", "other"]
+CATEGORIES: dict[CategoryKey, str] = {
     "accounts": "Accounts & everyday banking",
     "savings": "Savings",
     "cards": "Cards",
@@ -14,20 +23,40 @@ CATEGORIES: dict[str, str] = {
     "deposits": "Deposits & cash access",
     "other": "Other policies",
 }
-SYNTHETIC_CATEGORIES: dict[str, tuple[int, ...]] = {
+SYNTHETIC_CATEGORIES: dict[CategoryKey, tuple[int, ...]] = {
     "accounts": (2, 7, 9, 11, 14, 15, 19),
     "savings": (1, 6, 17),
     "cards": (3, 8, 16),
     "payments": (5, 13, 18, 20),
     "deposits": (4, 10, 12),
 }
-TITLE_CATEGORIES: dict[str, tuple[str, ...]] = {
+TITLE_CATEGORIES: dict[CategoryKey, tuple[str, ...]] = {
     "cards": ("card", "debit", "credit"),
     "savings": ("savings", "interest"),
     "payments": ("transfer", "wire", "payment", "beneficiary"),
     "deposits": ("deposit", "atm", "cash", "withdrawal"),
     "accounts": ("account", "checking", "statement", "overdraft", "dispute"),
 }
+
+
+class CategoryPolicyIdentity(ClosedModel):
+    """Bind discovery behavior to reviewed classification data and priority."""
+
+    policy_version: Literal[1] = 1
+    digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+def category_policy_identity() -> CategoryPolicyIdentity:
+    """Hash ordered classifier inputs and the related-title grouping policy."""
+    payload = {
+        "version": 1,
+        "categories": list(CATEGORIES.items()),
+        "synthetic": list(SYNTHETIC_CATEGORIES.items()),
+        "title_rules": list(TITLE_CATEGORIES.items()),
+        "related_titles": "casefold-original-title-v1",
+    }
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return CategoryPolicyIdentity(digest=sha256(raw.encode()).hexdigest())
 
 
 class PolicySummary(ClosedModel):
@@ -41,7 +70,9 @@ class PolicySummary(ClosedModel):
     related_ids: tuple[str, ...]
 
 
-def category_for(document: KnowledgeDocument, mode: Literal["synthetic", "official"]) -> str:
+def category_for(
+    document: KnowledgeDocument, mode: Literal["synthetic", "official"]
+) -> CategoryKey:
     """Prefer authored synthetic mappings; conservatively classify other titles with a fallback."""
     if mode == "synthetic":
         for category, numbers in SYNTHETIC_CATEGORIES.items():

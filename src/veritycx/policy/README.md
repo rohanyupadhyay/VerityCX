@@ -13,6 +13,12 @@ semantic grounding quality. No policy function exposes operational banking tools
 Errors carry safe categories rather than source text or credentials. These controls supplement
 repository fences and provider contracts; prompts do not grant authorization.
 
+Overview answers append an application-owned note that documented products or
+services may not form a complete offering list. The provider budget reserves its
+characters and separator within the existing 8000-character publication cap.
+Focused answers, clarification and abstention do not receive that note. Coverage
+metadata and categories never authorize a policy claim or foreign citation.
+
 Dependencies are pinned in root `pyproject.toml`; install with `uv sync --locked --link-mode=copy`.
 Run `uv run ruff check src/veritycx/policy`, `uv run mypy` and
 `uv run pytest tests/support -m "not support_db and not live"` from the repository root.

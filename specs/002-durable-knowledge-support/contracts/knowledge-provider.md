@@ -29,6 +29,35 @@ production content is rejected for review rather than automatically promoted to 
 
 ## Section Index and Retrieval
 
+### Retrieval version 3
+
+The shared bank-page category classifier prepares an approved catalog snapshot
+with original full-document titles. Its ordered category policy, grouping version,
+and assignments participate in the v3 corpus hash. Passage headings cannot change
+membership. Historical v1/v2 hashes and both lexical baselines remain verifiable.
+Current chat requires a reviewed v3 corpus; activation never silently rebinds old
+conversations and never happens during installation or worker startup.
+
+Rewrite prompt/schema 2 returns focused scope with no categories, or category_overview
+with distinct existing category keys in server order, in the same one-call budget.
+Availability hints are discovery context. Unknown keys, invalid scope and malformed
+output fail safely. Categories cannot grant policy authority or erase qualifiers.
+
+Focused selection preserves v2 behavior. Overview selection considers every approved
+document in the selected categories, including zero lexical matches. Related original
+case-folded titles form indivisible eligible groups, allocated across categories
+before spare sections. Preserve six sections and 12000 characters. Non-fitting or
+uncitable groups are omitted intact with honest coverage diagnostics. Empty
+categories abstain without an answer call; no fitting group requests narrowing.
+
+Answer prompt 3 permits lists of documented products without demanding a complete
+catalogue, requires selected-source citations, and retains unsupported qualifiers
+and conflicts. The application appends a fixed non-exhaustive scope note only to
+successful overviews, reserving its length and separator inside 8000 characters.
+Unknown products or features cannot be inferred from another product's policy.
+The additive migration 003 retains historical null diagnostics and unknown audit
+provenance; exports report the stored event prompt rather than the newest runtime.
+
 ### Retrieval version 2
 
 The approved RAG step-1 increment adds English spaCy tokenization/POS/lemmatization
@@ -48,7 +77,7 @@ Installed language packages, pipeline/archive hashes and policy identity are bou
 into version-2 manifests. Explicit setup verifies all assets before worker readiness;
 requests never download them. Version-1 hash verification is retained for legacy
 inspection and the frozen baseline. Chat requires a reviewed, explicitly approved
-version-2 corpus; public policy browsing does not depend on NLP installation.
+version-2 corpus in step 1; current chat requires v3. Public policy browsing does not depend on NLP installation.
 
 Corpus source bytes are revalidated for every request. A process-local cache holds
 at most 4096 derived passage representations keyed by exact approved title/body

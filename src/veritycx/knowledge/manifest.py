@@ -10,9 +10,11 @@ from typing import Literal
 from pydantic import ValidationError
 
 from veritycx.conversations.models import parse_json
+from veritycx.knowledge.catalog import category_for, category_policy_identity
 from veritycx.knowledge.documents import parse_document
 from veritycx.knowledge.index import sections
 from veritycx.knowledge.models import (
+    CatalogEntry,
     CorpusManifest,
     EvidenceSection,
     KnowledgeDocument,
@@ -47,11 +49,12 @@ def build_manifest(
     mode: Literal["synthetic", "official"],
     pin: str,
     *,
-    ranking_version: Literal[1, 2] = 2,
+    ranking_version: Literal[1, 2, 3] = 3,
     resource_identity: NLPResourceIdentity | None = None,
 ) -> CorpusManifest:
     """Bind hashes, unique IDs and deterministic section IDs to a reviewed provenance pin."""
     entries: list[ManifestEntry] = []
+    catalog: list[CatalogEntry] = []
     identifiers: set[str] = set()
     for relative in document_paths(root):
         raw = verified_bytes(root, relative)
@@ -59,6 +62,14 @@ def build_manifest(
         if document.id in identifiers:
             raise SourceError("duplicate_document")
         identifiers.add(document.id)
+        if ranking_version == 3:
+            catalog.append(
+                CatalogEntry(
+                    document_id=document.id,
+                    title=document.title,
+                    category=category_for(document, mode),
+                )
+            )
         entries.append(
             ManifestEntry(
                 path=relative,
@@ -67,7 +78,8 @@ def build_manifest(
                 section_ids=tuple(s.section_id for s in sections(document, "pending")),
             )
         )
-    identity = (resource_identity or configured_identity()) if ranking_version == 2 else None
+    identity = (resource_identity or configured_identity()) if ranking_version >= 2 else None
+    policy = category_policy_identity() if ranking_version == 3 else None
     payload: dict[str, object] = {
         "mode": mode,
         "pin": pin,
@@ -77,6 +89,9 @@ def build_manifest(
     }
     if identity is not None:
         payload["retrieval_resources"] = identity.model_dump()
+    if policy is not None:
+        payload["category_policy"] = policy.model_dump()
+        payload["catalog_index"] = [entry.model_dump() for entry in catalog]
     canonical = json.dumps(
         payload,
         sort_keys=True,
@@ -89,6 +104,8 @@ def build_manifest(
         mode=mode,
         ranking_version=ranking_version,
         retrieval_resources=identity,
+        category_policy=policy,
+        catalog_index=tuple(catalog) if ranking_version == 3 else None,
         entries=tuple(entries),
         aggregate_hash=digest,
     )

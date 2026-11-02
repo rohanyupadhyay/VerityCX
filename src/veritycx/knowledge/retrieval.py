@@ -14,6 +14,7 @@ from veritycx.providers.protocol import ContextMessage
 
 if TYPE_CHECKING:
     from veritycx.knowledge.nlp import TextNormalizer
+    from veritycx.knowledge.scope import SearchContext
     from veritycx.knowledge.synonyms import SynonymExpander
 
 
@@ -22,8 +23,9 @@ class RetrievalSelection:
     """Expose bounded retrieval diagnostics without duplicating source bodies."""
 
     sections: tuple[EvidenceSection, ...]
-    mode: Literal["primary", "synonym", "empty"]
+    mode: Literal["primary", "synonym", "category", "empty"]
     expanded_term_count: int = 0
+    context: SearchContext | None = None
 
 
 def select_evidence(

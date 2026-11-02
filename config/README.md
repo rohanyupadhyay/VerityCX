@@ -4,13 +4,16 @@
 
 ## Retrieval language inventory
 
-[retrieval-resources.json](retrieval-resources.json) binds ranking version 2 to
+[retrieval-resources.json](retrieval-resources.json) binds the unchanged language policy used by ranking versions 2 and 3 to
 spaCy 3.8.18, English pipeline 3.8.0, NLTK 3.10.4, and the WordNet archive.
 It records immutable download URLs, archive hashes, and model-file hashes.
 Use the maintained setup/check helper; customer requests never download data.
 These are language-processing assets, not additional banking evidence.
 The optional rewrite_model support setting overrides rewriting only; omission
 inherits the existing answer model.
+Version 3 additionally binds the shared service-category policy and original-title
+catalog snapshot into the prepared corpus manifest. Corpus approval remains
+explicit; language installation and worker startup never approve documents.
 
 ## Purpose and Responsibility
 

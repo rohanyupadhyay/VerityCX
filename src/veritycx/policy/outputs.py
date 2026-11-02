@@ -1,6 +1,7 @@
 """Constrain output publication to selected evidence; render citations on the server."""
 
 from veritycx.conversations.models import Citation, TurnResult
+from veritycx.knowledge.scope import OVERVIEW_SCOPE_NOTE
 from veritycx.providers.protocol import ProviderError, ProviderRequest, ProviderResult
 
 
@@ -22,6 +23,11 @@ def validate_result(request: ProviderRequest, result: ProviderResult) -> TurnRes
                 title=section.title,
             )
     text = "\n".join(claim.text for claim in result.claims)
-    if len(text) > 8000:
+    if len(text) > request.answer_text_limit:
         raise ProviderError("invalid_output")
+    if (
+        request.search_context is not None
+        and request.search_context.search_scope.scope == "category_overview"
+    ):
+        text += "\n" + OVERVIEW_SCOPE_NOTE
     return TurnResult(kind="answer", text=text, citations=tuple(citations.values()))
