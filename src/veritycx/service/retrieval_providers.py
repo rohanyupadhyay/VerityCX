@@ -2,13 +2,22 @@
 
 from collections.abc import Callable, Mapping
 
+from openai import AsyncOpenAI
+
+from veritycx.providers.openai import OpenAIProvider
 from veritycx.providers.protocol import (
     KnowledgeProvider,
     ProviderError,
     ProviderRequest,
     ProviderResult,
 )
-from veritycx.providers.rewrite import QueryRewriter, RewriteRequest, RewriteResult
+from veritycx.providers.rewrite import (
+    OpenAIQueryRewriter,
+    QueryRewriter,
+    RewriteRequest,
+    RewriteResult,
+)
+from veritycx.service.configuration import Settings
 from veritycx.service.retrieval_cases import RegressionScenario, RegressionTurn, ReplayTurn
 from veritycx.service.retrieval_checks import CallRecorder
 
@@ -97,5 +106,19 @@ def replay_provider_factory(replays: Mapping[tuple[str, str], ReplayTurn]) -> Pr
         """Construct explicit delegates, with no access to gold outcome data."""
         replay = replays[(case.id, turn.id)]
         return ReplayRewriter(replay), ReplayAnswer(replay)
+
+    return providers
+
+
+def live_provider_factory(client: AsyncOpenAI, settings: Settings) -> ProviderFactory:
+    """Bind actual provider adapters without loading any replay or expected answer."""
+    rewrite = OpenAIQueryRewriter(client, settings.effective_rewrite_model)
+    answer = OpenAIProvider(client, settings.model)
+
+    def providers(
+        case: RegressionScenario, turn: RegressionTurn
+    ) -> tuple[QueryRewriter, KnowledgeProvider]:
+        """Return shared bounded adapters; scenario gold is never included in requests."""
+        return rewrite, answer
 
     return providers

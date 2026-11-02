@@ -29,16 +29,36 @@ def main() -> int:
         print(str(error))
         return 1
     parser = argparse.ArgumentParser(description="Validate durable support")
-    parser.add_argument("--suite", choices=["offline", "grounding", "demo"], required=True)
+    parser.add_argument(
+        "--suite", choices=["offline", "grounding", "demo", "retrieval"], required=True
+    )
     parser.add_argument("--live", action="store_true")
+    parser.add_argument("--case", action="append", dest="case_ids")
     args = parser.parse_args()
-    if args.suite != "offline" and not args.live:
+    if args.case_ids and args.suite != "retrieval":
+        print("invalid_case_scope")
+        return 1
+    if args.suite in {"grounding", "demo"} and not args.live:
         print("live_opt_in_required")
         return 1
     if args.suite == "offline" and args.live:
         print("offline_live_conflict")
         return 1
     try:
+        if args.suite == "retrieval":
+            from veritycx.service.retrieval_cases import RegressionError
+            from veritycx.service.retrieval_command import run_regressions
+            from veritycx.service.retrieval_reports import exit_status
+
+            try:
+                retrieval_result = run_regressions(
+                    dict(os.environ), live=args.live, case_ids=args.case_ids
+                )
+            except RegressionError as error:
+                print(str(error))
+                return 1
+            print(json.dumps(retrieval_result, sort_keys=True))
+            return exit_status(retrieval_result)
         if args.suite == "grounding":
             print(json.dumps(validate_grounding(dict(os.environ), live=args.live), sort_keys=True))
             return 1  # Human semantic review is explicitly pending.
