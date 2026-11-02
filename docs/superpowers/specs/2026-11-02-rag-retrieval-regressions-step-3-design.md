@@ -8,8 +8,8 @@ unsupported requests. Expected evidence and response behavior come from the
 project-authored synthetic policies, rather than whatever the current engine
 happens to return.
 
-The user asked to implement step 3 and said to continue after the recommended
-approach was presented. Proceed with offline regression cases plus a separately
+The user asked to implement step 3, continued after the recommended approach was
+presented, and approved this design on 2026-11-02. Proceed with offline regression cases plus a separately
 invoked live-model suite. Live execution remains an explicit paid opt-in; this
 design does not authorize paid execution, app changes, push or merge.
 
@@ -200,5 +200,5 @@ authorized actions.
 
 A fresh read-only software-engineering check found nothing important left
 unanswered for implementation planning. The scenario counts and file boundaries
-remain proposed defaults and builder choices as stated above. Design approval
-is pending before implementation planning.
+remain proposed defaults and builder choices as stated above. The user approved
+the design on 2026-11-02; implementation planning follows that approval.
