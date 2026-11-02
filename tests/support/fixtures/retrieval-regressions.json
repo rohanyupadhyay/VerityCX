@@ -942,7 +942,7 @@
         {
           "id": "t1",
           "conversation": "a",
-          "question": "Show accounts and cards",
+          "question": "Which accounts and cards are documented?",
           "expected": {
             "rewrite_kinds": [
               "search"
@@ -1576,6 +1576,12 @@
               {
                 "scope": "focused",
                 "categories": []
+              },
+              {
+                "scope": "category_overview",
+                "categories": [
+                  "cards"
+                ]
               }
             ],
             "result_kinds": [
@@ -1620,7 +1626,7 @@
         {
           "id": "t1",
           "conversation": "a",
-          "question": "Does the Cedar card include cryptocurrency insurance?",
+          "question": "What cryptocurrency insurance does the Cedar card include?",
           "expected": {
             "rewrite_kinds": [
               "search",
@@ -1678,7 +1684,7 @@
         {
           "id": "t1",
           "conversation": "a",
-          "question": "Quasar hyperdrive warranty?",
+          "question": "What is the quasar hyperdrive warranty?",
           "expected": {
             "rewrite_kinds": [
               "search",
