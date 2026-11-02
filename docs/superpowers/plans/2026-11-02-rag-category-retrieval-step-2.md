@@ -287,7 +287,7 @@ be a complete list of offerings.”
 answer_text_limit is 8000 for other scopes, or 8000 minus len(note) minus one
 newline for overview answers. Count the joined claim text including its separators.
 
-- [ ] Test that a valid overview answer gets exactly one note, preserves its
+- [x] Test that a valid overview answer gets exactly one note, preserves its
   citations, and is at most 8000 characters. At the exact joined-text limit it
   succeeds; one character over fails with invalid_output. Test multiple claims
   and newline accounting. Focused answers and non-answer dispositions get no note.
@@ -309,10 +309,10 @@ newline for overview answers. Count the joined claim text including its separato
       assert request.answer_text_limit == 8000 - len(OVERVIEW_SCOPE_NOTE) - 1
   ```
 
-- [ ] Run uv run pytest tests/support/unit/test_category_answers.py
+- [x] Run uv run pytest tests/support/unit/test_category_answers.py
   tests/support/contract/test_providers.py -q and observe new failures.
 
-- [ ] Add the scope/coverage metadata and prompt-v3 instructions while retaining
+- [x] Add the scope/coverage metadata and prompt-v3 instructions while retaining
   the original question as authoritative. Authorize documented-product lists
   without demanding an exhaustive catalogue, require every factual claim to cite
   selected passages, and forbid cross-product facts or erasing qualifiers.
@@ -322,11 +322,11 @@ newline for overview answers. Count the joined claim text including its separato
   factual claims to make room. Existing invoke_provider validation/retry accounting
   must cover note/length failures; do not add a repair call.
 
-- [ ] Run provider/model/safety tests, including wrong-category and unsupported-
+- [x] Run provider/model/safety tests, including wrong-category and unsupported-
   qualifier requests. Mock tests assert contracts/instructions and publication
   gates; actual semantic behavior needs the later opt-in live checks.
 
-- [ ] Commit the tested request/publication change. Per-event prompt provenance,
+- [x] Commit the tested request/publication change. Per-event prompt provenance,
   graph wiring, and legacy export handling belong to Task 5.
 
 ## Task 5: Additive storage, durable diagnostics, and complete graph
