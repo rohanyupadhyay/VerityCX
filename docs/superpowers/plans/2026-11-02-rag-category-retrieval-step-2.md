@@ -219,7 +219,7 @@ RetrievalSelection.mode: primary | synonym | category | empty
 Leave v1 retrieve and the v2 select_evidence algorithm unchanged. The wrapper adds
 focused context to v2 results without changing selected IDs, order, or expansion.
 
-- [ ] Add test_original_cards_overview_covers_pine using the unchanged synthetic
+- [x] Add test_original_cards_overview_covers_pine using the unchanged synthetic
   source snapshot, real normalizer, and scope category_overview/cards. Assert:
 
   ```python
@@ -242,10 +242,10 @@ focused context to v2 results without changing selected IDs, order, or expansion
   related documents when all are eligible. A group larger than the entire budget
   produces no partial group and honest truncated coverage.
 
-- [ ] Run uv run pytest tests/support/unit/test_category_retrieval.py -q and
+- [x] Run uv run pytest tests/support/unit/test_category_retrieval.py -q and
   confirm the missing selector/metadata fails before implementation.
 
-- [ ] Implement selection under the existing evidence budgets: group by the
+- [x] Implement selection under the existing evidence budgets: group by the
   approved original title's casefold, rank by maximum v2 normalized section score
   using the eligible subcorpus's term frequencies, then stable document/section
   IDs. Select one best section per document for a complete fitting group.
@@ -260,11 +260,11 @@ focused context to v2 results without changing selected IDs, order, or expansion
   paths or create synthetic evidence. Empty overview selection remains scoped and
   never falls through to global lexical or WordNet search.
 
-- [ ] Run the new cases with existing test_nlp.py, test_synonyms.py, and
+- [x] Run the new cases with existing test_nlp.py, test_synonyms.py, and
   test_retrieval.py. Expect unchanged baselines, all budgets respected, and no
   resource download or new query/history cache.
 
-- [ ] Commit the tested selector and bounded coverage contract.
+- [x] Commit the tested selector and bounded coverage contract.
 
 ## Task 4: Grounded overview answers and publication limits
 
