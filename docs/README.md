@@ -39,6 +39,13 @@ classification are documentation failures; formatting alone does not establish t
 
 ## Feature 002 implementation
 
+The approved [RAG step 2 design](superpowers/specs/2026-11-02-rag-category-retrieval-step-2-design.md)
+and [implementation plan](superpowers/plans/2026-11-02-rag-category-retrieval-step-2.md)
+connect chat to the bank pages' shared categories through typed rewrite intent.
+Version 3 binds the category snapshot, preserves related sources and evidence caps,
+and publishes cited, explicitly non-exhaustive overviews. Migration 003 and reviewed
+corpus activation remain explicit maintenance actions; source policy bytes do not change.
+
 The [RAG step 1 design](superpowers/specs/2026-10-30-rag-retrieval-step-1-design.md)
 and [implementation plan](superpowers/plans/2026-10-30-rag-retrieval-step-1.md)
 cover conversational query rewriting, English normalization, title-aware lexical

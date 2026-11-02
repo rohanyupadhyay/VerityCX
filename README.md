@@ -40,7 +40,8 @@ credentials are used only by explicitly enabled live execution/export.
 
 ## Run the Local App
 
-Retrieval version 2 requires pinned local English spaCy and WordNet resources.
+Retrieval version 3 uses the same pinned local English spaCy and WordNet resources
+as the version-2 lexical baseline.
 After syncing the locked dependencies, install and verify the reviewed language
 archive explicitly:
 
@@ -64,16 +65,26 @@ omitting it inherits the answer model. Rewriting has one durably reserved call
 capped at ten seconds. Answering retains at most two attempts within the shared
 60-second turn deadline. Rewrite errors return a clear retry message without
 searching an unresolved original question. Ambiguity requests clarification.
-WordNet expansion is attempted once, only after empty primary retrieval.
+Focused questions retain normalized retrieval and one WordNet pass only after
+empty primary retrieval. Category overviews use the same rewrite call to choose
+validated service categories. The approved category snapshot matches the bank
+pages and includes Pine alongside Cedar and Hazel. Selection covers documents
+before adding extra sections, while retaining six-section/12,000-character caps.
+Related source versions stay together; large categories return partial coverage.
+Successful overviews carry citations and an application-owned note that the
+documented products or services may not be a complete offering list. Unsupported
+qualifiers remain unsupported; category metadata never creates policy facts.
 
-An existing version-1 installation requires an explicit maintenance transition:
+An existing version-1 or version-2 installation requires an explicit maintenance transition:
 stop owned workers, run the maintained application database migration/bootstrap,
-prepare the version-2 corpus, review and approve its printed hash, and restart.
+apply the additive migration 003, prepare the version-3 corpus, review and approve
+its printed hash, and restart.
 Preparation and startup never approve documents. Old conversations retain their
 original corpus identity; after activation, start a new conversation rather than
 mixing corpus versions. Completed historical answers remain stored under retention.
-The original keyword retriever remains available as the version-1 evaluation
-baseline. Category-aware chat retrieval is a later increment.
+The original keyword retriever and normalized lexical retriever remain available
+as version-1 and version-2 evaluation baselines. Wider retrieval evaluation and
+semantic-search decisions remain later increments.
 
 On Linux/WSL, use the maintained bootstrap from the repository root:
 

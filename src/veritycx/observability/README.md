@@ -4,6 +4,12 @@
 
 Atomic local audit and separately gated sanitized export.
 
+Category retrieval adds local requested-category and document-coverage diagnostics.
+Coverage counts source documents, not an exhaustive product catalogue. Answer audit
+records persist the answer prompt version for newly committed results. Exports use
+that event's knowledge-vN value, or unknown for historical/unverifiable provenance;
+restarting a newer worker does not relabel an older event.
+
 Rewriting keeps separate model, prompt version, observed token counts, start/end
 timestamps, and failure categories in the turn-owned query_rewrites row. Retrieval
 also records selected section IDs, selection mode and expansion count there, even

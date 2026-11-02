@@ -357,7 +357,7 @@ requests pass 3; non-model outcomes and unverifiable historical rows stay unknow
 metadata(event, provider) derives knowledge-vN from the stored event, or unknown.
 Do not relabel an old completed result merely because a new worker exports it.
 
-- [ ] Add native tests for upgrading a v2-prefix schema, fresh install, repeated
+- [x] Add native tests for upgrading a v2-prefix schema, fresh install, repeated
   migration, immutable 001/002 checksums, unknown/partial migration history,
   runtime DDL denial, retained prompt-1 rewrite rows and null historical metadata.
   Use only dedicated test storage and transactional/isolated schema fixtures.
@@ -376,21 +376,21 @@ Do not relabel an old completed result merely because a new worker exports it.
   001/002, then restore the full inventory and migrate to 003. Assert final
   migration versions equal [1, 2, 3] and preexisting fixture rows survive.
   Missing binaries are a reported prerequisite failure, not a skipped test.
-- [ ] Run these focused cases before implementing and record intended failures.
+- [x] Run these focused cases before implementing and record intended failures.
   A schema mismatch before migration is expected, not permission to edit 001/002.
-- [ ] Implement migration 003 and ordered inventory extension. Replace the named
+- [x] Implement migration 003 and ordered inventory extension. Replace the named
   rewrite prompt/mode constraints additively; accept retained prompt 1 and new 2.
   Bound category_keys to an array of at most six known keys, require consistent
   scope/coverage shapes and represented \<= eligible, and preserve selected-ID caps.
   record_retrieval(job, selection) writes diagnostics in its existing fenced
   transaction. Add truthful per-event answer prompt metadata as specified above.
-- [ ] Wire the graph: require v3 snapshot; compute hints from its catalog index;
+- [x] Wire the graph: require v3 snapshot; compute hints from its catalog index;
   invoke the version-2 rewriter exactly once; clarify/error short-circuit; run
   select_scoped_evidence in rag.inference; record diagnostics even for empty
   searches; pass SearchContext to the answer request; commit with its prompt version.
   Legacy corpus mismatch must fail before a new rewrite. Keep human/operation
   routing on the original input and preserve all existing lease/deadline guards.
-- [ ] Run native graph tests with a recording rewrite and answer provider:
+- [x] Run native graph tests with a recording rewrite and answer provider:
   cards overview gets exactly IDs 03/08/16, three corresponding citations and the
   note; Cedar fee uses focused selection; no extra rewrite/answer attempts;
   empty category abstains without answer; answer abstention does not search again;
@@ -403,7 +403,7 @@ Do not relabel an old completed result merely because a new worker exports it.
   rejection, foreground lease renewal during selection, and retention.
   Test exporting an old null-version audit row yields unknown and no question,
   history, source body, private path, or raw error; new answers export knowledge-v3.
-- [ ] Commit the integrated storage/graph change after focused native tests pass.
+- [x] Commit the integrated storage/graph change after focused native tests pass.
 
 ## Task 6: Documentation, full checks, and implementation handoff
 

@@ -24,3 +24,10 @@ or subprocess handles created by that test; it must never reset unrelated databa
 routing, strict AgentBot assignment and safe error contracts. Its mock transports never
 contact an actual Chatwoot server or OpenAI. The webhook persistence test prepares and
 approves a corpus in its own temporary cache, independent of local app setup or test order.
+
+## Category retrieval checks
+
+The category suites pin shared catalog assignments, frozen v1/v2 hashes, strict
+scope contracts, document coverage, indivisible related versions and final-note
+character limits. SDK transports are mocked. These checks verify contracts and
+control flow; they do not establish live semantic grounding quality.

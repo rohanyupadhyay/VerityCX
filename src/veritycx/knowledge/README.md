@@ -4,7 +4,23 @@
 
 Approved document ingestion and bounded lexical retrieval.
 
-## Retrieval version 2
+## Retrieval version 3
+
+category_retrieval.select_scoped_evidence dispatches the typed rewrite scope.
+Focused questions keep the version-2 selector unchanged. Overviews use the approved
+catalog index, whose categories and original full-document titles match the bank
+pages. Category membership can include a policy without a lexical hit, such as Pine.
+Round-robin category allocation covers complete related-title groups before adding
+extra sections, keeping six sections and 12,000 characters. Groups that do not fit
+are deferred intact. A document without citable passages remains omitted, as does
+its entire related group; coverage reports this limitation rather than inventing
+a passage. Nonempty categories with no fitting group request a narrower question.
+Empty categories abstain without global fallback or an answer call.
+
+Category diagnostics count eligible and represented documents, not the number or
+completeness of real bank products. Metadata never supplies policy facts.
+
+## Preserved lexical baseline
 
 The original retrieve function remains the frozen version-1 baseline.
 The select_evidence path uses spaCy English lemmas and reviewed stopword overrides
@@ -26,11 +42,12 @@ the required tagger/lemmatizer components once and batches inference off the wor
 event loop. The maintained setup helper installs data before requests; it never
 silently downloads or repairs assets during retrieval.
 
-Version-2 manifests bind language-resource and normalization identity. Version-1
-hash verification stays unchanged, and public document browsing supports either
-version without loading NLP. Chat requires an explicitly approved version-2 corpus.
+Version-2 manifests bind language-resource and normalization identity. Version-3
+manifests also bind the shared category policy and catalog index. Both legacy
+hash rules stay unchanged; public browsing supports all three versions without
+loading NLP. Chat requires an explicitly approved version-3 corpus.
 Dedicated test-database processes use a fixed test corpus cache, protecting the
-normal app's active corpus. Category-aware selection remains a later step.
+normal app's active corpus.
 Management preparation, approval, and runtime reads share this namespace selection.
 Parent-side validation metadata reads explicitly select the same test namespace,
 even when the parent has no runtime database environment. Official live validation

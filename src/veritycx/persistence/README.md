@@ -26,6 +26,20 @@ with `uv run ruff check src/veritycx/persistence` and `uv run mypy`.
 Feature tests live in `tests/support/`; database cases require dedicated credentials.
 Missing configuration, invalid external values and unavailable storage fail safely.
 
+## Category diagnostics and prompt provenance
+
+Migration 003 extends the immutable 001/002 prefix with rewrite prompt 2, category
+selection mode, requested category keys and measured document coverage. Historical
+rows keep null scope/coverage rather than invented measurements. New focused rows
+have empty category keys and no category coverage. New overview rows record counts,
+including empty selection. All updates retain the same parent/fence guard.
+
+Audit rows retain the actual answer prompt version when a new result is committed.
+Historical unknown provenance stays unknown during recovery/export; it is never
+relabelled using the newest worker's prompt. Answer attempts remain capped at two.
+Native fresh-install and v2-upgrade tests own temporary foreground PostgreSQL
+clusters; they never downgrade or reset the shared dedicated database.
+
 ## Implemented Typed Contracts
 
 `models.py` implements strict driver-row models for conversations, turns, jobs, operations,
