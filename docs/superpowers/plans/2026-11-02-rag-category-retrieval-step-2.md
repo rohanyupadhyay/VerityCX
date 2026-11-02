@@ -413,13 +413,13 @@ READMEs; specs/002-durable-knowledge-support/contracts/knowledge-provider.md;
 service/validation.py prompt metadata; this plan and the approved design's
 execution record. Preserve dated prior evidence and unrelated open work.
 
-- [ ] Document the new intent/selection behavior, honest list scope, related-title
+- [x] Document the new intent/selection behavior, honest list scope, related-title
   grouping, oversized/empty-category behavior, unchanged budgets, local diagnostics,
   prompt versions, v3 preparation/approval, migration 003 and new-conversation
   requirement. Update current validation result metadata to answer prompt 3,
   distinguishing current validation runs from old audit events.
 
-- [ ] Run the maintained checks and fix relevant failures:
+- [x] Run the maintained checks and fix relevant failures:
 
   ```text
   uv lock --check
@@ -440,13 +440,13 @@ execution record. Preserve dated prior evidence and unrelated open work.
   scripts/validate_support.py --suite offline. Keep its parent-side metadata
   explicitly in the fixed test namespace, with no application corpus dependency.
 
-- [ ] Record exact results and any latency failures before retries. The existing
+- [x] Record exact results and any latency failures before retries. The existing
   30-turn deterministic load target stays p95 \<= 5 seconds with zero leaks and
   a one-second scan cadence. Do not relax the target or delete unrelated test rows.
   Run frontend checks only if frontend/product contracts change; no UI change is
   planned. CI retains its cross-platform resource setup and native test gates.
 
-- [ ] Demonstrate the original question's three selected document IDs and the
+- [x] Demonstrate the original question's three selected document IDs and the
   final scoped answer with deterministic/transport fixtures. Clearly label this
   as control-flow evidence. Prepare a v3 manifest and compare source inventories
   without approving or migrating the app.
@@ -478,3 +478,39 @@ execution record. Preserve dated prior evidence and unrelated open work.
   narrower question when an eligible category has no whole group that can fit.
 - Execution: native in this session, preserving the prior selected method. No
   delegated implementation. The user approved native execution on 2026-11-02.
+
+## Execution evidence (2026-11-02)
+
+Tasks 1–6 were implemented natively in the existing feature checkout. Every
+behavior change has a recorded RED/GREEN check in the execution ledger. The
+final whole-branch review follows the completed task gates below.
+
+- Maintained lock/resource/environment, Ruff formatting/lint, strict mypy
+  (155 files), Markdown and workflow YAML checks passed. No frontend contract
+  changed, so no frontend check was added.
+- First full offline run: 555 passed, one failed (`latency_target_failed`),
+  351.34 seconds. The client p95 for that failed run was not captured. A read-only
+  persisted backend-stage probe measured p95 4967 ms; this excludes HTTP
+  polling/admission and is not a substitute for the client measurement.
+- Unchanged isolated 30-turn load retry: p95 2.551081 seconds, zero leaks.
+- Unchanged full offline retry: **556 passed**, one existing Starlette/AnyIO
+  deprecation warning, 348.64 seconds. Its load evidence measured p95
+  **4.941417166 seconds**, zero leaks, scan cadence one second. The five-second
+  target, concurrency, worker cadence and production cache remain unchanged.
+  These runs show local timing variability, not an SLA guarantee.
+- Standalone `uv run python scripts/validate_support.py --suite offline` passed
+  its subprocess checks, three offline knowledge cases and six handoff cases,
+  using deterministic providers and the dedicated test namespace.
+- Original-question native graph and transport fixtures selected policy-03,
+  policy-08 and policy-16 (Cedar, Hazel, Pine), cited all three and appended the
+  scope note. This is control-flow evidence; no paid live or human semantic
+  acceptance was run.
+- Prepared v3 manifest aggregate hash:
+  `327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c`.
+  All 40 source entries match the active v2 inventory. App corpus approval,
+  app migration and restart were not performed. A read-only check found no
+  listener on port 8000; this work does not claim a healthy active app.
+- Activation remains a separate maintenance action: stop owned workers, apply
+  migration 003, approve the reviewed v3 corpus, restart and use new
+  conversations. Wider quality regression/evaluation and semantic-search
+  measurement remain steps 3 and 4.

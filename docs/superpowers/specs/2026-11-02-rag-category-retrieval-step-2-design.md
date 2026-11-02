@@ -235,3 +235,15 @@ No new dependency is proposed. A later plan will name exact interfaces and tests
 A fresh read-only software-engineering review found nothing important left
 unanswered for implementation planning. No implementation or runtime change has
 been made as part of this design review.
+
+## Implementation evidence (2026-11-02)
+
+The approved native implementation is complete on the step-2 feature branch,
+with final branch review pending. Shared snapshot categories, one-call typed
+rewriting, bounded complete-group selection, cited scope-limited answers,
+additive migration 003 and per-event prompt provenance are implemented.
+The full offline retry passed 556 tests; the standalone validator passed three
+knowledge and six handoff cases. The earlier full-suite latency failure remains
+recorded with the passing retries in the [implementation plan](../plans/2026-11-02-rag-category-retrieval-step-2.md).
+App migration/activation, paid live semantic acceptance, push and merge have not
+been performed. Steps 3 and 4 remain separate increments.
