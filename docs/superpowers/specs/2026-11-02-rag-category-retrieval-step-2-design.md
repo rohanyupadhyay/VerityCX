@@ -239,7 +239,7 @@ been made as part of this design review.
 ## Implementation evidence (2026-11-02)
 
 The approved native implementation is complete on the step-2 feature branch,
-with final branch review pending. Shared snapshot categories, one-call typed
+with final branch review complete and two nonblocking test gaps recorded in the plan. Shared snapshot categories, one-call typed
 rewriting, bounded complete-group selection, cited scope-limited answers,
 additive migration 003 and per-event prompt provenance are implemented.
 The full offline retry passed 556 tests; the standalone validator passed three

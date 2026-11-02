@@ -457,7 +457,7 @@ execution record. Preserve dated prior evidence and unrelated open work.
   qualifier. Check each listed product and citation manually; structured output
   alone cannot prove semantic fidelity. Keep the active app unchanged.
 
-- [ ] Finish with the preserved native execution method's whole-branch review,
+- [x] Finish with the preserved native execution method's whole-branch review,
   fix concrete findings with RED/GREEN verification, commit the verified work,
   and report remaining activation and step-3/4 scope honestly. No push, PR merge,
   or app activation without separate authorization.
@@ -514,3 +514,73 @@ final whole-branch review follows the completed task gates below.
   migration 003, approve the reviewed v3 corpus, restart and use new
   conversations. Wider quality regression/evaluation and semantic-search
   measurement remain steps 3 and 4.
+
+## Final branch review
+
+One fresh read-only `gpt-6-astra` reviewer inspected the entire branch range
+`0c31dc9..28f35af`, judged it technically ready to merge, and found no Critical or
+Important defect. The executor accepted the two findings as Minor test gaps;
+no code fix or re-review was needed. Deferred:
+
+1. A combined multi-category/remaining-budget related-group regression. Group
+   indivisibility and multi-category allocation are covered independently.
+1. A native completed-historical-result recovery/re-export regression with zero
+   provider calls and preserved unknown prompt provenance. Null-retention and
+   metadata mapping are covered independently.
+
+The conditional live-smoke checkbox remains unchecked because paid semantic
+acceptance was not separately authorized. App activation and branch integration
+remain separate decisions. The ledger below preserves every ruling, including
+all four review exclusions and their practical costs.
+
+## Native execution ledger
+
+```text
+# SDD ledger — plan: docs/superpowers/plans/2026-11-02-rag-category-retrieval-step-2.md
+
+Execution: user approved design, then implementation plan, on 2026-11-02; native in this session.
+Ruling: preserve the existing feature branch/current checkout and prior direct-workspace preference — the workspace tools require explicit relocation consent, and this task is already on its approved feature branch — cost: no filesystem isolation; mitigate with explicit test-only storage and no app activation/restart.
+Pre-flight: Tasks 1/2/3/4/5 share scope/catalog models; define them in Task 1 before consumers.
+Pre-flight: Tasks 1/3 share original document titles; use approved catalog entries, never indexed headings.
+Pre-flight: Tasks 2/5 share rewrite prompt 2 and migration 003; unit-only Task 2 can precede native schema changes.
+Pre-flight: Tasks 3/5 share category mode/nullable diagnostics; extend ledger and SQL together in Task 5.
+Pre-flight: Tasks 4/5 share answer prompt 3; persist per-event provenance only when committing a new result.
+Pre-flight: Tasks 5/6 share standalone validation and test cache; parent reads must explicitly select validation namespace.
+Pre-flight: Task 5 upgrade fixture uses its own foreground native PostgreSQL process, not destructive reset of shared test storage.
+
+Baseline: 388 database-free tests passed, 98 deselected, one existing dependency warning.
+Task 1: RED missing category policy interface; GREEN 53 category/scope/version/corpus/publication checks. Ruff and strict mypy14files passed.
+Task 1: complete (commits b5007f3..177d4cd, tests: uv run pytest tests/support/unit/test_category_catalog.py tests/support/unit/test_retrieval_versions.py tests/support/unit/test_corpus.py tests/support/unit/test_review_regressions.py tests/support/contract/test_bank_information.py -q → 53 passed, 1 warning in 11.04s)
+Task 2: complete (commits 177d4cd..eef1acb, tests: uv run pytest tests/support/unit/test_query_rewrite.py tests/support/contract/test_query_rewrite_provider.py -q → 26 passed in 1.67s)
+
+Task 2: RED 13 contract/scope failures; GREEN 26 checks, including actual SDK transports and one-call assertions. Native storage is intentionally updated in Task 5.
+
+Task 3: Ruling: approved documents with no passages remain eligible but uncitable; defer the whole related group if any member has no passage — preserves the unchanged parser and avoids fabricated evidence — cost: partial coverage even when another version has facts. Regression observed RED corpus_changed then GREEN.
+Task 3: 25 selector/NLP/WordNet/baseline checks passed; Ruff and strict mypy2files passed.
+Task 3: complete (commits eef1acb..d931291, tests: uv run pytest tests/support/unit/test_category_retrieval.py tests/support/unit/test_nlp.py tests/support/unit/test_synonyms.py tests/support/unit/test_retrieval.py -q → 25 passed in 4.84s)
+
+Task 4: RED 8 overview publication/provider failures; GREEN 37 publication, wire, model and safety tests; strict mypy12files and Ruff pass. Output reserves note plus newline within 8000 characters. No semantic live-fidelity claim.
+Task 4: complete (commits d931291..26f97f6, tests: uv run pytest tests/support/unit/test_category_answers.py tests/support/contract/test_providers.py tests/support/unit/test_models.py tests/support/unit/test_safety.py -q → 37 passed in 2.28s)
+
+Task 5 in progress: private migration harness RED missing module -> GREEN 7 migration/privacy checks. Applied 003 ONLY to maintained test DB through test-only setup; app DB/corpus/runtime unchanged. Native graph RED selected only policy03/08; after integration GREEN initial14 graph/migration/privacy cases. Broader native cohort31passed/1failed due old monkeypatch target, corrected to select_scoped_evidence; final32case cohort running. Current strict typing fix is test-only canonical category tuple annotation.
+
+Task 5: GREEN 32 native graph/schema/recovery/retention/privacy cases in16.51sec, plus stale-diagnostic fence assertions2cases passed; source lint/format clean, strict mypy155files passed. Final task gate also includes HTTP ownership and checkpoint authority.
+Task 5: complete (commits 26f97f6..425608c, tests: uv run pytest tests/support/integration/test_category_rag.py tests/support/integration/test_category_migrations.py tests/support/integration/test_migrations.py tests/support/integration/test_rewrite_recovery.py tests/support/integration/test_attempt_recovery.py tests/support/integration/test_rag_retrieval_pipeline.py tests/support/integration/test_retention.py tests/support/integration/test_checkpoint_transactions.py tests/support/contract/test_conversation_api.py tests/support/unit/test_trace_privacy.py -q --tb=short → 37 passed in 18.12s)
+
+Task 6 in progress: resource/lock/environment/Ruff/format/YAML checks and strict mypy155files pass. Full offline suite: 555passed/1failed latency_target_failed in351.34sec. Read-only persisted stage probe: backend p95 4967ms, queue3261ms, source1673ms, rewrite240ms, selection512ms. Isolated unchanged benchmark rerun requested by user retry is running; no target/cadence/concurrency changes. Prepared app-cache v3 hash327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c, unchanged40sourceentries. App active rank2 unchanged.
+
+Task 6: standalone report prompt assertion observed RED2!=3 -> GREEN1 native handoff case; docs/contract/validation metadata updated. Unchanged isolated benchmark passed30turns p95=2.551081sec/leaks0; prior whole-suite miss remains recorded, not treated as an SLA guarantee. Full retry then standalone validator now run serially, unchanged threshold/cadence/concurrency. No production performance/cache workaround introduced without causal evidence.
+
+Task 6: unchanged full retry GREEN556tests/1existingdependencywarning in348.64sec; captured load evidence30turns,p95=4.941417166sec,zero leaks,scan1sec before standalone can replace it. Standalone validator now running serially. Read-only port8000 check found no listener; no app activation/restart performed.
+Task 6: complete (commits 425608c..b35a9fe, tests: uv run python scripts/validate_support.py --suite offline → {"cases_passed": 3, "corpus": "synthetic-327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c", "handoff_cases_passed": 6, "provider": "deterministic", "suite": "offline-knowledge"})
+
+
+Final review: fresh gpt-6-astra whole-branch read-only review of 0c31dc9..28f35af found no Critical or Important findings and judged technical readiness Yes. Executor regraded both findings Minor: covering implementation paths appear correct; these are missing combined/native regression boundaries, not observed runtime defects. No fix pass or re-review required.
+Final: minor (deferred): add a combined multi-category remaining-budget case where a two-document related group meets one remaining slot; independent grouping/budget paths are covered, but this combination is not.
+Final: minor (deferred): add native completed-historical-result recovery and re-export with no provider calls and unchanged unknown prompt version; null migration and pure mapping are covered separately.
+Final: Ruling: live-model classification and factual fidelity remain unaccepted — paid semantic acceptance was excluded, so deterministic/transport results establish only control flow — cost: real model classification and factual fidelity remain unverified.
+Final: Ruling: active-app migration, availability and activation remain outside this branch handoff — the approved plan excludes these maintenance operations; no listener was found on port8000, and no app migration/approval/restart was performed — cost: the active app does not yet use this implementation and currently is not serving on port8000.
+Final: Ruling: broader retrieval-quality evaluation and semantic-search alternatives stay in steps3/4 — this approved increment connects existing categories without extending the roadmap — cost: wider query-quality improvements remain unmeasured.
+Final: Ruling: no production latency guarantee is claimed — the first local full run failed the target and unchanged retries passed with variability — cost: the near-threshold 4.941sec p95 may fail under different load; first-run failure remains visible for later measurement.
+Final verification: full offline556passed/1existingwarning; standalone offline validator PASS(3knowledge+6handoff plus subprocess checks); whole Markdown check and git diff --check PASS after evidence-only docs commit. No source change after green suite. Integration decision pending separately; no push/merge/activation.
+```
