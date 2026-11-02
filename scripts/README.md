@@ -200,10 +200,11 @@ questions, history, rewrites, answers and expected authored facts in
 0700 directory/0600 file on POSIX). No credentials, source bodies or raw exceptions
 are included in that artifact. Do not commit generated review material.
 
-The current intake router clarifies imperative `Show ...`, `Does ...` without its
-recognized question keywords, and noun-only inputs before retrieval. Regression
-scenarios use explicit `What`/`Which` variants where necessary and preserve their
-gold outcomes; the original cards question stays verbatim. Wider intake-language
+The intake router clarifies inputs such as `Show accounts and cards`,
+`Does the Cedar card include cryptocurrency insurance?`, or
+`Quasar hyperdrive warranty?` when none of its recognized question keywords occurs.
+Regression scenarios use explicit `What`/`Which` variants where necessary and
+preserve their gold outcomes; the original cards question stays verbatim. Wider intake-language
 coverage, comparative scoring, latency/cost optimization and semantic-search
 decisions remain later work.
 
