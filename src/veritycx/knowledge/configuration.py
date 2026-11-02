@@ -9,6 +9,7 @@ from typing import Literal
 from psycopg.conninfo import conninfo_to_dict
 
 from veritycx.data_sources.tau3 import load_tau3_config
+from veritycx.knowledge.catalog import category_policy_identity
 from veritycx.knowledge.manifest import load_documents, load_sections, read_active
 from veritycx.knowledge.models import CorpusManifest, EvidenceSection, KnowledgeDocument
 from veritycx.knowledge.resources import configured_identity
@@ -85,7 +86,11 @@ def active_corpus(
     manifest = read_active(root, cache)
     if manifest.source_pin != pin or manifest.mode != mode:
         raise SourceError("corpus_changed")
-    if manifest.ranking_version != 2 or manifest.retrieval_resources != configured_identity():
+    if (
+        manifest.ranking_version != 3
+        or manifest.retrieval_resources != configured_identity()
+        or manifest.category_policy != category_policy_identity()
+    ):
         raise SourceError("retrieval_upgrade_required")
     return manifest, load_sections(root, manifest)
 

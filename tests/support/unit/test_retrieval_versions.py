@@ -25,11 +25,12 @@ def test_v2_binds_language_resources(tmp_path: Path) -> None:
     """Resource/policy identity participates in hashes independently of source bytes."""
     root, _, pin = source_mode("synthetic")
     identity = configured_identity()
-    current = build_manifest(root, "synthetic", pin, resource_identity=identity)
+    current = build_manifest(root, "synthetic", pin, ranking_version=2, resource_identity=identity)
     other = build_manifest(
         root,
         "synthetic",
         pin,
+        ranking_version=2,
         resource_identity=identity.model_copy(update={"wordnet_digest": "0" * 64}),
     )
     assert current.ranking_version == 2
@@ -40,3 +41,11 @@ def test_v2_binds_language_resources(tmp_path: Path) -> None:
         read_active(root, cache)
     approve(root, cache, prepared.aggregate_hash)
     assert read_active(root, cache) == prepared
+
+
+def test_v2_hash_rules_are_unchanged() -> None:
+    """The complete lexical baseline keeps its approved identity after category support."""
+    root, _, pin = source_mode("synthetic")
+    assert build_manifest(root, "synthetic", pin, ranking_version=2).aggregate_hash == (
+        "92126bf8d93182482cce66c599890de1db2f66e509dab2bb39a720e6056933b1"
+    )

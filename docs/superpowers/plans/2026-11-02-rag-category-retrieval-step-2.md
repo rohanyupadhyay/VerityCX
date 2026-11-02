@@ -15,8 +15,7 @@ LangGraph, PostgreSQL 18.6, Pydantic, uv, and the maintained offline/native harn
 No new dependency is proposed.
 
 **Spec:** [Approved step-2 design](../specs/2026-11-02-rag-category-retrieval-step-2-design.md).
-The user approved the design on 2026-11-02. This plan awaits their review before
-implementation. The existing feature branch is feat/rag-category-retrieval-step-2.
+The user approved the design on 2026-11-02. The user approved this plan for native implementation on 2026-11-02. The existing feature branch is feat/rag-category-retrieval-step-2.
 
 ## Global constraints
 
@@ -108,7 +107,7 @@ Avoid runtime import cycles: catalog may use postponed annotations and a
 TYPE_CHECKING import for KnowledgeDocument; it must not import models at runtime
 just to annotate category_for. Preserve its current classification behavior.
 
-- [ ] Write the schema/category/hash tests before implementing. Pin:
+- [x] Write the schema/category/hash tests before implementing. Pin:
 
   ```python
   def test_legacy_hashes_remain_frozen():
@@ -128,11 +127,11 @@ just to annotate category_for. Preserve its current classification behavior.
   Reject duplicate/foreign/missing catalog IDs, unknown categories, malformed
   coverage, and incorrect scope combinations. Empty known categories remain valid.
 
-- [ ] Run uv run pytest tests/support/unit/test_category_catalog.py
+- [x] Run uv run pytest tests/support/unit/test_category_catalog.py
   tests/support/unit/test_retrieval_versions.py -q; confirm the new interfaces and
   explicit v2 fixture expectations fail before implementation.
 
-- [ ] Implement the interfaces and default new preparation to ranking 3. Hash
+- [x] Implement the interfaces and default new preparation to ranking 3. Hash
   category data in priority order, including CATEGORIES order, title-rule order,
   synthetic assignments, and the case-folded-original-title grouping policy.
   Build the index from full parsed documents, never passage headings.
@@ -141,12 +140,12 @@ just to annotate category_for. Preserve its current classification behavior.
   Make active_corpus require v3 and matching current category/NLP identities.
   Public active_documents continues verifying v1/v2 sources without loading NLP.
 
-- [ ] Run the focused tests plus test_corpus.py, test_review_regressions.py, and
+- [x] Run the focused tests plus test_corpus.py, test_review_regressions.py, and
   test_bank_information.py. Expect pass and unchanged policy bodies. Assert
   category-policy or mapping drift requires reapproval and prepare never activates.
   Update existing default-preparation assertions without weakening frozen baselines.
 
-- [ ] Commit the tested snapshot/scope contract using the established docs/feat/fix style.
+- [x] Commit the tested snapshot/scope contract using the established docs/feat/fix style.
 
 ## Task 2: Typed overview intent in the existing rewrite call
 
@@ -478,4 +477,4 @@ execution record. Preserve dated prior evidence and unrelated open work.
 - Selection rulings: deduplicate cross-category related groups, and request a
   narrower question when an eligible category has no whole group that can fit.
 - Execution: native in this session, preserving the prior selected method. No
-  delegated implementation. Await user plan review before invoking executing-plans.
+  delegated implementation. The user approved native execution on 2026-11-02.
