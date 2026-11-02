@@ -215,6 +215,35 @@ def test_cross_category_related_group_is_selected_once() -> None:
     assert {item.document_id for item in result.sections} == {"a", "b"}
 
 
+def test_multicategory_related_pair_is_deferred_with_one_slot_remaining() -> None:
+    """A pair crossing categories cannot consume only the final remaining slot."""
+    evidence: list[EvidenceSection] = []
+    catalog: list[CatalogEntry] = []
+    for number in range(5):
+        category: CategoryKey = "accounts" if number < 3 else "cards"
+        parts, entry = document(str(number), f"Alpha {number}", category)
+        evidence.extend(parts)
+        catalog.append(entry)
+    pair_categories: tuple[CategoryKey, ...] = ("accounts", "cards")
+    for identifier, category in zip(("z-a", "z-c"), pair_categories, strict=True):
+        parts, entry = document(identifier, "Shared versioned policy", category)
+        evidence.extend(parts)
+        catalog.append(entry)
+    result = select(evidence, catalog, query="alpha", categories=("accounts", "cards"))
+    assert {item.document_id for item in result.sections} == {"0", "1", "2", "3", "4"}
+    assert len(result.sections) == 5
+    assert result.context is not None and result.context.coverage is not None
+    assert result.context.coverage.eligible_document_count == 7
+    assert result.context.coverage.represented_document_count == 5
+    assert result.context.coverage.coverage_truncated
+    assert result == select(
+        list(reversed(evidence)),
+        list(reversed(catalog)),
+        query="alpha",
+        categories=("cards", "accounts"),
+    )
+
+
 def test_section_cannot_escape_approved_catalog() -> None:
     """A source/catalog mismatch fails rather than classifying unapproved evidence."""
     evidence, _ = document("unbound", "Card", "cards")
