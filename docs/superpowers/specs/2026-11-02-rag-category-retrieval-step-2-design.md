@@ -1,6 +1,6 @@
 # RAG category retrieval: step 2 design
 
-Status: proposed for user approval. Builds on the merged and activated
+Status: approved by the user on 2026-11-02 for implementation planning. Builds on the merged and activated
 [step 1 design](./2026-10-30-rag-retrieval-step-1-design.md).
 
 ## Intent and confirmed decisions
@@ -19,7 +19,7 @@ The user selected these approaches on 2026-11-02:
 - Extend the existing model rewrite output to identify category overviews. Do not
   add a separate classification call.
 
-The remainder of this document proposes implementation choices for approval.
+The remainder of this document records the approved implementation choices.
 It covers all existing service categories; no new product taxonomy is introduced.
 
 ## Current behavior and approaches
