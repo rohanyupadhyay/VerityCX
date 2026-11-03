@@ -3,9 +3,23 @@
 import argparse
 from collections.abc import Sequence
 from pathlib import Path
+from typing import NoReturn
 
 from veritycx.service.retrieval_comparison import compare_retrieval
 from veritycx.service.retrieval_comparison_report import render_markdown
+
+
+class _SafeParser(argparse.ArgumentParser):
+    """Keep malformed CLI content out of captured logs while preserving --help."""
+
+    def error(self, message: str) -> NoReturn:
+        """Recognize only our finite repetition error; never reflect arbitrary input."""
+        category = (
+            "invalid_comparison_repetitions"
+            if message == "argument --repetitions: invalid_comparison_repetitions"
+            else "invalid_comparison_arguments"
+        )
+        self.exit(2, category + "\n")
 
 
 def _repetitions(value: str) -> int:
@@ -20,7 +34,7 @@ def _repetitions(value: str) -> int:
 
 def main(arguments: Sequence[str] | None = None) -> int:
     """Print a content-free structured report; Markdown requires an explicit new destination."""
-    parser = argparse.ArgumentParser(description="Offline frozen retrieval component comparison")
+    parser = _SafeParser(description="Offline frozen retrieval component comparison")
     parser.add_argument("--case", action="append", dest="case_ids")
     parser.add_argument("--repetitions", type=_repetitions, default=5)
     parser.add_argument("--markdown", type=Path)

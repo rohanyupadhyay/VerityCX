@@ -67,7 +67,7 @@ def test_real_cli_compares_original_cards_and_writes_new_markdown(tmp_path: Path
         (["--repetitions", "0"], "invalid_comparison_repetitions"),
         (["--repetitions", "21"], "invalid_comparison_repetitions"),
         (["--repetitions", "KEY_CANARY"], "invalid_comparison_repetitions"),
-        (["--live"], "unrecognized arguments: --live"),
+        (["--live"], "invalid_comparison_arguments"),
     ],
 )
 def test_invalid_cli_inputs_fail_without_raw_values(arguments: list[str], category: str) -> None:
@@ -125,3 +125,27 @@ def test_report_preflight_os_error_cannot_escape_as_a_raw_traceback(
     output = capsys.readouterr()
     assert output.out.strip() == "retrieval_comparison_failed"
     assert "KEY_CANARY" not in output.out + output.err
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--unknown", "KEY_CANARY"],
+        ["QUESTION_CANARY POLICY_BODY_CANARY"],
+        ["--case", "broad-cards-original", "--oops=KEY_CANARY"],
+    ],
+)
+def test_parser_failures_never_echo_unexpected_content(arguments: list[str]) -> None:
+    """Unknown flags and positional content must fail with a finite content-free category."""
+    result = run_cli(*arguments)
+    assert result.returncode == 2
+    assert result.stderr.strip() == "invalid_comparison_arguments"
+    assert not result.stdout
+    assert "CANARY" not in result.stdout + result.stderr
+
+
+def test_parser_help_remains_available_without_benchmark_execution() -> None:
+    """Sanitizing parser errors must preserve the ordinary successful help path."""
+    result = run_cli("--help")
+    assert result.returncode == 0 and "--repetitions" in result.stdout
+    assert "retrieval-comparison" not in result.stdout and not result.stderr
