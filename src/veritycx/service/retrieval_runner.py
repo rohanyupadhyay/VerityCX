@@ -41,6 +41,23 @@ from veritycx.service.retrieval_providers import ProviderFactory, RecordingAnswe
 from veritycx.service.validation import dedicated_database
 
 
+def _failed_observation(
+    case_id: str, turn: RegressionTurn, recorder: CallRecorder, start: float, error: str
+) -> ObservedTurn:
+    """Retain actual paid-call diagnostics when durable observations are unavailable."""
+    return ObservedTurn(
+        case_id=case_id,
+        turn_id=turn.id,
+        rewrite=next((r for r in reversed(recorder.rewrite_results) if r is not None), None),
+        rewrite_requests=tuple(recorder.rewrite_requests),
+        answer_requests=tuple(recorder.answer_requests),
+        answer_results=tuple(recorder.answer_results),
+        answer_attempts=len(recorder.answer_requests),
+        elapsed_ms=int((monotonic() - start) * 1000),
+        execution_error=error,
+    )
+
+
 async def _observe(
     pool: DatabasePool,
     job: WorkJob,
@@ -136,12 +153,16 @@ async def exercise_regressions(
         for case in scenarios:
             owner = uuid4()
             parents: dict[str, UUID] = {}
+            unavailable_parents: set[str] = set()
             histories: dict[str, list[ContextMessage]] = {alias: [] for alias in case.conversations}
             blocked: set[str] = set()
             observations = []
             for alias in case.conversations:
-                parent = await repo.create(owner, uuid4(), manifest.corpus_version)
-                parents[alias] = parent.id
+                try:
+                    parent = await repo.create(owner, uuid4(), manifest.corpus_version)
+                    parents[alias] = parent.id
+                except Exception:
+                    unavailable_parents.add(alias)
             for turn in case.turns:
                 expected_history = tuple(histories[turn.conversation])
                 if turn.conversation in blocked:
@@ -150,34 +171,44 @@ async def exercise_regressions(
                     )
                 else:
                     recorder = CallRecorder()
-                    rewrite, answer = providers(case, turn)
-                    rag = RAGServices(
-                        RecordingRewriter(rewrite, recorder), normalizer, expander, inference
-                    )
-                    accepted = await repo.accept(
-                        owner, parents[turn.conversation], uuid4(), turn.question
-                    )
-                    job = await repo.claim(uuid4(), conversation_id=parents[turn.conversation])
-                    if job is None or job.turn_id != accepted.id:
-                        raise RegressionError("regression_claim_failed")
                     start = monotonic()
-                    error = None
+                    stage = "conversation_create_failed"
                     try:
-                        await process_job(
-                            pool, job, settings, RecordingAnswer(answer, recorder), rag=rag
+                        if turn.conversation in unavailable_parents:
+                            raise RegressionError("regression_conversation_unavailable")
+                        stage = "provider_setup_failed"
+                        rewrite, answer = providers(case, turn)
+                        rag = RAGServices(
+                            RecordingRewriter(rewrite, recorder), normalizer, expander, inference
+                        )
+                        stage = "accept_failed"
+                        accepted = await repo.accept(
+                            owner, parents[turn.conversation], uuid4(), turn.question
+                        )
+                        stage = "claim_failed"
+                        job = await repo.claim(uuid4(), conversation_id=parents[turn.conversation])
+                        if job is None or job.turn_id != accepted.id:
+                            raise RegressionError("regression_claim_failed")
+                        error = None
+                        try:
+                            await process_job(
+                                pool, job, settings, RecordingAnswer(answer, recorder), rag=rag
+                            )
+                        except Exception:
+                            error = "pipeline_failed"
+                        stage = "observation_failed"
+                        observation = await _observe(
+                            pool,
+                            job,
+                            case.id,
+                            turn,
+                            recorder,
+                            sections,
+                            int((monotonic() - start) * 1000),
+                            error,
                         )
                     except Exception:
-                        error = "pipeline_failed"
-                    observation = await _observe(
-                        pool,
-                        job,
-                        case.id,
-                        turn,
-                        recorder,
-                        sections,
-                        int((monotonic() - start) * 1000),
-                        error,
-                    )
+                        observation = _failed_observation(case.id, turn, recorder, start, stage)
                     if (
                         observation.execution_error
                         or observation.result is None

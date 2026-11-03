@@ -110,6 +110,51 @@ def test_valid_observation_passes_all_four_boundaries() -> None:
     )
 
 
+@pytest.mark.parametrize("field", ["content", "section_hash", "title", "corpus_version"])
+def test_provider_evidence_must_match_approved_sections(field: str) -> None:
+    """Correct section identifiers cannot hide changed provider-facing source material."""
+    from veritycx.service.retrieval_checks import judge_turn
+
+    turn, observed, catalog = overview()
+    request = observed.answer_requests[0]
+    altered = request.evidence[0].model_copy(
+        update={field: "0" * 64 if field == "section_hash" else "changed"}
+    )
+    observed = replace(
+        observed,
+        answer_requests=(
+            request.model_copy(update={"evidence": (altered, *request.evidence[1:])}),
+        ),
+    )
+    verdict = judge_turn(turn, observed, expected_history=(), catalog_index=catalog)
+    assert not verdict.passed
+    assert "evidence_mismatch" in verdict.retrieval.reasons
+
+
+def test_provider_coverage_must_match_independent_catalog_truth() -> None:
+    """An accurate journal cannot hide false coverage supplied to the answer model."""
+    from veritycx.service.retrieval_checks import judge_turn
+
+    turn, observed, catalog = overview()
+    request = observed.answer_requests[0]
+    assert request.search_context is not None
+    context = request.search_context.model_copy(
+        update={
+            "coverage": CategoryCoverage(
+                eligible_document_count=4,
+                represented_document_count=3,
+                coverage_truncated=True,
+            )
+        }
+    )
+    observed = replace(
+        observed, answer_requests=(request.model_copy(update={"search_context": context}),)
+    )
+    verdict = judge_turn(turn, observed, expected_history=(), catalog_index=catalog)
+    assert not verdict.passed
+    assert "coverage_mismatch" in verdict.retrieval.reasons
+
+
 @pytest.mark.parametrize(
     "change,reason",
     [

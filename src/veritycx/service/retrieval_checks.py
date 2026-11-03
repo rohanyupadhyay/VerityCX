@@ -7,7 +7,7 @@ from typing import Literal
 
 from veritycx.conversations.models import ClosedModel, TurnResult
 from veritycx.knowledge.models import CatalogEntry, EvidenceSection
-from veritycx.knowledge.scope import OVERVIEW_SCOPE_NOTE
+from veritycx.knowledge.scope import OVERVIEW_SCOPE_NOTE, CategoryCoverage
 from veritycx.persistence.rewrites import RewriteRow
 from veritycx.providers.protocol import ContextMessage, ProviderRequest, ProviderResult
 from veritycx.providers.rewrite import RewriteRequest, RewriteResult, SearchRewrite
@@ -194,6 +194,18 @@ def judge_turn(
             rewrite_errors.append("journal_mismatch")
     if isinstance(rewrite, SearchRewrite):
         scope = rewrite.search_scope()
+        expected_coverage = None
+        if scope.scope == "category_overview":
+            eligible_ids = {
+                entry.document_id for entry in catalog_index if entry.category in scope.categories
+            }
+            represented_ids = {s.document_id for s in observed.selected_sections}
+            if represented_ids <= eligible_ids:
+                expected_coverage = CategoryCoverage(
+                    eligible_document_count=len(eligible_ids),
+                    represented_document_count=len(represented_ids),
+                    coverage_truncated=len(represented_ids) < len(eligible_ids),
+                )
         if scope not in turn.expected.scopes:
             rewrite_errors.append("scope_mismatch")
         evidence_errors.extend(check_evidence(turn.expected.evidence, observed.selected_sections))
@@ -255,8 +267,13 @@ def judge_turn(
             ):
                 evidence_errors.append("coverage_mismatch")
         for request in observed.answer_requests:
-            if tuple(s.section_id for s in request.evidence) != ids:
+            if request.evidence != observed.selected_sections:
                 evidence_errors.append("evidence_mismatch")
+            if (
+                request.search_context is None
+                or request.search_context.coverage != expected_coverage
+            ):
+                evidence_errors.append("coverage_mismatch")
             if (
                 request.rewritten_query != rewrite.query
                 or request.search_context is None

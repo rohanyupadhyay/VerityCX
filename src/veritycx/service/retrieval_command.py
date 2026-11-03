@@ -41,7 +41,7 @@ def _child_environment(env: Mapping[str, str], *, live: bool) -> dict[str, str]:
             "LANGSMITH_API_KEY",
             "LANGCHAIN_API_KEY",
         }
-        and not name.startswith(("VERITYCX_CHATWOOT", "CHATWOOT_"))
+        and not name.startswith(("PG", "VERITYCX_CHATWOOT", "CHATWOOT_"))
     }
     if not live:
         child.pop("OPENAI_API_KEY", None)

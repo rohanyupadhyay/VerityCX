@@ -1,7 +1,9 @@
 """Run the authored quality inventory through actual fenced worker execution."""
 
 import json
+from collections.abc import Awaitable, Callable
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -67,7 +69,76 @@ def test_all_regression_scenarios_use_real_pipeline(test_database_url: str) -> N
     run_async(exercise())
 
 
-@pytest.mark.parametrize("fault", ["missing_pine", "lost_history"])
+@pytest.mark.parametrize("stage", ["create", "accept", "claim", "observe"])
+def test_storage_failure_keeps_prior_results_and_unaffected_conversations(
+    test_database_url: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, stage: str
+) -> None:
+    """A single failed storage operation cannot discard paid calls or stop independent cases."""
+    import veritycx.service.retrieval_reports as reports
+    import veritycx.service.retrieval_runner as runner
+    from veritycx.persistence.repository import Repository
+    from veritycx.service.retrieval_cases import load_cases, load_replays
+    from veritycx.service.retrieval_providers import replay_provider_factory
+
+    target = runner if stage == "observe" else Repository
+    name = "_observe" if stage == "observe" else stage
+    original_operation: Callable[..., Awaitable[object]] = getattr(target, name)
+    calls = 0
+
+    async def fail_once(*args: object, **kwargs: object) -> object:
+        """Inject one storage-boundary failure after a complete successful scenario."""
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("PRIVATE_STORAGE_FAILURE_CANARY")
+        return await original_operation(*args, **kwargs)
+
+    monkeypatch.setattr(target, name, fail_once)
+    monkeypatch.setattr(reports, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(reports, "EVIDENCE_ROOT", tmp_path / "reports")
+
+    async def exercise() -> None:
+        manifest, evidence = active_corpus("synthetic")
+        cases = load_cases()
+        by_id = {case.id: case for case in cases.scenarios}
+        selected = tuple(
+            by_id[name]
+            for name in ("plural-cedar-card", "followup-interleaved", "broad-cards-original")
+        )
+        async with database_pool(test_database_url) as pool:
+            result = await runner.exercise_regressions(
+                pool,
+                Settings(),
+                selected,
+                manifest=manifest,
+                evidence=evidence,
+                providers=replay_provider_factory(load_replays(cases, manifest)),
+                mode="offline",
+            )
+        assert not result.passed
+        assert [case.case_id for case in result.scenarios] == [case.id for case in selected]
+        first, interleaved, last = result.scenarios
+        assert first.turns[0][1].passed and last.turns[0][1].passed
+        failed, independent, dependent, independent_followup = interleaved.turns
+        assert failed[1].execution.status == "fail"
+        assert independent[1].passed and independent_followup[1].passed
+        assert dependent[1].execution.reasons == ("dependency_failed",)
+        assert dependent[1].rewrite.status == "not_run"
+        observation = failed[0]
+        assert len(observation.rewrite_requests) == (1 if stage == "observe" else 0)
+        assert len(observation.answer_requests) == (1 if stage == "observe" else 0)
+        assert len(observation.answer_results) == (1 if stage == "observe" else 0)
+        assert observation.answer_attempts == len(observation.answer_requests)
+        summary = reports.public_summary(result)
+        assert summary["scenario_count"] == 3 and summary["turn_count"] == 6
+        assert summary["provider_requests"] == (10 if stage == "observe" else 8)
+        private = reports.write_review_report(result).read_text()
+        assert "PRIVATE_STORAGE_FAILURE_CANARY" not in private + json.dumps(summary)
+
+    run_async(exercise())
+
+
+@pytest.mark.parametrize("fault", ["missing_pine", "lost_history", "wrong_body"])
 def test_runner_detects_pipeline_faults_despite_scripted_answers(
     test_database_url: str, monkeypatch: pytest.MonkeyPatch, fault: str
 ) -> None:
@@ -80,11 +151,19 @@ def test_runner_detects_pipeline_faults_despite_scripted_answers(
 
     def missing(*args: object, **kwargs: object) -> RetrievalSelection:
         result = original(*args, **kwargs)  # type: ignore[arg-type]
+        if fault == "wrong_body":
+            return replace(
+                result,
+                sections=tuple(
+                    s.model_copy(update={"content": "A changed policy body."})
+                    for s in result.sections
+                ),
+            )
         return replace(
             result, sections=tuple(s for s in result.sections if s.document_id != "policy-16")
         )
 
-    if fault == "missing_pine":
+    if fault != "lost_history":
         monkeypatch.setattr(graph, "select_scoped_evidence", missing)
     else:
         monkeypatch.setattr(graph, "recent_context", lambda _: ())
@@ -92,7 +171,7 @@ def test_runner_detects_pipeline_faults_despite_scripted_answers(
     async def exercise() -> None:
         manifest, evidence = active_corpus("synthetic")
         cases = load_cases()
-        selected = ["broad-cards-original"] if fault == "missing_pine" else ["followup-interleaved"]
+        selected = ["followup-interleaved"] if fault == "lost_history" else ["broad-cards-original"]
         async with database_pool(test_database_url) as pool:
             result = await exercise_regressions(
                 pool,
@@ -116,6 +195,10 @@ def test_runner_detects_pipeline_faults_despite_scripted_answers(
             )
             for reason in boundary.reasons
         ]
-        assert ("missing_evidence" if fault == "missing_pine" else "history_mismatch") in labels
+        assert {
+            "missing_pine": "missing_evidence",
+            "lost_history": "history_mismatch",
+            "wrong_body": "evidence_mismatch",
+        }[fault] in labels
 
     run_async(exercise())

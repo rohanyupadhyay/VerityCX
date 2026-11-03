@@ -101,6 +101,12 @@ def test_child_environment_is_test_only_and_parent_is_unchanged(
         "LANGCHAIN_API_KEY": "TRACE_CANARY",
         "VERITYCX_MIGRATION_DATABASE_URL": "ADMIN_CANARY",
         "VERITYCX_CHATWOOT_API_TOKEN": "CHATWOOT_CANARY",
+        "PGHOSTADDR": "192.0.2.1",
+        "PGSERVICE": "external",
+        "PGSERVICEFILE": "/private/service.conf",
+        "PGOPTIONS": "-c search_path=external",
+        "PGPASSFILE": "/private/pgpass",
+        "PGDATABASE": "external",
     }
     result = retrieval_command.run_regressions(env, case_ids=["broad-cards-original"])
     assert result["automated_passed"] is True
@@ -109,6 +115,8 @@ def test_child_environment_is_test_only_and_parent_is_unchanged(
     assert isinstance(child_env, dict)
     assert child_env["VERITYCX_DATABASE_URL"] == TEST_DSN
     assert child_env["LANGSMITH_TRACING"] == "false"
+    assert not any(name.startswith("PG") for name in child_env)
+    assert env["PGHOSTADDR"] == "192.0.2.1"
     assert not any(
         "CANARY" in str(value)
         for name, value in child_env.items()
