@@ -39,3 +39,9 @@ false coverage, lost context, changed questions, invalid citations and budget
 failures. Report tests cover private file ownership/permissions, non-overwrite,
 stdout canaries and pending semantic acceptance. The combined multi-category
 last-slot related-group case closes the earlier selector coverage gap.
+
+`test_retrieval_metrics.py` checks literal partial-gold arithmetic, unique-document
+counts, unknown labels and overview constraints. `test_retrieval_comparison.py`
+runs the real retained selectors and checks input exclusions, timing/quality
+sample sizes, paired outcomes, corrupted bodies/IDs, exceptions, nondeterminism
+and source-byte changes during measurement.

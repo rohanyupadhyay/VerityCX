@@ -78,3 +78,11 @@ Run `uv run ruff check src/veritycx/service`, `uv run mypy` and
 `uv run pytest tests/support -m "not support_db and not live"` from the repository root.
 Native database tests additionally require the dedicated test runtime/admin DSNs described in
 [quickstart](../../../../specs/002-durable-knowledge-support/quickstart.md).
+
+`retrieval_metrics.py` computes independent document metrics only for explicitly
+labeled evidence. `retrieval_comparison.py` runs retained selector components on
+raw probes and supplied authored rewrites/scopes without storage or providers.
+Its per-input/version passage caches and shared language resources are explicit;
+missing labels, exclusions, failures and metric denominators stay visible.
+`retrieval_comparison_report.py` renders the same observations as Markdown through
+the standalone comparison CLI. These results cannot establish live model quality.

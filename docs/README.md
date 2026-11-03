@@ -72,3 +72,9 @@ and [implementation plan](superpowers/plans/2026-10-29-bank-information.md) docu
 the implemented service pages, complete policies, shared search, and contextual
 VerityCX entry points under `/bank`. Content comes from the active approved corpus;
 missing bank facts remain absent. Public browsing works independently of chat.
+
+The [step 4 offline measurement design](superpowers/specs/2026-11-03-rag-retrieval-measurement-step-4-design.md)
+and [implementation plan](superpowers/plans/2026-11-03-rag-retrieval-measurement-step-4.md)
+define controlled comparisons of retained retrieval versions. Raw and authored-query
+tracks, partial gold labels, uncached/warmed timing and known-regression limitations
+remain explicit. Measured evidence is recorded under `evaluations/`.

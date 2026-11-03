@@ -92,14 +92,14 @@ create dated docs/evaluations/2026-11-03-retrieval-comparison.md.
 **Interfaces:** CLI consumes ComparisonReport; render_markdown(report)->str;
 JSON schema stays strictly content-free. Only explicit --markdown writes a file.
 
-- [ ] Add actual CLI tests for named-case offline execution with no DB/key,
+- [x] Add actual CLI tests for named-case offline execution with no DB/key,
   bounded/duplicate/unknown arguments, absence of query/body/key canaries in JSON,
   metadata/sample denominators, exclusive Markdown creation and finite errors.
   Test renderer with assessed and unassessed metrics and execution failures.
-- [ ] Run uv run pytest tests/support/contract/test_retrieval_comparison_cli.py -q.
+- [x] Run uv run pytest tests/support/contract/test_retrieval_comparison_cli.py -q.
   Expected RED then implement GREEN. Baseline quality failures alone remain exit0;
   current v3 assessed failures or any execution failure return1.
-- [ ] Document commands, provenance, warm/cold labels, partial gold, supplied
+- [x] Document commands, provenance, warm/cold labels, partial gold, supplied
   rewrite/scope limits and descriptive unsupported retrieval. No embeddings
   decision is justified solely by a known regression set.
 - [ ] Run maintained lock/resources/environment/Ruff/strict-mypy/Markdown/YAML

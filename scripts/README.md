@@ -252,3 +252,31 @@ equality. Missing, extra, duplicate, malformed, wrong-case, unsafe-placeholder, 
 findings exit `1` with sorted name-only output; success exits `0` with
 `environment_contract_ok`. The checker never opens `.env`. Correct the named source/template drift,
 and use only empty or obvious synthetic placeholders in the tracked example.
+
+## Offline retrieval comparison
+
+`uv run python scripts/compare_retrieval.py` compares retained v1 keyword, v2
+normalized/WordNet and v3 category-aware selectors using the frozen regression
+inputs. It needs the pinned language resources, but no model key, PostgreSQL,
+corpus activation or running app. It does not read root dotenv configuration.
+Use repeatable `--case broad-cards-original`, `--repetitions 1` (range 1–20,
+default 5), and optional `--markdown NEW_PATH` for an exclusive new report file.
+JSON stdout excludes questions, policy bodies and environment contents.
+
+Raw probes and supplied authored rewrites/scopes are separate tracks; these
+measure components, not model rewriting or answer correctness. Quality counts
+use unique documents and explicit labels only: unknown is null/unassessed, not
+perfect precision or a passing safety test. Partial overview coverage and each
+metric's denominator remain visible. Nonempty retrieval for an unsupported
+question is descriptive and does not establish an incorrect answer.
+
+Shared language setup, first-call uncached passage timing and repeated warmed
+median/nearest-rank p95 are reported separately. Passage caches are isolated per
+input/version; the spaCy pipeline and WordNet reader are shared in the serial
+process. Repetition does not increase quality sample size. This is neither a
+cold-service nor a production latency measurement. Input/code hashes, corpus,
+Git state and platform pin provenance; changed bytes during a run are rejected.
+Exit0 permits expected baseline quality failures; exit1 signals execution or
+current-v3 assessed contract failures, or invalid input/output configuration.
+The known regression set is not a held-out benchmark and cannot by itself
+justify adding embeddings. Paid/model semantic evaluation remains separate.

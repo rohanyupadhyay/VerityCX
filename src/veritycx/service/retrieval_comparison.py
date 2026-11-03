@@ -12,8 +12,10 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter_ns
-from typing import Literal
+from typing import Literal, Self
 from uuid import uuid4
+
+from pydantic import model_validator
 
 from veritycx import PROJECT_ROOT
 from veritycx.conversations.models import ClosedModel, VersionedModel
@@ -58,6 +60,13 @@ MODULES = (
     "knowledge/synonyms.py",
     "service/retrieval_metrics.py",
     "service/retrieval_comparison.py",
+    "service/retrieval_checks.py",
+    "service/retrieval_cases.py",
+    "knowledge/catalog.py",
+    "knowledge/manifest.py",
+    "knowledge/models.py",
+    "knowledge/resources.py",
+    "knowledge/scope.py",
 )
 
 
@@ -163,6 +172,15 @@ class ComparisonProvenance(ClosedModel):
     shared_setup_ms: float
 
 
+def _passed(rows: Sequence[ComparisonRow]) -> bool:
+    """Earlier baseline quality failures are data; current and execution regressions fail."""
+    return bool(rows) and all(
+        row.error is None
+        and not (row.version == "v3" and row.metrics and row.metrics.contract_passed is False)
+        for row in rows
+    )
+
+
 class ComparisonReport(VersionedModel):
     """A component comparison cannot establish model or answer semantic acceptance."""
 
@@ -184,15 +202,14 @@ class ComparisonReport(VersionedModel):
     exclusions: tuple[ExcludedInput, ...]
     groups: tuple[GroupSummary, ...]
     pairs: tuple[PairedSummary, ...]
+    passed: bool
 
-    @property
-    def passed(self) -> bool:
-        """Earlier baseline quality failures are data, while execution/current regressions fail."""
-        return bool(self.rows) and all(
-            row.error is None
-            and not (row.version == "v3" and row.metrics and row.metrics.contract_passed is False)
-            for row in self.rows
-        )
+    @model_validator(mode="after")
+    def coherent(self) -> Self:
+        """A persisted success flag must agree with every visible execution/current result."""
+        if self.passed != _passed(self.rows):
+            raise ValueError("invalid_comparison_outcome")
+        return self
 
 
 @dataclass(frozen=True)
@@ -534,4 +551,5 @@ def compare_retrieval(
         exclusions=tuple(excluded),
         groups=summarize_rows(rows),
         pairs=_pairs(rows),
+        passed=_passed(rows),
     )
