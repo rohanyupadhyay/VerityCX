@@ -47,14 +47,14 @@ minimum_category_documents=None). Metrics expose contract_passed bool|None,
 required_document_recall, required_document_rr, allowed_document_precision,
 allowed_document_coverage and finite reason labels.
 
-- [ ] Write literal tests: two sections of docA count once, required{A,B} with
+- [x] Write literal tests: two sections of docA count once, required{A,B} with
   selected{A,X} recall0.5/RR1; allowed{A,B} precision0.5/coverage0.5; unknown
   allowed set => null precision; empty selection => null precision, recall0;
   unlabeled => null contract; explicit expected-empty with selected evidence
   fails; overview wrong counts/category balance fails despite allowed IDs.
-- [ ] Run uv run pytest tests/support/unit/test_retrieval_metrics.py -q.
+- [x] Run uv run pytest tests/support/unit/test_retrieval_metrics.py -q.
   Expected RED for missing interface before code; then implement and GREEN.
-- [ ] Commit feat: add independent retrieval comparison metrics.
+- [x] Commit feat: add independent retrieval comparison metrics.
 
 ## Task 2: Controlled comparison runner
 
