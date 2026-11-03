@@ -225,6 +225,10 @@ def write_review_report(run: RegressionRun) -> Path:
                     if observed.rewrite
                     else None,
                     "result": observed.result.model_dump(mode="json") if observed.result else None,
+                    "answer_results": [
+                        result.model_dump(mode="json") if result else None
+                        for result in observed.answer_results
+                    ],
                     "selected_source_ids": [s.section_id for s in observed.selected_sections],
                     "verdict": verdict.model_dump(mode="json"),
                     "execution_failed": bool(observed.execution_error),

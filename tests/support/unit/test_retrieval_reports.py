@@ -117,6 +117,27 @@ def test_report_cannot_escape_its_owned_root(
     assert not (tmp_path / "escape").exists()
 
 
+def test_failed_durable_observation_retains_actual_answer_outputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A paid answer remains inspectable even when its committed result cannot be read."""
+    from veritycx.service import retrieval_reports
+
+    monkeypatch.setattr(retrieval_reports, "EVIDENCE_ROOT", tmp_path / "reports")
+    monkeypatch.setattr(retrieval_reports, "PROJECT_ROOT", tmp_path)
+    run = sample_run()
+    observed, _ = run.scenarios[0].turns[0]
+    observed = replace(observed, result=None, execution_error="observation_failed")
+    turn, _, catalog = overview()
+    verdict = judge_turn(turn, observed, expected_history=(), catalog_index=catalog)
+    run = replace(run, scenarios=(ScenarioResult("broad-cards-original", ((observed, verdict),)),))
+    report = json.loads(retrieval_reports.write_review_report(run).read_text())
+    assert report["turns"][0]["result"] is None
+    expected = [r.model_dump(mode="json") if r else None for r in observed.answer_results]
+    assert report["turns"][0]["answer_results"] == expected
+    assert not report["summary"]["automated_passed"]
+
+
 @pytest.mark.skipif(os.name != "posix", reason="POSIX symlink semantics")
 def test_report_allows_a_declared_workspace_through_a_system_symlink(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

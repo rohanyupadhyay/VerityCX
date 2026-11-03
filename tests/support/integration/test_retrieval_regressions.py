@@ -134,6 +134,12 @@ def test_storage_failure_keeps_prior_results_and_unaffected_conversations(
         assert summary["provider_requests"] == (10 if stage == "observe" else 8)
         private = reports.write_review_report(result).read_text()
         assert "PRIVATE_STORAGE_FAILURE_CANARY" not in private + json.dumps(summary)
+        failed_detail = next(
+            detail
+            for detail in json.loads(private)["turns"]
+            if detail["case_id"] == "followup-interleaved" and detail["turn_id"] == "t1"
+        )
+        assert len(failed_detail["answer_results"]) == (1 if stage == "observe" else 0)
 
     run_async(exercise())
 
