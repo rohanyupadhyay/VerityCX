@@ -45,3 +45,8 @@ scenario selection, child-only test configuration, inherited credential/tracing
 removal, complete summary validation and owned cleanup on interruption. It checks
 that child startup exceptions and stdout/stderr cannot expose private canaries.
 The existing offline/grounding/demo command contracts remain in place.
+
+`test_retrieval_comparison_cli.py` runs the offline component-comparison command
+with unreachable storage and no provider key, checks finite errors/privacy and
+exclusive Markdown creation, and verifies that current execution failures cannot
+be reported as successful comparisons. It does not call a paid model.
