@@ -89,3 +89,14 @@ privacy. Run maintained static checks, the full offline suite and actual default
 and named-case comparisons. Review the completed branch once, fix Important
 findings with reproducing tests, and report the actual measured differences and
 remaining limits. Keep the running app unchanged and keep integration separate.
+
+## Execution completed (2026-11-03)
+
+The accepted offline-first increment is implemented on a feature branch. Retained
+selectors, partial-gold metrics, two controlled input tracks, explicit exclusions,
+repeatable timing, provenance and safe CLI/reporting are complete. The final
+post-review suite passed 672 tests and both actual default/named comparison commands
+passed. The Important parser-error disclosure was reproduced and fixed; the Minor
+clarification-only outcome explanation remains deferred. Ten execution/review
+rulings, complete verification and the measured report are recorded in the plan.
+No app activation, paid run, push or merge is included in this increment.

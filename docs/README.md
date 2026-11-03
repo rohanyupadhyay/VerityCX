@@ -78,3 +78,8 @@ and [implementation plan](superpowers/plans/2026-11-03-rag-retrieval-measurement
 define controlled comparisons of retained retrieval versions. Raw and authored-query
 tracks, partial gold labels, uncached/warmed timing and known-regression limitations
 remain explicit. Measured evidence is recorded under `evaluations/`.
+
+The [dated offline retrieval comparison](evaluations/2026-11-03-retrieval-comparison.md)
+records the actual v1/v2/v3 measurements, per-case outcomes, exclusions and limits.
+It is a known-regression component comparison; broader claims require independent
+labels and held-out evaluation.

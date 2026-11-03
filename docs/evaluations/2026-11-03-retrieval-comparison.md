@@ -1,6 +1,6 @@
 # Offline retrieval comparison
 
-Generated: 2026-11-03T13:01:15.908536+00:00. Run: 6474c5d1-955b-47d9-9837-52e1ec0dc482.
+Generated: 2026-11-03T13:20:34.391988+00:00. Run: 6010a095-65bc-4301-a6d5-4746a1313486.
 
 This is a known-regression component comparison, not held-out evaluation and not answer correctness.
 Raw questions use authored scopes; the scripted_rewrite track supplies authored queries and scopes.
@@ -10,7 +10,7 @@ not a reconstruction of its historical whole-system behavior. No models or datab
 The spaCy pipeline and WordNet reader are shared. Passage caches are separate per input/version.
 Uncached passage timing measures the first selector call after language initialization; warmed
 timing repeats the same input with its passage cache populated. Neither is production turn latency.
-Shared language setup: 2979.431 ms. Warm repetitions per input/version: 5.
+Shared language setup: 3022.749 ms. Warm repetitions per input/version: 5.
 
 ## Quality
 
@@ -47,12 +47,12 @@ Variant order rotates across inputs and repetitions. Measurements are serial and
 
 | Track | Version | Uncached passages | Warmed |
 | --- | --- | --- | --- |
-| raw | v1 | 0.351 / 0.533 / 19 | 0.352 / 0.570 / 95 |
-| scripted_rewrite | v1 | 0.370 / 0.630 / 29 | 0.370 / 0.734 / 145 |
-| raw | v2 | 49.457 / 131.007 / 19 | 3.501 / 9.004 / 95 |
-| scripted_rewrite | v2 | 50.082 / 63.000 / 29 | 3.439 / 5.607 / 145 |
-| raw | v3 | 48.272 / 54.431 / 19 | 3.491 / 8.524 / 95 |
-| scripted_rewrite | v3 | 48.878 / 56.693 / 29 | 3.335 / 5.288 / 145 |
+| raw | v1 | 0.362 / 0.516 / 19 | 0.341 / 0.467 / 95 |
+| scripted_rewrite | v1 | 0.352 / 0.474 / 29 | 0.344 / 0.487 / 145 |
+| raw | v2 | 48.169 / 113.945 / 19 | 3.266 / 8.291 / 95 |
+| scripted_rewrite | v2 | 48.316 / 51.782 / 29 | 3.137 / 4.359 / 145 |
+| raw | v3 | 47.245 / 59.444 / 19 | 3.187 / 8.713 / 95 |
+| scripted_rewrite | v3 | 47.939 / 52.965 / 29 | 3.116 / 4.660 / 145 |
 
 ## Family breakdown
 
@@ -270,7 +270,7 @@ uv run python scripts/compare_retrieval.py --repetitions 5
 - Fixture SHA-256: 3117b8aeca7f6600d2858e81acd77fd4fce43f8887bac72cf528cf47cf690766
 - Replay SHA-256: ecea0ac1b1f27e370abe63fc62b559c7f1bf12ff2f16f1a3f771ff107d9b44d5
 - Resource manifest SHA-256: 716d14b9bb8c872e357d479ef22a96dec0f41712595196399d26acce62893e23
-- Git revision: d464490ee1e0f0b0e05a366610f2181ccfbed29c; working tree dirty: False
+- Git revision: 611c895f8fdceb0ca1e83f9352c1c44dbb7437c1; working tree dirty: False
 - Python: 3.12.3; platform: linux
 - Provider requests: 0; model usage, monetary cost and semantic acceptance: unmeasured.
 

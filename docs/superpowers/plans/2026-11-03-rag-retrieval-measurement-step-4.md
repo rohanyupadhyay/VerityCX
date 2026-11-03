@@ -112,7 +112,7 @@ JSON schema stays strictly content-free. Only explicit --markdown writes a file.
 
 ## Global finishing gate
 
-- [ ] Perform one fresh whole-branch review using Review Focus and ledger; fix
+- [x] Perform one fresh whole-branch review using Review Focus and ledger; fix
   Important findings RED→GREEN with a green full suite. No automatic re-review.
   Preserve all rulings/minors in this plan before removing its scratch directory.
 
@@ -131,23 +131,23 @@ new timing controls never alter production caching or resource initialization.
 
 ## Verification record (2026-11-03)
 
-- Baseline337database-free support tests passed,123deselected,1existingwarning.
+- Baseline: 337 database-free support tests passed,123 deselected,1 existing warning.
 - Independent metrics RED8→GREEN8; comparison RED9failures/3fixtureerrors→GREEN12,
-  then changed-fixture test RED→GREEN; focused combined31tests passed in53.32sec.
+  then changed-fixture test RED→GREEN; focused combined 31 tests passed in 53.32 seconds.
 - Initial six invalid-CLI checks were too weak (a missing script also failed).
   They now require the exact parser/selection category. Inaccessible output
   preflight reproduced an unsanitized PermissionError and passed after the guard.
-- Maintained lock/resources/environment/Ruff200files/mypy176files/Markdown and
+- Maintained lock/resources/environment/Ruff (200 files), strict mypy (176 files)/Markdown and
   two workflow YAML checks passed. Full offline suite: **668 passed**, one existing
   Starlette/AnyIO warning, **445.56 seconds**. No earlier gate failure was hidden.
-- Existing load gate:30turns,p95=2.558153seconds,zero leaks,scan1sec,target5sec.
+- Existing load gate: 30 turns,p95=2.558153seconds, zero leaks, one-second scans and five-second target.
 - Final default comparison ran alone after tests on clean source commit
-  d464490ee1e0f0b0e05a366610f2181ccfbed29c:144variant rows,14explicit track
-  exclusions,5warm samples/input/version,zero provider requests. Named original
-  cards subset also passed with6rows. The report preserves hashes and unknowns.
-- Raw contracts: v1 12/17, v2 13/17, v3 17/17, plus2unassessed inputs.
-  Authored-rewrite contracts: v1/v2 22/26, v3 26/26, plus3unassessed inputs.
-  Paired v3 improvements:5/4 on raw againstv1/v2,4/4 on authored rewrites;
+  d464490ee1e0f0b0e05a366610f2181ccfbed29c: 144 variant rows, 14 explicit track
+  exclusions, 5 warm samples/input/version,zero provider requests. Named original
+  cards subset also passed with 6 rows. The report preserves hashes and unknowns.
+- Raw contracts: v1 12/17, v2 13/17, v3 17/17, plus 2 unassessed inputs.
+  Authored-rewrite contracts: v1/v2 22/26, v3 26/26, plus 3 unassessed inputs.
+  Paired v3 improvements: 5/4 on raw against v1/v2, 4/4 on authored rewrites;
   zero paired contract regressions. These tracks overlap and are not independent
   held-out questions. Initial timing collected during static checks was discarded
   as a final measurement; only the separate quiet run is the dated report.
@@ -155,3 +155,39 @@ new timing controls never alter production caching or resource initialization.
   credential files were unchanged. The benchmark never opens storage; existing
   native tests use their dedicated database. No paid evaluation, app restart,
   push or merge is included. Final review is the remaining global gate.
+
+## Final review and verified state
+
+The fresh gpt-6-astra whole-branch review found no Critical issues, one Important
+parser disclosure and one nonblocking clarification-only reporting gap. Default
+argparse errors could echo an unknown option value or unexpected positional text.
+Three subprocess canary cases reproduced the disclosure (RED), then passed with
+finite parser error categories. Normal help and bounded repetition errors remain
+available. All 14 CLI checks passed; Ruff and full strict mypy (176 files) passed.
+
+The complete post-fix suite passed **672 tests**, one existing Starlette/AnyIO
+warning, in **456.56 seconds**. No automatic second review was dispatched.
+The unchanged 30-turn load gate measured p95 **2.762761 seconds**, zero leaks and one-second scans.
+
+The quiet default comparison and named original-cards comparison were rerun after
+tests on clean source commit 611c895. The report was intentionally refreshed from
+that new run; the CLI itself still never overwrites an existing report path.
+The three retained algorithm implementations and all quality outcomes are unchanged:
+raw 12/17,13/17,17/17; authored-query 22/26,22/26,26/26; zero paired regressions.
+Unknown/unassessed inputs and 14 exclusions remain explicit. The source commit,
+hashes, full timing samples and machine context are in the JSON evidence.
+
+All implementation and global verification gates are complete. The app was not
+restarted or changed. Paid-model quality, held-out validation and integration are
+outside this approved offline increment.
+
+### Final reviewer exclusions and deferred item
+
+- Final: minor (deferred): valid clarification-only selection has zero rows, two exclusions and exit1 without a finite no_applicable_inputs reason; conservative empty-run gating stands, but document/test that outcome more explicitly later.
+- Final: Ruling: actual model rewriting/history/answer factuality remains outside offline comparison — authored inputs intentionally control component inputs — cost: actual model interpretation and answer fidelity remain unverified by these measurements.
+- Final: Ruling: unsupported-answer safety remains unmeasured — source presence and incomplete labels cannot establish safe abstention — cost: nonempty unsupported retrieval cannot be interpreted as a false answer or proof of safety.
+- Final: Ruling: held-out generalization and the embeddings decision remain deferred — the inventory already informed the fixes — cost: descriptive improvements do not justify broad effectiveness or semantic-search claims.
+- Final: Ruling: production latency/concurrency/HTTP/storage/application integration remain outside this benchmark — serial component timings isolate retrieval and the app is unchanged — cost: no production latency/SLA or new integration guarantee follows.
+- Final: Ruling: paid usage/cost/provider behavior remains unmeasured — no provider is executed by offline components — cost: model token/cost and provider reliability need a separately scoped evaluation.
+- Final: Ruling: baseline relevance weaknesses remain comparison subjects — modifying retained selectors would invalidate the baseline control — cost: baseline failures remain visible rather than fixed in this increment.
+- Final: Ruling: reviewer does not independently rerun the full native/static suite — author verification is fresh and the review is read-only with focused code checks — cost: no second independent full-suite execution; author reruns the suite after the Important fix.
