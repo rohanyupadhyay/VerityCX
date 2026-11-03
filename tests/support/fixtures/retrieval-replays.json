@@ -1,0 +1,896 @@
+{
+  "schema_version": 1,
+  "turns": [
+    {
+      "case_id": "plural-cedar-card",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Tell me about the Cedar card.",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "plural-cedar-cards",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Tell me about the Cedar cards.",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "plural-hazel-fee",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Hazel foreign fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "plural-hazel-fees",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What are the Hazel foreign fees?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "para-cedar-replacement",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Cedar card replacement fee",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "para-hazel-abroad",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Hazel card foreign fee",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "para-alder-opening",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Alder savings opening deposit",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Alder savings opening deposit is 50 synthetic dollars.",
+            "evidence_ids": [
+              "policy-01:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "para-dogwood-cash",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Dogwood ATM daily limit",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Dogwood ATM daily limit is 300 synthetic dollars.",
+            "evidence_ids": [
+              "policy-04:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "para-elm-cutoff",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Elm wire transfer cutoff",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Elm wire transfer cutoff is 14:00 local time.",
+            "evidence_ids": [
+              "policy-05:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "para-grove-statements",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Grove statement delivery",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Grove statement delivery is monthly.",
+            "evidence_ids": [
+              "policy-07:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "broad-cards-original",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What cards does VerityCX offers?",
+          "scope": "category_overview",
+          "categories": [
+            "cards"
+          ]
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Pine debit activation period is 30 days.",
+            "evidence_ids": [
+              "policy-16:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "broad-cards-options",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What card options are available?",
+          "scope": "category_overview",
+          "categories": [
+            "cards"
+          ]
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Pine debit activation period is 30 days.",
+            "evidence_ids": [
+              "policy-16:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "broad-savings",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What savings products are documented?",
+          "scope": "category_overview",
+          "categories": [
+            "savings"
+          ]
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Alder savings opening deposit is 50 synthetic dollars.",
+            "evidence_ids": [
+              "policy-01:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Fir savings withdrawal notice is 2 business days.",
+            "evidence_ids": [
+              "policy-06:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Quince savings interest posting is monthly.",
+            "evidence_ids": [
+              "policy-17:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "broad-accounts",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What account policies are documented?",
+          "scope": "category_overview",
+          "categories": [
+            "accounts"
+          ]
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Birch checking monthly fee is 5 synthetic dollars.",
+            "evidence_ids": [
+              "policy-02:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Grove statement delivery is monthly.",
+            "evidence_ids": [
+              "policy-07:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Iris overdraft grace period is 1 business day.",
+            "evidence_ids": [
+              "policy-09:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Kauri account closure fee is 0 synthetic dollars.",
+            "evidence_ids": [
+              "policy-11:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Nutmeg address update processing is 2 business days.",
+            "evidence_ids": [
+              "policy-14:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Oak dormant account notice is 60 days.",
+            "evidence_ids": [
+              "policy-15:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Spruce dispute notification window is 45 days.",
+            "evidence_ids": [
+              "policy-19:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": true
+    },
+    {
+      "case_id": "broad-accounts-cards",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Which accounts and cards are documented?",
+          "scope": "category_overview",
+          "categories": [
+            "accounts",
+            "cards"
+          ]
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Birch checking monthly fee is 5 synthetic dollars.",
+            "evidence_ids": [
+              "policy-02:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Grove statement delivery is monthly.",
+            "evidence_ids": [
+              "policy-07:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Iris overdraft grace period is 1 business day.",
+            "evidence_ids": [
+              "policy-09:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Kauri account closure fee is 0 synthetic dollars.",
+            "evidence_ids": [
+              "policy-11:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Nutmeg address update processing is 2 business days.",
+            "evidence_ids": [
+              "policy-14:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Oak dormant account notice is 60 days.",
+            "evidence_ids": [
+              "policy-15:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Spruce dispute notification window is 45 days.",
+            "evidence_ids": [
+              "policy-19:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Pine debit activation period is 30 days.",
+            "evidence_ids": [
+              "policy-16:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": true
+    },
+    {
+      "case_id": "followup-cedar",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Cedar card replacement fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-cedar",
+      "turn_id": "t2",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Cedar card replacement fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-topic-change",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Cedar card replacement fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-topic-change",
+      "turn_id": "t2",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Alder savings opening deposit?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Alder savings opening deposit is 50 synthetic dollars.",
+            "evidence_ids": [
+              "policy-01:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-topic-change",
+      "turn_id": "t3",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Alder savings opening deposit?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Alder savings opening deposit is 50 synthetic dollars.",
+            "evidence_ids": [
+              "policy-01:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-ambiguous",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Tell me about Cedar and Hazel card fees.",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          },
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-ambiguous",
+      "turn_id": "t2",
+      "rewrite": {
+        "result": {
+          "disposition": "clarify",
+          "text": "Which card do you mean?"
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": null,
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-missing",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "clarify",
+          "text": "Which card do you mean?"
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": null,
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-interleaved",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Cedar card replacement fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-interleaved",
+      "turn_id": "t2",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Hazel card foreign fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-interleaved",
+      "turn_id": "t3",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Cedar card replacement fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Cedar card replacement fee is 7 synthetic dollars.",
+            "evidence_ids": [
+              "policy-03:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "followup-interleaved",
+      "turn_id": "t4",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Hazel card foreign fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "answer",
+        "claims": [
+          {
+            "text": "The synthetic Hazel card foreign fee is 2 percent.",
+            "evidence_ids": [
+              "policy-08:0001"
+            ]
+          }
+        ],
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "unsupported-product",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the Martian asteroid vault fee?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "abstain",
+        "text": "The approved policies do not document the requested product or qualifier.",
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "unsupported-business",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "Which VerityCX cards are eligible for businesses?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "abstain",
+        "text": "The approved policies do not document the requested product or qualifier.",
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "unsupported-attribute",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What cryptocurrency insurance does the Cedar card include?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": {
+        "disposition": "abstain",
+        "text": "The approved policies do not document the requested product or qualifier.",
+        "model": "scripted-answer-v1"
+      },
+      "available_claims_only": false
+    },
+    {
+      "case_id": "unsupported-absent",
+      "turn_id": "t1",
+      "rewrite": {
+        "result": {
+          "disposition": "search",
+          "query": "What is the quasar hyperdrive warranty?",
+          "scope": "focused",
+          "categories": []
+        },
+        "model": "scripted-rewrite-v1"
+      },
+      "answer": null,
+      "available_claims_only": false
+    }
+  ]
+}

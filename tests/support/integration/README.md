@@ -35,3 +35,17 @@ one-call rewrite recovery. Fresh/v2-prefix migration tests use a private native
 PostgreSQL cluster through migration_harness and stop only their owned process.
 They never downgrade/reset shared test or application storage. Missing native
 binaries are an explicit prerequisite failure rather than a silent skip.
+
+`test_retrieval_regressions.py` runs all 24 scenarios/31 turns through real scoped
+jobs, preserving same-owner interleaved conversation history. Missing-Pine and
+lost-history mutations must fail the independent checks even with scripted outputs.
+`test_historical_prompt_recovery.py` reclaims a completed historical result and
+exports unchanged unknown prompt provenance without invoking either provider.
+`test_retrieval_live_contract.py` uses real OpenAI SDK adapters through intercepted
+HTTP transports, including the child live branch and a replay-access sentinel.
+It is an offline native test, not a paid live acceptance test.
+
+`test_validation_worker_readiness.py` proves that a preceding run's fresh
+heartbeat cannot satisfy readiness for the owned load worker. The load harness
+waits for that worker's explicit identity after NLP initialization, without
+warming retrieval caches or changing the queue-latency target or scan cadence.

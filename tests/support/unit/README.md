@@ -31,3 +31,11 @@ The category suites pin shared catalog assignments, frozen v1/v2 hashes, strict
 scope contracts, document coverage, indivisible related versions and final-note
 character limits. SDK transports are mocked. These checks verify contracts and
 control flow; they do not establish live semantic grounding quality.
+
+The retrieval regression suites validate the separate case/replay inventory,
+literal evidence expectations, real raw-wording retrieval and conservative
+per-boundary verdicts. Corrupted observations exercise missing/forbidden evidence,
+false coverage, lost context, changed questions, invalid citations and budget
+failures. Report tests cover private file ownership/permissions, non-overwrite,
+stdout canaries and pending semantic acceptance. The combined multi-category
+last-slot related-group case closes the earlier selector coverage gap.

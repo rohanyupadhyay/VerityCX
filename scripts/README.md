@@ -149,6 +149,65 @@ do not certify semantic correctness. The demo uses only a previously approved of
 `setup_support_ci.py` separately initializes a fresh CI-owned native cluster and database roles; it
 refuses use outside GitHub Actions and does not reset existing clusters.
 
+## Retrieval regression validation
+
+After loading the dedicated local test environment, run:
+
+```bash
+uv run python scripts/validate_support.py --suite retrieval
+uv run python scripts/validate_support.py --suite retrieval --case broad-cards-original
+```
+
+The fixed synthetic inventory contains 24 scenarios and 31 turns across plurals,
+paraphrases, broad product questions, contextual/ambiguous follow-ups and
+unsupported requests. `--case` may be repeated for distinct named scenarios;
+unknown/duplicate IDs fail before child execution. The default uses explicit
+scripted provider outputs and the actual durable worker pipeline. It exercises
+real spaCy/WordNet and approved category selection; it does not prove live-model
+understanding or factual fidelity. The production deterministic provider keeps
+its original exact 40-case contract.
+
+The command owns one child process with test-only runtime database configuration,
+the test corpus namespace, tracing disabled and no migration/Chatwoot credentials.
+It never starts an unscoped worker or changes the running app's corpus/settings.
+Reports retain each selected case and boundary verdict; failures are not rerun.
+
+Actual model execution requires separate authorization and explicit `--live`:
+
+```bash
+uv run python scripts/validate_support.py --suite retrieval --live --case broad-cards-original
+```
+
+Use the selected provider credential. Root dotenv retains its normal non-overriding
+priority; on Linux/WSL, `env -u OPENAI_API_KEY -u OPENAI_BASE_URL` before the command
+selects the root dotenv credential instead of inherited shell values. This changes
+only that invocation's environment. There are at most 31 turns and 93 provider
+requests for the full suite (one rewrite and at most two answers per turn); a
+subset lowers the bound. There is no model judge or scenario-level retry.
+
+Exit 0 means offline automated contracts passed; exit 1 means a failed case or
+execution/configuration failure; exit 2 with a JSON report means live automated
+contracts passed with human semantic review still pending. Argument-usage errors
+retain argparse's separate non-JSON exit 2. Structured success never certifies
+that every generated fact is correct.
+
+Stdout includes case IDs, source IDs, four boundary verdicts, source/prompt/NLP
+versions, configured and adapter-reported model labels and observed token usage.
+Unavailable usage and cost remain unknown. Adapter model labels are not a separate
+verification of an upstream canonical model alias. Inspect actual synthetic
+questions, history, rewrites, answers and expected authored facts in
+`.cache/support/evidence/retrieval-regressions/<report-id>/review.json` (private
+0700 directory/0600 file on POSIX). No credentials, source bodies or raw exceptions
+are included in that artifact. Do not commit generated review material.
+
+The intake router clarifies inputs such as `Show accounts and cards`,
+`Does the Cedar card include cryptocurrency insurance?`, or
+`Quasar hyperdrive warranty?` when none of its recognized question keywords occurs.
+Regression scenarios use explicit `What`/`Which` variants where necessary and
+preserve their gold outcomes; the original cards question stays verbatim. Wider intake-language
+coverage, comparative scoring, latency/cost optimization and semantic-search
+decisions remain later work.
+
 ## Customer page and Chatwoot commands
 
 `uv run python scripts/run_support.py --provider openai --build` builds the customer

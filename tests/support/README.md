@@ -25,3 +25,12 @@ remain separate from local passing tests.
 ## Current files
 
 `conftest.py`, `harness.py`.
+
+The retrieval quality inventory adds 24 scenarios/31 turns alongside the unchanged
+40-case grounding suite. Unit checks use the real pinned NLP/selector; native
+checks use actual storage/worker processing and explicit replay adapters. Detector
+tests intentionally omit Pine or remove history and require failed verdicts.
+SDK mock transports cover the live branch without paid network access. Actual live
+execution remains explicit and is not part of default CI. See
+[fixtures](fixtures/README.md) and the
+[command guide](../../scripts/README.md#retrieval-regression-validation).
