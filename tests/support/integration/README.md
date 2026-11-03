@@ -44,3 +44,8 @@ exports unchanged unknown prompt provenance without invoking either provider.
 `test_retrieval_live_contract.py` uses real OpenAI SDK adapters through intercepted
 HTTP transports, including the child live branch and a replay-access sentinel.
 It is an offline native test, not a paid live acceptance test.
+
+`test_validation_worker_readiness.py` proves that a preceding run's fresh
+heartbeat cannot satisfy readiness for the owned load worker. The load harness
+waits for that worker's explicit identity after NLP initialization, without
+warming retrieval caches or changing the queue-latency target or scan cadence.

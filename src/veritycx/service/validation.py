@@ -121,7 +121,7 @@ def serve_test(port: int) -> None:
     run_async(server.serve())
 
 
-def serve_scoped_worker(owner: str) -> None:
+def serve_scoped_worker(owner: str, worker_id: str | None = None) -> None:
     """Run only a private validation session's workload; normal worker CLI stays unscoped."""
     dedicated_database(os.environ.get("VERITYCX_DATABASE_URL", ""))
     configuration = load_configuration(
@@ -130,17 +130,45 @@ def serve_scoped_worker(owner: str) -> None:
         provider=os.environ.get("VERITYCX_VALIDATION_PROVIDER", "deterministic"),
         corpus_mode=os.environ.get("VERITYCX_VALIDATION_CORPUS", "synthetic"),
     )
-    run_async(configured_worker(configuration, owner_scope=UUID(owner)))
+    run_async(
+        configured_worker(
+            configuration,
+            owner_scope=UUID(owner),
+            worker_id=UUID(worker_id) if worker_id else None,
+        )
+    )
 
 
-def wait_ready(client: httpx.Client, owner: ProcessOwner) -> None:
+def _owned_worker_ready(identity: tuple[str, UUID]) -> bool:
+    """Do not treat another run's fresh heartbeat as this worker's initialized capacity."""
+    dsn, worker = identity
+    try:
+        with psycopg.connect(dedicated_database(dsn), connect_timeout=1) as conn:
+            row = conn.execute(
+                "SELECT EXISTS (SELECT 1 FROM support_app.worker_heartbeats "
+                "WHERE worker_id=%s AND last_seen>clock_timestamp()-interval '15 seconds')",
+                (worker,),
+            ).fetchone()
+        return row is not None and row[0] is True
+    except psycopg.Error:
+        return False
+
+
+def wait_ready(
+    client: httpx.Client,
+    owner: ProcessOwner,
+    *,
+    worker_identity: tuple[str, UUID] | None = None,
+) -> None:
     """Wait at most 30 seconds for owned live processes and durable readiness."""
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         if any(process.poll() is not None for process in owner.children):
             raise ValidationError("owned_process_exited")
         try:
-            if client.get("/health/ready").status_code == 200:
+            if client.get("/health/ready").status_code == 200 and (
+                worker_identity is None or _owned_worker_ready(worker_identity)
+            ):
                 return
         except httpx.HTTPError:
             pass
@@ -534,12 +562,14 @@ def owned_session(
             "--corpus-mode",
             corpus_mode,
         ]
+        worker_identity = None
         if isolate_owner:
+            worker_identity = (dsn, uuid4())
             owner = authenticate("Bearer " + first.read_text().strip(), load_principals(auth))
             worker_args = [
                 "-c",
                 "from veritycx.service.validation import serve_scoped_worker; "
-                f"serve_scoped_worker('{owner}')",
+                f"serve_scoped_worker('{owner}', '{worker_identity[1]}')",
             ]
         worker = processes.launch(worker_args)
         with httpx.Client(
@@ -547,7 +577,7 @@ def owned_session(
             timeout=10,
             headers={"Authorization": "Bearer " + first.read_text().strip()},
         ) as client:
-            wait_ready(client, processes)
+            wait_ready(client, processes, worker_identity=worker_identity)
             yield ValidationSession(
                 client, processes, worker, SecretStr(second.read_text().strip())
             )

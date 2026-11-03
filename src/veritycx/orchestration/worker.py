@@ -102,9 +102,10 @@ async def work(
     *,
     rag: RAGServices,
     owner_scope: UUID | None = None,
+    worker_id: UUID | None = None,
 ) -> None:
     """Poll accepted/expired work every second, limiting concurrency to configured slots."""
-    worker = uuid4()
+    worker = worker_id or uuid4()
     validate_worker_scope(configuration.database_url.get_secret_value(), owner_scope)
     async with database_pool(
         configuration.database_url.get_secret_value(), max_size=configuration.settings.pool_max_size
@@ -189,7 +190,10 @@ def validate_worker_scope(dsn: str, owner_scope: UUID | None) -> None:
 
 
 async def configured_worker(
-    configuration: RuntimeConfiguration, *, owner_scope: UUID | None = None
+    configuration: RuntimeConfiguration,
+    *,
+    owner_scope: UUID | None = None,
+    worker_id: UUID | None = None,
 ) -> None:
     """Create an explicit exporter only when opted in; ignore ambient trace endpoints."""
     validate_worker_scope(configuration.database_url.get_secret_value(), owner_scope)
@@ -199,7 +203,9 @@ async def configured_worker(
             if configuration.trace_key is None or configuration.trace_project is None:
                 raise ConfigurationError("missing_trace_configuration")
             exporter = TraceExporter(client, configuration.trace_key, configuration.trace_project)
-        await run_configured_provider(configuration, exporter, owner_scope=owner_scope)
+        await run_configured_provider(
+            configuration, exporter, owner_scope=owner_scope, worker_id=worker_id
+        )
 
 
 async def run_configured_provider(
@@ -207,6 +213,7 @@ async def run_configured_provider(
     exporter: TraceExporter | None,
     *,
     owner_scope: UUID | None = None,
+    worker_id: UUID | None = None,
 ) -> None:
     """Select exactly one provider; missing live credentials never trigger fixture fallback."""
     if configuration.settings.provider == "deterministic":
@@ -217,7 +224,12 @@ async def run_configured_provider(
         )
         await asyncio.to_thread(active_corpus, configuration.settings.corpus_mode)
         await work(
-            configuration, DeterministicProvider(), exporter, rag=rag, owner_scope=owner_scope
+            configuration,
+            DeterministicProvider(),
+            exporter,
+            rag=rag,
+            owner_scope=owner_scope,
+            worker_id=worker_id,
         )
         return
     if configuration.provider_key is None:
@@ -237,6 +249,7 @@ async def run_configured_provider(
             exporter,
             rag=rag,
             owner_scope=owner_scope,
+            worker_id=worker_id,
         )
 
 
