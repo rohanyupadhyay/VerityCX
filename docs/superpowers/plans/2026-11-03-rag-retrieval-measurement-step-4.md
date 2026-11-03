@@ -67,18 +67,18 @@ execution-error rows. Report holds per-case rows, grouped summaries, paired
 outcomes, exclusions, provenance and shared_setup_ms; .passed gates only current
 v3 assessed failures and execution errors. Markdown/CLI consume this report.
 
-- [ ] Test real fixed sources/selectors: raw19 + scripted search turns, explicit
+- [x] Test real fixed sources/selectors: raw19 + scripted search turns, explicit
   missing-probe/clarification exclusions, all three variants, same corpus/caps,
   original-cards v3 IDs03/08/16, warmed n/repeat count, family/group denominators,
   no false precision for missing gold and paired failures/unknowns counted.
-- [ ] Test corrupted selector body/unknown ID, thrown exception, unstable repeated
+- [x] Test corrupted selector body/unknown ID, thrown exception, unstable repeated
   output, invalid repetition/case selection: retain rows and fail execution.
   Use literal numeric samples to check median and nearest-rank p95.
-- [ ] Run uv run pytest tests/support/unit/test_retrieval_comparison.py -q.
+- [x] Run uv run pytest tests/support/unit/test_retrieval_comparison.py -q.
   Expected RED, then implement to GREEN. Call actual selectors with controlled
   inputs only; golden evidence never reaches selector arguments. Initialize shared
   resources once, separate per-input/version passage caches and rotate order.
-- [ ] Commit feat: compare frozen retrieval baselines offline.
+- [x] Commit feat: compare frozen retrieval baselines offline.
 
 ## Task 3: CLI, report and measured handoff
 

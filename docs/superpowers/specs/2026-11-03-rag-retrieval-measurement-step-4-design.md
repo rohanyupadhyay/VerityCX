@@ -26,7 +26,7 @@ v2/v3 receive those same two strings through their existing interfaces. v1/v2
 lack category expansion; v3 consumes the supplied scope. This measures component
 behavior with controlled inputs, not historical whole-system behavior, actual
 rewrite/history quality, answer correctness or held-out/official performance.
-Keep expected evidence outside selector inputs. Do not load provider adapters.
+Keep expected evidence outside selector inputs. No provider clients or adapters are instantiated or invoked.
 
 ## Quality and honest denominators
 
@@ -52,7 +52,9 @@ known-regression results, not statistical generalization claims.
 
 ## Timing
 
-Initialize and time shared verified spaCy/WordNet setup separately. For each
+Initialize and time shared verified spaCy/WordNet setup separately. The spaCy
+pipeline and WordNet reader are shared in this serial process; only passage
+caches are isolated per input and variant. For each
 input/version use a separate normalizer passage cache. Time the first selector
 call with uncached passages, then 1–20 repeated warmed calls (default 5). Verify
 all repeated outputs, including evidence/context, match the first output.
