@@ -102,13 +102,16 @@ JSON schema stays strictly content-free. Only explicit --markdown writes a file.
 - [x] Document commands, provenance, warm/cold labels, partial gold, supplied
   rewrite/scope limits and descriptive unsupported retrieval. No embeddings
   decision is justified solely by a known regression set.
-- [ ] Run maintained lock/resources/environment/Ruff/strict-mypy/Markdown/YAML
+- [x] Run maintained lock/resources/environment/Ruff/strict-mypy/Markdown/YAML
   checks and uv run pytest tests -m 'not live' -q, serial test DB usage.
   Expected all pass, unchanged load p95\<=5sec/scan1sec/zero leaks. Retain failures.
-- [ ] Run full comparison with default5 repetitions and named original-cards
+- [x] Run full comparison with default5 repetitions and named original-cards
   subset; save JSON privately and a new dated Markdown report. Check actual
   outcomes rather than requiring a positive improvement. Commit feature/docs,
   rerun report after source commit for provenance, then commit measured report.
+
+## Global finishing gate
+
 - [ ] Perform one fresh whole-branch review using Review Focus and ledger; fix
   Important findings RED→GREEN with a green full suite. No automatic re-review.
   Preserve all rulings/minors in this plan before removing its scratch directory.
@@ -119,3 +122,36 @@ The user chose offline-first progress and prior native/direct-workspace preferen
 persist. This plan is self-reviewed for source/metric/runner/report interfaces.
 Gold labels remain outside selector inputs. Full-code baselines are preserved;
 new timing controls never alter production caching or resource initialization.
+
+## Execution rulings
+
+- Ruling: preserve native execution/current checkout and proceed through the recorded plan without another approval round — user said proceed after the explicit offline-first/skip-discussion offer and existing preferences persist — cost: no filesystem isolation or separate design sign-off; mitigate with a feature branch, frozen inputs and no app changes.
+- Ruling: separate raw probes from common authored-rewrite/scope component inputs — all variants need controlled inputs and original constraints, while real model interpretation is outside offline scope — cost: results cannot establish end-to-end rewrite/history/answer fidelity or held-out generalization.
+- Ruling: treat missing relevance/empty labels as unknown and count unsupported nonempty results descriptively — source retrieval does not establish answerability and focused gold is incomplete — cost: precision and safety denominators are limited; unsupported-answer quality remains unmeasured.
+
+## Verification record (2026-11-03)
+
+- Baseline337database-free support tests passed,123deselected,1existingwarning.
+- Independent metrics RED8→GREEN8; comparison RED9failures/3fixtureerrors→GREEN12,
+  then changed-fixture test RED→GREEN; focused combined31tests passed in53.32sec.
+- Initial six invalid-CLI checks were too weak (a missing script also failed).
+  They now require the exact parser/selection category. Inaccessible output
+  preflight reproduced an unsanitized PermissionError and passed after the guard.
+- Maintained lock/resources/environment/Ruff200files/mypy176files/Markdown and
+  two workflow YAML checks passed. Full offline suite: **668 passed**, one existing
+  Starlette/AnyIO warning, **445.56 seconds**. No earlier gate failure was hidden.
+- Existing load gate:30turns,p95=2.558153seconds,zero leaks,scan1sec,target5sec.
+- Final default comparison ran alone after tests on clean source commit
+  d464490ee1e0f0b0e05a366610f2181ccfbed29c:144variant rows,14explicit track
+  exclusions,5warm samples/input/version,zero provider requests. Named original
+  cards subset also passed with6rows. The report preserves hashes and unknowns.
+- Raw contracts: v1 12/17, v2 13/17, v3 17/17, plus2unassessed inputs.
+  Authored-rewrite contracts: v1/v2 22/26, v3 26/26, plus3unassessed inputs.
+  Paired v3 improvements:5/4 on raw againstv1/v2,4/4 on authored rewrites;
+  zero paired contract regressions. These tracks overlap and are not independent
+  held-out questions. Initial timing collected during static checks was discarded
+  as a final measurement; only the separate quiet run is the dated report.
+- App code, retrieval policies, source documents, corpus/schema/configuration and
+  credential files were unchanged. The benchmark never opens storage; existing
+  native tests use their dedicated database. No paid evaluation, app restart,
+  push or merge is included. Final review is the remaining global gate.
