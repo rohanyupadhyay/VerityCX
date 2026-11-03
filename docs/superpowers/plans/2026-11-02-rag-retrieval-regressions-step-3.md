@@ -386,7 +386,7 @@ READMEs, docs/README.md, this plan and the approved design execution record.
   environment are untouched. Establish test-only database usage through DSN and
   scope guards, without querying customer records. Report control-flow evidence honestly.
 
-- [ ] Perform the preserved native method's one fresh whole-branch review;
+- [x] Perform the preserved native method's one fresh whole-branch review;
   regrade and fix concrete Critical/Important findings with RED/GREEN evidence,
   retain the ledger's rulings/minors in the committed execution record, and
   commit verified work. No push/merge/activation without separate authorization.
@@ -445,3 +445,103 @@ READMEs, docs/README.md, this plan and the approved design execution record.
 
 The standalone retry load evidence measured p95 **4.937324 seconds**,
 with zero leaks; this does not establish a production latency guarantee.
+
+## Final review and fix pass (2026-11-03)
+
+The fresh whole-branch review used gpt-6-astra against the complete branch
+package, approved design and this plan. The implementation owner accepted all
+three Important findings; there were no Critical findings. One fix pass follows
+the native execution method, with no second review.
+
+- Isolation: inherited libpq connection defaults could redirect the test child.
+  The owned child now drops inherited PG-prefixed variables while pinning the
+  validated test DSN; the parent is unchanged. A hostile-environment contract
+  failed first and passed after the fix. PostgreSQL documents these defaults in
+  its [environment reference](https://www.postgresql.org/docs/current/libpq-envars.html)
+  and [connection reference](https://www.postgresql.org/docs/current/libpq-connect.html).
+- Evidence: correct IDs could conceal changed bodies, hashes, titles or corpus
+  identity, and provider-facing coverage was not independently checked. The
+  checker now compares complete evidence objects with approved corpus sections
+  and provider coverage with catalog truth. Five unit mutations failed first
+  and passed after the fix. An additional native wrong-body mutation confirms
+  that scripted answers cannot conceal changed source bodies; its first
+  invocation lacked the test DSN and was rerun with explicit test configuration.
+- Storage: create/accept/claim/observation failures could abort the whole run.
+  Four injected boundary failures reproduced that loss after an earlier complete
+  scenario. The runner now retains earlier observations and actual provider
+  requests/results, fails the affected turn, marks its dependents unrun and
+  continues independent aliases/scenarios. Failed observation has no claimed
+  durable result; its attempt count records actual captured answer calls.
+  Both report forms sanitize storage exceptions, with no automatic rerun.
+
+The focused post-fix gate passed 55 tests in 54.46 seconds. Ruff and full strict
+mypy passed. The evidence/isolation fixes are committed as 19289e0; structured answer-output
+retention follows in cb9a3f6. The final full-suite and standalone
+results are recorded below after execution.
+
+## Execution rulings carried from the native ledger
+
+- Ruling: preserve the existing feature checkout and declared direct-workspace preference — the worktree skill honors an existing preference and the approved plan preserves native/current-checkout execution — cost: no filesystem isolation; mitigate through test-only storage, unchanged source documents and no app activation.
+- Ruling: partial-overview replay answers may filter a finite authored claim inventory by supplied evidence — fixed full answers would freeze an arbitrary valid six-of-seven selection — cost: these replay outputs adapt to input, so gold coverage checks and missing-evidence detector tests remain independent; no semantic/live claim is made. ReplayTurn.available_claims_only is explicit and limited to authored answers.
+- Ruling: use explicit What/Which grammar for the multi-category and two unsupported retrieval scenarios, preserving their gold outcomes — the approved design forbids changing production routing and allows builder-selected wording; the original cards regression remains verbatim — cost: imperative Show, Does-only and noun-only intake variants still clarify before retrieval and remain a documented limitation for step4. Unsupported-business gold permits focused or cards-overview scope when the qualifier is preserved; disposition still must abstain/clarify.
+- Final: Ruling: live-model factual fidelity remains pending — paid execution is excluded from this approved implementation; mock SDK contracts verify wiring only — cost: actual model answer fidelity is unverified until an authorized live run and human semantic review.
+- Final: Ruling: broader intake-language behavior remains outside this change — production routing stays unchanged and limitations are documented — cost: Show/Does-only/noun-only variants can clarify before retrieval.
+- Final: Ruling: production latency guarantees and comparative retrieval gains remain step4 work — local gates check regressions without claiming measured production improvement — cost: load timing remains variable and no comparative gain has been established.
+- Final: minor (deferred): add an authored candidate-fact inventory to private partial-account overview reports; current reports expose questions, citations and actual outputs but incomplete expected account facts. Manual reviewers can consult cited policies.
+
+## Verification-discovered readiness defect
+
+Two complete post-review runs failed only the unchanged load test:
+634 passed/one failed in 457.43 seconds, then 635 passed/one failed in
+437.91 seconds after the additional report-retention test. Both failures were
+latency_target_failed; their exact p95 was not retained by the old validator.
+An isolated load/report gate passed 14 tests, including load p95 2.705550 seconds.
+No failing result was discarded or target relaxed.
+
+Root-cause investigation reproduced the order dependency with just knowledge
+validation immediately followed by load: one passed/one failed in 25.82 seconds.
+Finite numeric exception diagnostics measured p95 5.312660 seconds; first turns
+were 5.009–5.316 seconds and later turns 2.112–2.431 seconds. Readiness accepted a
+fresh heartbeat left by the terminated preceding worker while the new scoped
+worker was still initializing NLP resources.
+
+The scoped load harness now assigns its own worker UUID and waits for that exact
+heartbeat as well as HTTP readiness. Optional identity plumbing preserves worker
+defaults and has no CLI/configuration, schema, retrieval-policy or running-app
+change. A native foreign-fresh-heartbeat guard failed before the fix; the guard
+and identical knowledge→load sequence then passed all three tests in 27.82 seconds,
+with load p95 2.674839 seconds, 30 turns, zero leaks and one-second scans. No warmup
+turn, cache change, concurrency change or five-second target change was made.
+This verification fix is committed as d938b61. Final Ruff checks cover 193 files
+and strict typing covers 169 files. One new test initially used an implicit
+module.time reexport, corrected to a direct stdlib import without a suppression.
+
+- Final: Ruling: bind load-harness readiness to its explicitly owned worker identity — the maintained gate must not accept the preceding validation worker's heartbeat while this worker initializes NLP; this is test readiness correctness, not retrieval/performance tuning — cost: a small optional worker-identity plumbing surface and startup readiness wait; cold startup duration is not included in post-readiness turn latency, while the five-second target, one-second scan, concurrency and caches remain unchanged.
+
+## Final verified state (2026-11-03)
+
+- The final code tree at d938b61 passed **637 tests**, one existing
+  Starlette/AnyIO deprecation warning, in **443.85 seconds**. Its 30-turn load
+  measurement was p95 **2.595527 seconds**, zero leaks and one-second scans.
+- All maintained static checks passed: lock, retrieval resources, environment
+  contract, Ruff (193 files), strict mypy (169 files), Markdown and both workflow
+  YAML checks. Final documentation formatting is checked before its commit.
+- Standalone commands passed serially: offline knowledge **3** and handoff **6**;
+  retrieval **24 scenarios/31 turns**; named original-cards **1 scenario/1 turn**.
+  All three exits were zero, and retrieval evidence remains explicitly scripted.
+- The standalone support suite load measured p95 **2.898918 seconds**,
+  30 turns, zero leaks and one-second scans. Earlier failures and the readiness
+  correction remain recorded above; these timings are not a production guarantee.
+- All three Important review findings have RED→GREEN evidence and a green full
+  suite. The additional Important readiness defect was reproduced with a
+  knowledge→load sequence and fixed through an owned-worker guard. No second
+  review was dispatched. The single Minor finding remains deferred above.
+- The 40 source documents, original 40 grounding cases and corpus hash
+  327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c
+  are unchanged, as is support configuration. No paid acceptance run, app
+  migration/activation/restart, push or merge was performed. Live-model semantic
+  acceptance remains pending, and step4 measurement remains a separate increment.
+
+The seven rulings and one deferred Minor above preserve the execution ledger.
+All implementation tasks and global verification gates are complete; branch
+integration requires the user's separate choice.

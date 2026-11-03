@@ -203,13 +203,20 @@ unanswered for implementation planning. The scenario counts and file boundaries
 remain proposed defaults and builder choices as stated above. The user approved
 the design on 2026-11-02; implementation planning follows that approval.
 
-## Implementation progress
+## Implementation completed (2026-11-03)
 
-The user approved the native implementation plan on 2026-11-02. Tasks 1–4
-have passed their focused checks, including the complete 24-scenario/31-turn
-offline worker run and actual SDK transports intercepted by tests. The full offline
-suite passed 625 tests, and maintained standalone gates passed after one recorded
-load-check retry. Final whole-branch review is in progress. No paid provider
-execution or app change has been performed. The implementation record preserves
-the builder rulings about partial-overview replay claims and explicit question
-grammar needed to exercise retrieval after the unchanged intake router.
+The approved native plan is implemented. The final offline suite passed 637 tests;
+all maintained static checks and standalone offline/retrieval gates passed.
+The complete 24-scenario/31-turn worker run includes the original cards question,
+with native detector and actual SDK mock-transport contracts.
+
+The fresh whole-branch review's three Important findings were fixed with
+RED→GREEN evidence. Verification also uncovered and corrected a load-harness
+readiness race: the harness now waits for its own worker's heartbeat. No latency
+target, scan cadence, concurrency or retrieval cache policy was changed. Earlier
+failures, the root-cause reproduction, seven builder rulings and one deferred
+Minor report improvement are recorded in the implementation plan.
+
+No paid provider execution or app migration/activation/restart was performed.
+Live-model semantic acceptance remains pending. Step4 measurement and branch
+integration remain separately authorized actions.
