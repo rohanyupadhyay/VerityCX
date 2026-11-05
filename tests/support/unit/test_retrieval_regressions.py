@@ -57,7 +57,7 @@ def overview() -> tuple[RegressionTurn, ObservedTurn, tuple[CatalogEntry, ...]]:
         turn_id=uuid4(),
         request_digest="a" * 64,
         model="scripted-rewrite-v1",
-        prompt_version=2,
+        prompt_version=3,
         status="succeeded",
         result_json=replay.rewrite.model_dump_json(),
         failure_category=None,

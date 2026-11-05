@@ -138,7 +138,7 @@ def test_category_overview_records_coverage_and_current_prompt(test_database_url
             published = TurnResult.model_validate_json(json.dumps(row["result"]))
             assert published.text.endswith(OVERVIEW_SCOPE_NOTE)
             assert {item.document_id for item in published.citations} == expected
-            assert journal["prompt_version"] == 2 and journal["retrieval_mode"] == "category"
+            assert journal["prompt_version"] == 3 and journal["retrieval_mode"] == "category"
             assert journal["search_scope"] == "category_overview"
             assert journal["category_keys"] == ["cards"]
             assert journal["eligible_document_count"] == journal["represented_document_count"] == 3

@@ -34,3 +34,28 @@ SDK mock transports cover the live branch without paid network access. Actual li
 execution remains explicit and is not part of default CI. See
 [fixtures](fixtures/README.md) and the
 [command guide](../../scripts/README.md#retrieval-regression-validation).
+
+## Live card-discovery acceptance gate
+
+A passing offline suite does not establish that the real model answers customer
+questions correctly. Before declaring a rewrite, discovery, or answer-generation
+change fixed, run this separately with explicitly authorized API access and the
+dedicated test database configured:
+
+```text
+uv run pytest tests/support/acceptance/test_card_discovery_live.py -m live -q
+```
+
+This invokes the actual configured rewrite and answer models through the durable
+worker pipeline. No response is replayed or supplied by a mock transport. Three
+fresh executions of the original card question must return an answer naming
+Cedar, Hazel, and Pine and cite all three policy documents. Additional live cases
+check paraphrased discovery, a contextual follow-up, a genuinely missing reference,
+and unsupported product/business questions. Failures block acceptance; do not
+replace them with an offline pass or retry until a favorable response appears.
+
+The test writes private synthetic review evidence under
+`.cache/support/evidence/retrieval-regressions/`. It is intentionally excluded from
+default offline CI because it makes paid provider requests. Record its result
+separately from offline test results, and verify the original question in a fresh
+native Chatwoot chat before declaring the customer-visible issue resolved.

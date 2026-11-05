@@ -112,7 +112,7 @@ def test_rewrite_canonical_scope_and_request_hints() -> None:
         remaining_seconds=10.0,
         available_categories=(CategoryHint(key="cards", label="Cards"),),
     )
-    assert request.prompt_version == 2
+    assert request.prompt_version == 3
     assert "available_categories" in request.model_dump_json()
     for hints in (
         (CategoryHint(key="cards", label="Cards"),) * 7,

@@ -22,6 +22,7 @@ from veritycx.persistence.models import WorkJob
 from veritycx.persistence.repository import Repository
 from veritycx.persistence.rewrites import RewriteRow
 from veritycx.providers.protocol import ContextMessage
+from veritycx.providers.rewrite import REWRITE_PROMPT_VERSION
 from veritycx.service.configuration import Settings
 from veritycx.service.retrieval_cases import (
     RegressionError,
@@ -239,7 +240,7 @@ async def exercise_regressions(
         "corpus_hash": manifest.aggregate_hash,
         "ranking_version": manifest.ranking_version,
         "nlp_policy_version": normalizer.identity.policy_version,
-        "rewrite_prompt_version": 2,
+        "rewrite_prompt_version": REWRITE_PROMPT_VERSION,
         "answer_prompt_version": 3,
         "configured_answer_model": settings.model,
         "configured_rewrite_model": settings.effective_rewrite_model,

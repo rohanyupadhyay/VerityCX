@@ -29,7 +29,7 @@ class Provenance(ClosedModel):
     corpus_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     ranking_version: Literal[3]
     nlp_policy_version: int = Field(ge=1)
-    rewrite_prompt_version: Literal[2]
+    rewrite_prompt_version: Literal[2, 3]
     answer_prompt_version: Literal[3]
     configured_answer_model: ModelName | None = None
     configured_rewrite_model: ModelName | None = None

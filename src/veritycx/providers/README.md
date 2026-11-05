@@ -15,8 +15,13 @@ is spent; a technical failure returns a retry message without raw-query fallback
 The original question, rewritten search metadata, and authoritative evidence
 remain distinct in answer generation. WordNet does not make another model call.
 
-Rewrite prompt/schema 2 adds focused/category_overview scope and distinct canonical
-service-category keys. Availability hints come from the approved corpus snapshot.
+Rewrite prompt/schema 3 retains focused/category_overview scope and distinct canonical
+service-category keys. It supplies trusted VerityCX application identity and treats
+broad product discovery as a search, while preserving genuine missing-reference
+clarification. Every wire variant starts with disposition. Focused and overview
+search use separate wire variants so the remote schema enforces empty versus
+nonempty categories; parsed searches still pass through the internal scope model.
+Availability hints come from the approved corpus snapshot.
 Unknown keys, inconsistent scope and malformed output fail with the existing retry
 message; no local classifier or live-failure substitute is introduced.
 Answer prompt 3 receives scope and measured coverage as search metadata. It can

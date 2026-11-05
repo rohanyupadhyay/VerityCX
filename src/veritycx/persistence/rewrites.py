@@ -24,7 +24,7 @@ class RewriteRow(ClosedModel):
     turn_id: UUID
     request_digest: str
     model: str
-    prompt_version: Literal[1, 2]
+    prompt_version: Literal[1, 2, 3]
     status: Literal["reserved", "succeeded", "failed"]
     result_json: str | None
     failure_category: str | None

@@ -18,24 +18,25 @@ pytestmark = pytest.mark.support_db
 
 
 def test_applied_migration_prefix_checksums_are_frozen() -> None:
-    """Category support cannot rewrite either previously applied SQL migration."""
-    assert [sha256(path.read_bytes()).hexdigest() for path in migrations.MIGRATIONS[:2]] == [
+    """Discovery fixes cannot rewrite any previously applied SQL migration."""
+    assert [sha256(path.read_bytes()).hexdigest() for path in migrations.MIGRATIONS[:3]] == [
         "c7a8e1a89b2f171ef47b33ce0b44ee5ee4fef79938cfcb3cb923747251e5923e",
         "c38080887e5050e75f964392dee94de086e433f4de0b74bf394f546bad37cc04",
+        "f1eb3369cb34d1eea8e3fa5008d345deef6092da425868ecd91e4c1fec0870c6",
     ]
 
 
-@pytest.mark.parametrize("legacy", [False, True])
+@pytest.mark.parametrize("prefix", [0, 2, 3])
 def test_private_native_database_upgrades_without_rewriting_old_rows(
-    tmp_path: Path, owned_processes: OwnedProcesses, monkeypatch: pytest.MonkeyPatch, legacy: bool
+    tmp_path: Path, owned_processes: OwnedProcesses, monkeypatch: pytest.MonkeyPatch, prefix: int
 ) -> None:
-    """Fresh install and v2 upgrade retain old content, null provenance and grants."""
+    """Fresh install and v2/v3 upgrades retain old content, provenance and grants."""
     inventory = migrations.MIGRATIONS
-    assert len(inventory) == 3
+    assert len(inventory) == 4
     with owned_migration_database(tmp_path, owned_processes) as database:
-        if legacy:
+        if prefix:
             with monkeypatch.context() as patch:
-                patch.setattr(migrations, "MIGRATIONS", inventory[:2])
+                patch.setattr(migrations, "MIGRATIONS", inventory[:prefix])
                 run_async(migrate(database.admin_dsn, "veritycx_support_test"))
             parent, turn = uuid4(), uuid4()
             with psycopg.connect(database.admin_dsn, autocommit=True) as conn:
@@ -54,8 +55,8 @@ def test_private_native_database_upgrades_without_rewriting_old_rows(
                 conn.execute(
                     "INSERT INTO support_app.query_rewrites "
                     "(turn_id,request_digest,model,prompt_version,status) "
-                    "VALUES (%s,'legacy','fixture',1,'reserved')",
-                    (turn,),
+                    "VALUES (%s,'legacy','fixture',%s,'reserved')",
+                    (turn, 2 if prefix == 3 else 1),
                 )
                 conn.execute(
                     "INSERT INTO support_app.audit "
@@ -78,10 +79,10 @@ def test_private_native_database_upgrades_without_rewriting_old_rows(
                     )
                 ).fetchall()
                 assert rows == migrations.migration_inventory()
-                assert [row["version"] for row in rows] == [1, 2, 3]
+                assert [row["version"] for row in rows] == [1, 2, 3, 4]
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     await conn.execute("CREATE TABLE support_app.forbidden_category_test (id int)")
-                if legacy:
+                if prefix:
                     row = await (
                         await conn.execute(
                             "SELECT q.prompt_version,q.search_scope,q.category_keys,"
@@ -91,7 +92,7 @@ def test_private_native_database_upgrades_without_rewriting_old_rows(
                             (turn,),
                         )
                     ).fetchone()
-                    assert row is not None and row["prompt_version"] == 1
+                    assert row is not None and row["prompt_version"] == (2 if prefix == 3 else 1)
                     assert row["search_scope"] is None and row["category_keys"] is None
                     assert row["answer_prompt"] is None
                     text = await (
