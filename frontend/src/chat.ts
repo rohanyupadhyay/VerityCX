@@ -1,6 +1,6 @@
 /** Validate public Chatwoot settings and coordinate one bounded native widget lifecycle. */
 
-export type ChatState = "loading" | "ready" | "unavailable";
+export type ChatState = "loading" | "starting" | "ready" | "unavailable";
 export type ChatConfig =
   { enabled: false } | { enabled: true; baseUrl: string; websiteToken: string };
 
@@ -9,6 +9,8 @@ interface ChatwootWidget {
   toggle(state: "open" | "close"): void;
   /** Control only the native launcher's visibility. */
   toggleBubbleVisibility(state: "show" | "hide"): void;
+  /** Forget the anonymous browser session without resolving or deleting its conversation. */
+  reset?: () => void;
 }
 
 declare global {
@@ -74,6 +76,9 @@ export class ChatConnection {
   private readonly request = new AbortController();
   private timer: ReturnType<typeof setTimeout> | undefined;
   private script: HTMLScriptElement | undefined;
+  private widgetOrigin: string | undefined;
+  private resetFrame: HTMLIFrameElement | undefined;
+  private readonly seenSessions = new Set<string>();
   private readonly listeners = new Set<() => void>();
 
   /** Expose connection state without allowing callers to bypass readiness checks. */
@@ -124,6 +129,7 @@ export class ChatConnection {
     this.request.abort();
     window.removeEventListener("chatwoot:ready", this.onReady);
     window.removeEventListener("chatwoot:error", this.fail);
+    this.clearWidgetListener();
     this.script?.remove();
     this.hideWidget();
     this.setState("unavailable");
@@ -157,6 +163,7 @@ export class ChatConnection {
       }
       clearTimeout(this.timer);
       this.timer = setTimeout(this.fail, 15_000);
+      this.widgetOrigin = config.baseUrl;
       window.chatwootSettings = {
         hideMessageBubble: false,
         position: "right",
@@ -167,6 +174,7 @@ export class ChatConnection {
       };
       window.addEventListener("chatwoot:ready", this.onReady);
       window.addEventListener("chatwoot:error", this.fail);
+      window.addEventListener("message", this.onWidgetLoaded);
       const script = document.createElement("script");
       script.dataset.verityChat = "true";
       script.src = `${config.baseUrl}/packs/js/sdk.js`;
@@ -210,6 +218,89 @@ export class ChatConnection {
     }
   }
 
+  /** Release widget observation and ephemeral session identities on failure or unmount. */
+  private clearWidgetListener(): void {
+    window.removeEventListener("message", this.onWidgetLoaded);
+    this.resetFrame = undefined;
+    this.seenSessions.clear();
+  }
+
+  /** Chatwoot v4.19.1 suppresses chatwoot:ready after reset; observe its loaded message. */
+  private readonly onWidgetLoaded = (event: MessageEvent): void => {
+    const frame =
+      this.resetFrame ?? document.getElementById("chatwoot_live_chat_widget");
+    if (
+      this.disposed ||
+      !this.sdkStarted ||
+      event.origin !== this.widgetOrigin ||
+      !(frame instanceof HTMLIFrameElement) ||
+      !frame.isConnected ||
+      event.source !== frame.contentWindow ||
+      typeof event.data !== "string" ||
+      !event.data.startsWith("chatwoot-widget:")
+    )
+      return;
+    let payload: unknown;
+    try {
+      payload = JSON.parse(event.data.slice("chatwoot-widget:".length));
+    } catch {
+      return;
+    }
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      !("event" in payload) ||
+      payload.event !== "loaded" ||
+      !("config" in payload) ||
+      typeof payload.config !== "object" ||
+      payload.config === null ||
+      !("authToken" in payload.config) ||
+      typeof payload.config.authToken !== "string" ||
+      !payload.config.authToken
+    )
+      return;
+    // Reset reuses the same WindowProxy. Reject earlier sessions' queued loaded messages.
+    const session = payload.config.authToken;
+    if (this.seenSessions.has(session)) return;
+    this.seenSessions.add(session);
+    if (this.state !== "starting") return;
+    clearTimeout(this.timer);
+    this.resetFrame = undefined;
+    try {
+      window.$chatwoot!.toggleBubbleVisibility("show");
+      window.$chatwoot!.toggle("open");
+      this.setState("ready");
+    } catch {
+      this.fail();
+    }
+  };
+
+  /** Start a separate anonymous conversation; the native bubble can reopen the current one. */
+  startNew(): boolean {
+    if (this.disposed || this.state !== "ready") return false;
+    const widget = window.$chatwoot;
+    const frame = document.getElementById("chatwoot_live_chat_widget");
+    if (
+      !widget?.reset ||
+      !(frame instanceof HTMLIFrameElement) ||
+      !frame.contentWindow
+    ) {
+      this.fail();
+      return false;
+    }
+    this.setState("starting");
+    this.resetFrame = frame;
+    this.timer = setTimeout(this.fail, 15_000);
+    try {
+      widget.toggleBubbleVisibility("hide");
+      widget.reset();
+      return true;
+    } catch {
+      this.fail();
+      return false;
+    }
+  }
+
   /** Release this page's requests, timers, and event handlers. */
   dispose(): void {
     this.disposed = true;
@@ -217,6 +308,7 @@ export class ChatConnection {
     clearTimeout(this.timer);
     window.removeEventListener("chatwoot:ready", this.onReady);
     window.removeEventListener("chatwoot:error", this.fail);
+    this.clearWidgetListener();
     if (this.script) {
       this.script.onload = null;
       this.script.onerror = null;

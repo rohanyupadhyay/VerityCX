@@ -230,9 +230,11 @@ export function BankPages({
         <span className="status-dot" />
         {state === "ready"
           ? "VerityCX chat is ready"
-          : state === "loading"
-            ? "VerityCX chat is connecting"
-            : "VerityCX chat is currently unavailable"}{" "}
+          : state === "starting"
+            ? "Starting a new chat"
+            : state === "loading"
+              ? "VerityCX chat is connecting"
+              : "VerityCX chat is currently unavailable"}{" "}
         · Bank information is available independently.
       </p>
       {state === "unavailable" && (
@@ -509,9 +511,11 @@ export function BankPages({
             </p>
             {state !== "ready" && (
               <p role="status">
-                {state === "loading"
-                  ? "Chat is connecting. You can keep reading."
-                  : "Chat is currently unavailable. You can still read every policy."}
+                {state === "starting"
+                  ? "Starting a new chat. You can keep reading."
+                  : state === "loading"
+                    ? "Chat is connecting. You can keep reading."
+                    : "Chat is currently unavailable. You can still read every policy."}
               </p>
             )}
           </aside>

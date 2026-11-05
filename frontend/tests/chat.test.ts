@@ -18,6 +18,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  document.getElementById("chatwoot_live_chat_widget")?.remove();
   document.head
     .querySelectorAll("script[data-verity-chat]")
     .forEach((script) => script.remove());
@@ -26,6 +27,177 @@ afterEach(() => {
   delete window.chatwootSettings;
   vi.unstubAllGlobals();
   vi.useRealTimers();
+});
+
+/** Simulate only the external SDK; exercise the actual connection and iframe boundary. */
+async function readyConnection() {
+  const connection = new ChatConnection();
+  const frame = document.createElement("iframe");
+  frame.id = "chatwoot_live_chat_widget";
+  document.body.appendChild(frame);
+  const toggle = vi.fn();
+  const reset = vi.fn();
+  const visibility = vi.fn();
+  window.$chatwoot = { toggle, reset, toggleBubbleVisibility: visibility };
+  window.chatwootSDK = { run: vi.fn() };
+  await connection.start();
+  document.head
+    .querySelector("script[data-verity-chat]")
+    ?.dispatchEvent(new Event("load"));
+  widgetLoaded(frame, {
+    data: 'chatwoot-widget:{"event":"loaded","config":{"authToken":"initial-session"}}',
+  });
+  window.dispatchEvent(new Event("chatwoot:ready"));
+  return { connection, frame, toggle, reset, visibility };
+}
+
+/** Match the pinned SDK's loaded message, without including credentials or chat data. */
+let sessionSequence = 0;
+function widgetLoaded(
+  frame: HTMLIFrameElement,
+  overrides: MessageEventInit = {},
+) {
+  window.dispatchEvent(
+    new MessageEvent("message", {
+      origin: "https://support.example.test",
+      source: frame.contentWindow,
+      data: `chatwoot-widget:${JSON.stringify({ event: "loaded", config: { authToken: `fresh-session-${++sessionSequence}` } })}`,
+      ...overrides,
+    }),
+  );
+}
+
+describe("fresh conversation", () => {
+  it("ignores readiness from earlier sessions of the same iframe during another reset", async () => {
+    const { connection, frame, toggle } = await readyConnection();
+    const previous =
+      'chatwoot-widget:{"event":"loaded","config":{"authToken":"previous-session"}}';
+    try {
+      connection.startNew();
+      widgetLoaded(frame, { data: previous });
+      expect(connection.state).toBe("ready");
+      toggle.mockClear();
+      connection.startNew();
+      widgetLoaded(frame, {
+        data: 'chatwoot-widget:{"event":"loaded","config":{"authToken":"initial-session"}}',
+      });
+      widgetLoaded(frame, { data: previous });
+      widgetLoaded(frame, { data: 'chatwoot-widget:{"event":"loaded"}' });
+      expect(connection.state).toBe("starting");
+      expect(toggle).not.toHaveBeenCalledWith("open");
+      widgetLoaded(frame);
+      expect(connection.state).toBe("ready");
+    } finally {
+      connection.dispose();
+    }
+  });
+  it("resets each session and opens only after the actual widget is ready", async () => {
+    const { connection, frame, reset, toggle, visibility } =
+      await readyConnection();
+    try {
+      expect(connection.startNew()).toBe(true);
+      expect(connection.state).toBe("starting");
+      expect(reset).toHaveBeenCalledTimes(1);
+      expect(visibility).toHaveBeenLastCalledWith("hide");
+      expect(toggle).not.toHaveBeenCalledWith("open");
+      expect(connection.startNew()).toBe(false);
+      expect(connection.open()).toBe(false);
+      expect(reset).toHaveBeenCalledTimes(1);
+      window.dispatchEvent(new Event("chatwoot:ready"));
+      expect(connection.state).toBe("starting");
+      widgetLoaded(frame);
+      expect(connection.state).toBe("ready");
+      expect(toggle).toHaveBeenLastCalledWith("open");
+      expect(visibility).toHaveBeenLastCalledWith("show");
+      expect(connection.startNew()).toBe(true);
+      expect(reset).toHaveBeenCalledTimes(2);
+      widgetLoaded(frame);
+      expect(connection.state).toBe("ready");
+    } finally {
+      connection.dispose();
+    }
+  });
+
+  it("ignores unrelated, malformed, and untrusted readiness messages", async () => {
+    const { connection, frame } = await readyConnection();
+    try {
+      connection.startNew();
+      widgetLoaded(frame, { origin: "https://other.example.test" });
+      widgetLoaded(frame, { source: window });
+      widgetLoaded(frame, { data: "chatwoot-widget:invalid JSON" });
+      widgetLoaded(frame, { data: "chatwoot-widget:null" });
+      widgetLoaded(frame, { data: { event: "loaded" } });
+      widgetLoaded(frame, { data: 'chatwoot-widget:{"event":"other"}' });
+      expect(connection.state).toBe("starting");
+      widgetLoaded(frame);
+      expect(connection.state).toBe("ready");
+    } finally {
+      connection.dispose();
+    }
+  });
+
+  it("times out a reset and ignores late readiness", async () => {
+    vi.useFakeTimers();
+    const { connection, frame, toggle } = await readyConnection();
+    try {
+      connection.startNew();
+      await vi.advanceTimersByTimeAsync(15_000);
+      expect(connection.state).toBe("unavailable");
+      widgetLoaded(frame);
+      expect(connection.state).toBe("unavailable");
+      expect(toggle).not.toHaveBeenCalledWith("open");
+    } finally {
+      connection.dispose();
+    }
+  });
+
+  it("reports a failed reset without reopening the old chat", async () => {
+    const { connection, frame, reset, toggle } = await readyConnection();
+    try {
+      reset.mockImplementation(() => {
+        throw new Error("private SDK failure");
+      });
+      expect(connection.startNew()).toBe(false);
+      expect(connection.state).toBe("unavailable");
+      widgetLoaded(frame);
+      expect(toggle).not.toHaveBeenCalledWith("open");
+    } finally {
+      connection.dispose();
+    }
+  });
+
+  it.each(["iframe", "reset"])(
+    "fails closed when the SDK's %s is missing",
+    async (missing) => {
+      const { connection, frame, reset } = await readyConnection();
+      try {
+        if (missing === "iframe") frame.remove();
+        else
+          window.$chatwoot = {
+            toggle: vi.fn(),
+            toggleBubbleVisibility: vi.fn(),
+          };
+        expect(connection.startNew()).toBe(false);
+        expect(connection.state).toBe("unavailable");
+        expect(reset).not.toHaveBeenCalled();
+      } finally {
+        connection.dispose();
+      }
+    },
+  );
+
+  it("does not reset before initialization or after disposal", async () => {
+    const unstarted = new ChatConnection();
+    expect(unstarted.startNew()).toBe(false);
+    unstarted.dispose();
+    const { connection, frame, reset, toggle } = await readyConnection();
+    connection.startNew();
+    connection.dispose();
+    widgetLoaded(frame);
+    expect(connection.startNew()).toBe(false);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(toggle).not.toHaveBeenCalledWith("open");
+  });
 });
 
 describe("public configuration", () => {

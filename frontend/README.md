@@ -59,6 +59,19 @@ only the public website token and base URL. File uploads are disabled. It waits 
 account data, prefill messages, or log message content. Chatwoot itself may store a
 conversation cookie and make requests to its configured server.
 
+Page chat buttons start a fresh anonymous session using `$chatwoot.reset()`;
+previous conversations remain stored on the server but are no longer accessible
+from that browser session. The native floating bubble reopens the current chat.
+During reset, page launchers are disabled and show a starting status. Chatwoot
+v4.19.1 suppresses `chatwoot:ready` after reset, so the wrapper waits for its
+`loaded` message from the configured origin and the actual widget iframe before
+opening the new session. It remembers observed session tokens only in memory
+to reject delayed readiness from previous sessions; tokens are never logged or
+persisted by this wrapper and are released on failure or unmount.
+Reset has a 15-second timeout and uses the same
+unavailable/retry behavior as initialization. Customer-side conversation
+resolution stays disabled to preserve human-handoff protection.
+
 ## Operational constraints
 
 The configuration request and widget initialization have bounded timeouts. Invalid
