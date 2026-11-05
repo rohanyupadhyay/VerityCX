@@ -154,6 +154,23 @@ it("keeps known conflicting versions visible and opens only the native chat acti
   expect(open).toHaveBeenCalledOnce();
 });
 
+it("keeps policies readable while a fresh chat is starting", async () => {
+  window.history.replaceState({}, "", "/bank/policies/cedar-replacement");
+  vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify(policy)));
+  const onOpen = vi.fn();
+  await act(async () =>
+    root.render(<BankPages state="starting" onOpen={onOpen} />),
+  );
+  expect(container.textContent).toContain("Starting a new chat");
+  expect(container.textContent).not.toContain("chat is currently unavailable");
+  expect(container.querySelector("[data-chat-retry]")).toBeNull();
+  const launcher =
+    container.querySelector<HTMLButtonElement>("[data-chat-launch]");
+  expect(launcher?.disabled).toBe(true);
+  launcher?.click();
+  expect(onOpen).not.toHaveBeenCalled();
+});
+
 it("shows unavailable content with retry and honest empty results", async () => {
   vi.mocked(fetch).mockResolvedValueOnce(new Response("{}", { status: 503 }));
   await act(async () =>

@@ -113,6 +113,7 @@ const questions = [
 
 const statusText: Record<ChatState, string> = {
   loading: "Connecting to chat",
+  starting: "Starting a new chat",
   ready: "Chat is ready",
   unavailable: "Chat is currently unavailable",
 };
@@ -168,7 +169,7 @@ export function App(): ReactElement {
 
   /** Delegate every conversation action to the verified native SDK. */
   function openChat(): void {
-    connection.open();
+    connection.startNew();
   }
 
   return (
@@ -309,9 +310,11 @@ export function App(): ReactElement {
                 <p>
                   {state === "ready"
                     ? "Ask a policy question in our support chat. Human availability depends on the connected inbox."
-                    : state === "loading"
-                      ? "We’re checking the support connection. You can explore the guidance below while you wait."
-                      : "The support connection isn’t available. You can still explore the guidance below."}
+                    : state === "starting"
+                      ? "A fresh conversation will open shortly."
+                      : state === "loading"
+                        ? "We’re checking the support connection. You can explore the guidance below while you wait."
+                        : "The support connection isn’t available. You can still explore the guidance below."}
                 </p>
                 {state === "unavailable" && (
                   <button
