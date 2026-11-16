@@ -121,6 +121,8 @@ locked frontend dependencies if missing, builds the page, verifies readiness, an
 both child processes. Ctrl+C stops only those children. It refuses an occupied API port;
 it never kills an existing service. Use `--setup` to run the app database bootstrap first,
 or `--provider deterministic` for explicitly offline authored-fixture behavior.
+The customer app launcher defaults to OpenAI even when `--provider` is omitted;
+missing live credentials fail startup instead of switching to fixture answers.
 
 Check `curl --fail-with-body http://127.0.0.1:8000/health/ready` for `{"status":"ready"}`.
 Open `http://127.0.0.1:8000/` for the branded banking support page. Its customer messenger

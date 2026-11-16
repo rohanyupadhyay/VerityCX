@@ -212,8 +212,12 @@ decisions remain later work.
 
 `uv run python scripts/run_support.py --provider openai --build` builds the customer
 page and supervises the loopback API and worker together. It requires Node.js 24 and
-a valid existing server-side OpenAI key. The default provider follows `support.toml`;
-live selection is explicit, and no key or Chatwoot token is bundled into frontend assets.
+a valid existing server-side OpenAI key. The customer app launcher defaults to OpenAI,
+including when started with only `--setup --build`; `--provider deterministic` explicitly
+selects offline authored-fixture behavior. Missing live credentials fail startup instead
+of switching to fixtures. The selected provider is printed at startup. The standalone
+API/worker configuration retains its offline defaults. No key or Chatwoot token is
+bundled into frontend assets.
 `--setup` invokes the existing app database bootstrap first. Without `--build`, an
 existing build is reused; a missing build is created automatically. Frontend and service
 diagnostics stay in private files under `.cache/support/local/`. Ctrl+C terminates only

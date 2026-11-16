@@ -123,7 +123,12 @@ def _wait_ready(base_url: str, processes: LocalProcesses) -> None:
 def main() -> int:
     """Optionally prepare/build, then supervise the API and worker until interrupted."""
     parser = argparse.ArgumentParser(description="Run the VerityCX customer support app")
-    parser.add_argument("--provider", choices=["deterministic", "openai"])
+    parser.add_argument(
+        "--provider",
+        choices=["deterministic", "openai"],
+        default="openai",
+        help="answer provider (default: openai; deterministic is offline fixture mode)",
+    )
     parser.add_argument("--build", action="store_true", help="rebuild the customer frontend")
     parser.add_argument(
         "--setup", action="store_true", help="run maintained local app bootstrap first"
@@ -152,6 +157,7 @@ def main() -> int:
         if arguments.build or not (PROJECT_ROOT / "dist" / "chat" / "index.html").is_file():
             _build_frontend()
         provider = configuration.settings.provider
+        print(f"support_provider: {provider}", flush=True)
         processes.start(
             "api", [sys.executable, "-m", "veritycx.service.main", "--provider", provider]
         )
