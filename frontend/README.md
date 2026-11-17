@@ -115,6 +115,11 @@ conflict notice. Other duplicate titles show related-source links without assert
 that their contents conflict. Example questions are visible text; Ask VerityCX opens
 the native widget without automatically sending or prefilling a message.
 
+Homepage questions, service descriptions, and support guidance use general policy
+topics rather than named synthetic products or hardcoded bank facts, so they remain
+usable when the active corpus changes. Visitors can use the product names in the
+available documents when asking about a specific policy.
+
 Vite proxies both `/chat/config` and `/bank/api` to the local FastAPI service.
 Service/API contracts are documented in `src/veritycx/service/README.md`.
 

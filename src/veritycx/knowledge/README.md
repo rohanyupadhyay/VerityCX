@@ -7,7 +7,8 @@ Approved document ingestion and bounded lexical retrieval.
 ## Retrieval version 3
 
 category_retrieval.select_scoped_evidence dispatches the typed rewrite scope.
-Focused questions keep the version-2 selector unchanged. Overviews use the approved
+Focused questions first isolate an explicitly named product family, then use the
+unchanged version-2 selector within that family. Overviews use the approved
 catalog index, whose categories and original full-document titles match the bank
 pages. Category membership can include a policy without a lexical hit, such as Pine.
 Round-robin category allocation covers complete related-title groups before adding
@@ -19,6 +20,30 @@ Empty categories abstain without global fallback or an answer call.
 
 Category diagnostics count eligible and represented documents, not the number or
 completeness of real bank products. Metadata never supplies policy facts.
+
+## Customer audience and product identity
+
+`audience.py` excludes whole documents explicitly labelled internal, staff-only, or
+agent-only, including a customer-looking document with a restricted-use section. Bare
+internal-transfer language remains public. Preparation still validates every source's
+envelope, identifiers, and path before excluding it. Denied documents never enter manifest
+entries, catalog metadata, sections, public policy pages, or model evidence. Loading also
+independently refuses denied sources in historical or forged inventories. The original
+upstream checkout is preserved; acquisition inspection still counts all upstream files.
+
+`products.py` derives source families and category hints from structured document IDs.
+Longest complete names preserve modifiers such as Light Blue; original explicit names
+take precedence over rewriting. Unknown named products do not borrow facts from a
+different product. Follow-ups use the resolved standalone reference. Explicit audience
+qualifiers restrict generic discovery to personal or business families where applicable.
+Discovery covers distinct product introductions before secondary documents, retaining
+the existing six-section limit and indivisible related-source groups. These identities
+are search metadata and never establish fees, eligibility, or other policy facts.
+
+Audience and product rules are bound into the category policy digest. Existing corpora
+must be explicitly prepared and approved after this maintenance change; startup does not
+silently reapprove changed active data. The corrected fixed official corpus has 639
+customer-facing documents; 59 explicitly restricted or mixed-audience files are excluded.
 
 ## Preserved lexical baseline
 
@@ -71,9 +96,18 @@ fail closed when approval is missing or sources change.
 
 Prepare with `uv run python scripts/manage_support.py corpus prepare --mode synthetic`, then review
 and run `uv run python scripts/manage_support.py corpus approve --hash HASH`. Artifacts live under
-ignored `.cache/support/corpora/`. Source changes fail closed; no automatic approval, embeddings,
-web fetching, task evaluation or banking-record reads. The derived index is not trusted on restore;
+ignored `.cache/support/corpora/`. Source changes fail closed; no automatic reapproval, embeddings,
+request-time web fetching, task evaluation or banking-record reads. The derived index is not trusted on restore;
 verified source bytes reconstruct sections. Live grounding review remains pending.
+
+`startup.ensure_corpus(mode)` is used only by the customer app supervisor. Under the
+user-authorized startup workflow, it acquires the pinned official checkout if needed,
+verifies/installs pinned NLP assets, and prepares and activates a missing corpus. Existing
+active corpora are validated and reused without manifest writes. Invalid, changed, and
+outdated active corpora are preserved and rejected rather than automatically reapproved.
+Initial activation uses an exclusive `startup.lock`; a concurrent initializer fails with
+`corpus_setup_in_progress`, and a failed call removes only its own acquired lock. API and
+worker entry points remain read-only. No task or banking-record data enters the corpus.
 
 Dependencies are pinned in root `pyproject.toml`; install with `uv sync --locked --link-mode=copy`.
 Run `uv run ruff check src/veritycx/knowledge`, `uv run mypy` and

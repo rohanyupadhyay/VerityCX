@@ -8,6 +8,7 @@ from dataclasses import replace
 from veritycx.knowledge.catalog import CategoryKey
 from veritycx.knowledge.models import CatalogEntry, EvidenceSection
 from veritycx.knowledge.nlp import TextNormalizer
+from veritycx.knowledge.products import product_identity, scoped_catalog
 from veritycx.knowledge.retrieval import RetrievalSelection, select_evidence
 from veritycx.knowledge.scope import CategoryCoverage, SearchContext, SearchScope
 from veritycx.knowledge.synonyms import SynonymExpander
@@ -24,12 +25,7 @@ def select_scoped_evidence(
     normalizer: TextNormalizer,
     expander: SynonymExpander,
 ) -> RetrievalSelection:
-    """Retain focused v2 selection or cover complete approved category groups."""
-    if search_scope.scope == "focused":
-        result = select_evidence(
-            original_question, rewritten_query, evidence, normalizer=normalizer, expander=expander
-        )
-        return replace(result, context=SearchContext(search_scope=search_scope, coverage=None))
+    """Isolate named source products before bounded focused or category selection."""
     catalog = {entry.document_id: entry for entry in catalog_index}
     if (
         len(catalog) != len(catalog_index)
@@ -37,6 +33,16 @@ def select_scoped_evidence(
         or len({item.section_id for item in evidence}) != len(evidence)
     ):
         raise SourceError("corpus_changed")
+    scoped = scoped_catalog(
+        original_question, rewritten_query, catalog_index, normalizer=normalizer
+    )
+    catalog = {entry.document_id: entry for entry in scoped}
+    evidence = [item for item in evidence if item.document_id in catalog]
+    if search_scope.scope == "focused":
+        result = select_evidence(
+            original_question, rewritten_query, evidence, normalizer=normalizer, expander=expander
+        )
+        return replace(result, context=SearchContext(search_scope=search_scope, coverage=None))
     eligible = {
         identifier: entry
         for identifier, entry in catalog.items()
@@ -68,19 +74,45 @@ def select_scoped_evidence(
     for identifier, entry in eligible.items():
         groups[entry.title.casefold()].append(identifier)
 
-    def priority(group: tuple[str, ...]) -> tuple[float, str, str]:
-        """Keep group ranking independent of input iteration order."""
+    def priority(group: tuple[str, ...]) -> tuple[int, int, int, float, str, str]:
+        """Prefer product introductions while preserving stable legacy group ranking."""
         best = max(
             (by_document[identifier][0][0] for identifier in group if identifier in by_document),
             default=0.0,
         )
         first = group[0]
-        return -best, first, by_document[first][0][1].section_id if first in by_document else ""
+        product = product_identity(first)
+        detail = int(
+            any(product_identity(identifier) is not None for identifier in group)
+            and not any(identifier.endswith("_001") for identifier in group)
+        )
+        return (
+            int(product is None),
+            detail,
+            int(product.business) if product is not None else 0,
+            -best,
+            first,
+            by_document[first][0][1].section_id if first in by_document else "",
+        )
 
     pending: dict[CategoryKey, deque[tuple[str, ...]]] = {
         key: deque() for key in search_scope.categories
     }
     ordered = sorted((tuple(sorted(group)) for group in groups.values()), key=priority)
+    # Cover distinct products before using a second document from the same family.
+    # Related source versions remain indivisible groups under the existing budget.
+    seen_products: set[str] = set()
+    representatives: list[tuple[str, ...]] = []
+    details: list[tuple[str, ...]] = []
+    for group in ordered:
+        product = product_identity(group[0])
+        if product is None or product.family not in seen_products:
+            representatives.append(group)
+            if product is not None:
+                seen_products.add(product.family)
+        else:
+            details.append(group)
+    ordered = representatives + details
     for group in ordered:
         owner = next(
             key

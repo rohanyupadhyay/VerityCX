@@ -34,8 +34,11 @@ Focused answers and non-answer dispositions receive no note.
 `deterministic.py` implements exactly the forty authored fixture cases and abstains outside them.
 `openai.py` adapts the pinned Responses SDK with structured output, no tools, store=false, 2048 output
 tokens and max_retries=0. Its wire schema separates cited answers from clarification/abstention
-text in a nested union. The adapter supplies model and usage metadata from configuration and the
-SDK response, then constructs the existing strict internal result. `execution.py` reserves calls
+text in a nested union. For selected evidence, each request restricts wire citation IDs to an
+enum of its exact section IDs, preventing document IDs from being generated as citations.
+The independent publication check still rejects every unselected ID. The adapter supplies model
+and usage metadata from configuration and the SDK response, then constructs the existing strict
+internal result. `execution.py` reserves calls
 in PostgreSQL, enforces the remaining deadline,
 reuses journaled output and permits at most two attempts. Every failed/crashed reservation is spent.
 

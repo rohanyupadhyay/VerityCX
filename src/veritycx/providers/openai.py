@@ -1,10 +1,11 @@
 """Adapt one Responses request with structured output, no tools and SDK retries disabled."""
 
 import asyncio
+from types import GenericAlias
 from typing import Literal
 
 from openai import APIError, APITimeoutError, AsyncOpenAI
-from pydantic import Field, ValidationError
+from pydantic import Field, ValidationError, create_model
 
 from veritycx.conversations.models import ClosedModel
 from veritycx.providers.protocol import Claim, ProviderError, ProviderRequest, ProviderResult, Usage
@@ -33,6 +34,42 @@ class _ResponseEnvelope(ClosedModel):
     result: _GroundedAnswer | _NonAnswer
 
 
+def _response_format(request: ProviderRequest) -> type[_ResponseEnvelope]:
+    """Constrain remote citations to this request's exact selected section IDs."""
+    if not request.evidence:
+        return _ResponseEnvelope
+    # Documents also carry document IDs, which are not valid citations. Encode
+    # membership in the remote decoder rather than relying on prompt compliance.
+    # The separate publication policy still checks every returned identifier.
+    selected_claim = create_model(
+        "SelectedClaim",
+        __base__=Claim,
+        evidence_ids=(
+            tuple[str, ...],
+            Field(
+                min_length=1,
+                max_length=6,
+                json_schema_extra={
+                    "items": {
+                        "type": "string",
+                        "enum": list(dict.fromkeys(s.section_id for s in request.evidence)),
+                    }
+                },
+            ),
+        ),
+    )
+    selected_answer = create_model(
+        "SelectedGroundedAnswer",
+        __base__=_GroundedAnswer,
+        claims=(GenericAlias(tuple, (selected_claim, Ellipsis)), Field(min_length=1)),
+    )
+    return create_model(
+        "SelectedResponseEnvelope",
+        __base__=_ResponseEnvelope,
+        result=(selected_answer | _NonAnswer, ...),
+    )
+
+
 class OpenAIProvider:
     """Make one bounded network attempt; the durable application ledger owns retries."""
 
@@ -50,7 +87,7 @@ class OpenAIProvider:
             async with asyncio.timeout(timeout):
                 response = await self.client.responses.parse(
                     model=self.model,
-                    text_format=_ResponseEnvelope,
+                    text_format=_response_format(request),
                     instructions=(
                         "Answer banking policy questions using only the supplied evidence. "
                         "The original question defines the customer's request; rewritten_query "

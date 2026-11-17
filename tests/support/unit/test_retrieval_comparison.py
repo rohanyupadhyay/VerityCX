@@ -36,9 +36,11 @@ def test_all_inputs_and_exclusions_remain_visible(measured: ComparisonReport) ->
         )
     assert measured.passed
     assert measured.provider_requests == 0 and measured.cost is None
+    # The customer-audience and product-scope maintenance transition changes the
+    # reviewed v3 identity while preserving the authored source documents.
     assert (
         measured.provenance.corpus_hash
-        == "327f77dafc86fe6ef60480fcfc3ebc7f3fd75177906860abed74da218bf68d6c"
+        == "955579412980e49c5675072e44a9d141aa6b490b2b295f85800980f77e0551ef"
     )
     assert measured.provenance.repetitions == 2
     assert "What cards does" not in measured.model_dump_json()

@@ -11,11 +11,12 @@ from scripts import setup_support_local
 
 
 @pytest.mark.parametrize(
-    "arguments,provider,key",
+    "arguments,provider,key,corpus_mode",
     [
-        ([], "openai", "offline-test-no-network"),
-        (["--provider", "deterministic"], "deterministic", None),
-        ([], None, None),
+        ([], "openai", "offline-test-no-network", "official"),
+        (["--provider", "deterministic"], "deterministic", None, "synthetic"),
+        (["--corpus-mode", "synthetic"], "openai", "offline-test-no-network", "synthetic"),
+        ([], None, None, "official"),
     ],
 )
 def test_customer_launcher_uses_live_provider_unless_offline_is_explicit(
@@ -25,6 +26,7 @@ def test_customer_launcher_uses_live_provider_unless_offline_is_explicit(
     arguments: list[str],
     provider: str | None,
     key: str | None,
+    corpus_mode: str,
 ) -> None:
     """An ordinary app restart must not silently replace live answers with authored fixtures."""
     from scripts import run_support
@@ -40,7 +42,22 @@ def test_customer_launcher_uses_live_provider_unless_offline_is_explicit(
         monkeypatch.setenv("OPENAI_API_KEY", key)
     monkeypatch.setattr(sys, "argv", ["run_support.py", *arguments])
     monkeypatch.setattr(run_support, "load_project_environment", lambda: None)
-    monkeypatch.setattr(run_support, "active_corpus", lambda _: None)
+    from veritycx.knowledge.manifest import build_manifest
+    from veritycx.knowledge.models import CorpusManifest
+
+    documents = tmp_path / "documents"
+    documents.mkdir()
+    (documents / "policy.json").write_text(
+        '{"id":"policy-01","title":"Policy","content":"Synthetic fact."}'
+    )
+    initialized: list[str] = []
+
+    def initialize(mode: str) -> CorpusManifest:
+        """Replace external acquisition while retaining a real typed corpus inventory."""
+        initialized.append(mode)
+        return build_manifest(documents, "synthetic", "synthetic-v1")
+
+    monkeypatch.setattr(run_support, "ensure_corpus", initialize, raising=False)
     monkeypatch.setattr(run_support, "port_available", lambda *_: True)
     monkeypatch.setattr(run_support, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(run_support, "LOCAL", tmp_path / "logs")
@@ -69,11 +86,13 @@ def test_customer_launcher_uses_live_provider_unless_offline_is_explicit(
         assert run_support.main() == 1
         assert "missing_provider_credential" in capsys.readouterr().out
         assert not commands
+        assert not initialized
         return
     assert run_support.main() == 0
+    assert initialized == [corpus_mode]
     assert commands == [
-        [sys.executable, "-m", "veritycx.service.main", "--provider", provider],
-        [sys.executable, "-m", "veritycx.orchestration.worker", "--provider", provider],
+        [sys.executable, "-m", module, "--provider", provider, "--corpus-mode", corpus_mode]
+        for module in ("veritycx.service.main", "veritycx.orchestration.worker")
     ]
     assert len(children) == 2 and all(child.poll() is not None for child in children)
 
@@ -91,6 +110,38 @@ def test_run_command_documents_provider_and_build_options() -> None:
     assert "--provider" in result.stdout
     assert "--build" in result.stdout
     assert "--setup" in result.stdout
+    assert "--corpus-mode" in result.stdout
+
+
+def test_failed_corpus_initialization_starts_no_services(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The launcher must report initialization failure before publishing either child service."""
+    from scripts import run_support
+
+    from veritycx.policy.sources import SourceError
+    from veritycx.service.auth import init_demo
+
+    auth, _, _ = init_demo(tmp_path / "auth")
+    monkeypatch.setenv("VERITYCX_AUTH_FILE", str(auth))
+    monkeypatch.setenv("VERITYCX_DATABASE_URL", "postgresql://offline-test@127.0.0.1/unused")
+    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-no-network")
+    monkeypatch.setattr(sys, "argv", ["run_support.py"])
+    monkeypatch.setattr(run_support, "load_project_environment", lambda: None)
+    monkeypatch.setattr(run_support, "port_available", lambda *_: True)
+
+    def unavailable(mode: str) -> None:
+        """Model a real fail-closed source validation result."""
+        raise SourceError("corpus_changed")
+
+    def forbidden_start(*args: object, **kwargs: object) -> None:
+        """Any service publication after failed initialization is a contract violation."""
+        pytest.fail("service started before corpus initialization succeeded")
+
+    monkeypatch.setattr(run_support, "ensure_corpus", unavailable, raising=False)
+    monkeypatch.setattr(run_support.LocalProcesses, "start", forbidden_start)
+    assert run_support.main() == 1
+    assert "corpus_changed" in capsys.readouterr().out
 
 
 def test_run_command_refuses_an_existing_listener(

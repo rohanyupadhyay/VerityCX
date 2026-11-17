@@ -55,17 +55,16 @@ const topics: {
     icon: "bank",
     title: "Everyday banking",
     description:
-      "Make sense of Birch checking fees, account requirements and the everyday details.",
-    tag: "Checking & accounts",
+      "Explore documented account fees, opening requirements and everyday banking policies.",
+    tag: "Accounts & requirements",
     category: "accounts",
   },
   {
     number: "02",
     icon: "card",
     title: "Cards, without the confusion",
-    description:
-      "Explore Cedar card replacement policies and understand the next steps.",
-    tag: "Cards & replacements",
+    description: "Explore documented card products, fees and requirements.",
+    tag: "Cards & fees",
     category: "cards",
   },
   {
@@ -73,7 +72,7 @@ const topics: {
     icon: "leaf",
     title: "Room to grow",
     description:
-      "Get clarity on Alder savings requirements and how the policies fit together.",
+      "Find documented savings fees, account requirements and related policies.",
     tag: "Savings & eligibility",
     category: "savings",
   },
@@ -92,7 +91,7 @@ const questions = [
   {
     question: "What can I ask here?",
     answer:
-      "Ask a question about the demonstration bank’s policies: Birch checking fees, Cedar card replacements, Alder savings requirements, or transfer rules. Be specific about the product so support can find the relevant policy.",
+      "Ask about the products and policies in the available bank documents, such as savings fees, card products, account opening requirements, or transfer rules. Use the product name shown in the document so support can find the relevant policy.",
   },
   {
     question: "Can you access or change my account?",
@@ -268,9 +267,9 @@ export function App(): ReactElement {
                   </h2>
                   <p>Here are a few places to start.</p>
                   {[
-                    "What are the Birch checking fees?",
-                    "How do Cedar card replacements work?",
-                    "What does Alder savings require?",
+                    "Which savings fees are documented?",
+                    "Which card products are documented?",
+                    "What are the account opening requirements?",
                   ].map((question, index) => (
                     <ChatButton
                       key={question}

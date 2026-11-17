@@ -23,6 +23,10 @@ or subprocess handles created by that test; it must never reset unrelated databa
 `test_providers.py` exercises real SDK parsing through an offline transport for cited
 answers, clarifications and abstentions, including SDK-supplied usage and configured
 model identity. It also checks citation membership, malformed output and disabled retries.
+The remote answer schema restricts citation strings to the exact selected section IDs;
+the independent publication policy continues rejecting unselected identifiers.
+`test_bank_information.py` also verifies that staff-only documents are absent from public
+listings and return 404 on direct lookup after corpus preparation.
 
 `test_configuration_loading.py` requires API and worker startup to load the root dotenv before
 configuration. `test_environment_commands.py` applies the same ordering contract to management and
@@ -38,7 +42,9 @@ values, so configuring the application does not change their expectations.
 containment and the disabled widget contract. `test_chatwoot_runtime_configuration.py`
 checks optional channel configuration and pool requirements. `test_chatwoot_setup.py`
 checks private owned Docker provisioning without requiring a real Docker daemon;
-`test_run_support.py` checks launcher discovery, listener preservation and owned cleanup.
+`test_run_support.py` checks launcher discovery, listener preservation and owned cleanup,
+automatic knowledge initialization before service publication, official/synthetic selection,
+and identical corpus arguments for both child services.
 
 `test_retrieval_regressions_cli.py` covers explicit live gating, bounded unique
 scenario selection, child-only test configuration, inherited credential/tracing

@@ -10,6 +10,7 @@ from typing import Literal
 from pydantic import ValidationError
 
 from veritycx.conversations.models import parse_json
+from veritycx.knowledge.audience import customer_facing
 from veritycx.knowledge.catalog import category_for, category_policy_identity
 from veritycx.knowledge.documents import parse_document
 from veritycx.knowledge.index import sections
@@ -62,6 +63,8 @@ def build_manifest(
         if document.id in identifiers:
             raise SourceError("duplicate_document")
         identifiers.add(document.id)
+        if not customer_facing(document):
+            continue
         if ranking_version == 3:
             catalog.append(
                 CatalogEntry(
@@ -78,6 +81,8 @@ def build_manifest(
                 section_ids=tuple(s.section_id for s in sections(document, "pending")),
             )
         )
+    if not entries:
+        raise SourceError("missing_sources")
     identity = (resource_identity or configured_identity()) if ranking_version >= 2 else None
     policy = category_policy_identity() if ranking_version == 3 else None
     payload: dict[str, object] = {
@@ -198,6 +203,8 @@ def load_documents(root: Path, manifest: CorpusManifest) -> list[KnowledgeDocume
         if sha256(raw).hexdigest() != entry.sha256:
             raise SourceError("corpus_changed")
         document = parse_document(raw)
+        if not customer_facing(document):
+            raise SourceError("forbidden_source")
         indexed = sections(document, manifest.corpus_version)
         if (
             document.id != entry.document_id

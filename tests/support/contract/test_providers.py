@@ -206,7 +206,16 @@ def test_sdk_decodes_disposition_specific_output_without_model_authored_metadata
                 ProviderRequest(
                     correlation_id="fixture",
                     question="What is the fee?",
-                    evidence=(),
+                    evidence=(
+                        EvidenceSection(
+                            corpus_version="fixture",
+                            document_id="policy",
+                            section_id="policy:0001",
+                            section_hash="a" * 64,
+                            title="Authored policy",
+                            content="The fee is 5 synthetic dollars.",
+                        ),
+                    ),
                     remaining_seconds=5.0,
                 )
             )
@@ -219,3 +228,108 @@ def test_sdk_decodes_disposition_specific_output_without_model_authored_metadata
             assert result.usage.output_tokens == 7
 
     run_async(exercise())
+
+
+def test_sdk_schema_limits_citations_to_each_requests_selected_sections() -> None:
+    """Document IDs and other requests' sections must be impossible wire citations."""
+    import json
+    from typing import Any
+
+    import httpx2
+    from openai import AsyncOpenAI
+
+    from veritycx.providers.openai import OpenAIProvider
+    from veritycx.service.runtime import run_async
+
+    selections = (("policy:0001", "policy:0002"), ("other:0003",))
+    calls = 0
+    schemas: list[dict[str, Any]] = []
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Inspect the SDK schema and return a cited, authored policy claim."""
+        nonlocal calls
+        expected = list(selections[calls])
+        calls += 1
+        schema = json.loads(request.content)["text"]["format"]["schema"]
+        schemas.append(schema)
+        return httpx2.Response(
+            200,
+            json={
+                "id": "resp_offline",
+                "object": "response",
+                "created_at": 0,
+                "status": "completed",
+                "model": "sdk-fixture",
+                "output": [
+                    {
+                        "id": "msg_offline",
+                        "type": "message",
+                        "role": "assistant",
+                        "status": "completed",
+                        "content": [
+                            {
+                                "type": "output_text",
+                                "text": json.dumps(
+                                    {
+                                        "result": {
+                                            "disposition": "answer",
+                                            "claims": [
+                                                {
+                                                    "text": "The authored fee is five credits.",
+                                                    "evidence_ids": [expected[0]],
+                                                }
+                                            ],
+                                        }
+                                    }
+                                ),
+                                "annotations": [],
+                            }
+                        ],
+                    }
+                ],
+            },
+        )
+
+    async def exercise() -> None:
+        """Reuse one adapter while keeping distinct selections isolated."""
+        async with AsyncOpenAI(
+            api_key="offline-test",
+            max_retries=0,
+            http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(respond)),
+        ) as client:
+            provider = OpenAIProvider(client)
+            for identifiers in selections:
+                request = ProviderRequest(
+                    correlation_id="fixture",
+                    question="What is the fee?",
+                    evidence=tuple(
+                        EvidenceSection(
+                            corpus_version="fixture",
+                            document_id=identifier.split(":")[0],
+                            section_id=identifier,
+                            section_hash="a" * 64,
+                            title="Authored policy",
+                            content="The authored fee is five credits.",
+                        )
+                        for identifier in identifiers
+                    ),
+                    remaining_seconds=5.0,
+                )
+                result = await provider.generate(request)
+                published = validate_result(request, result)
+                assert published.text == "The authored fee is five credits."
+                assert published.citations[0].section_id == identifiers[0]
+
+    run_async(exercise())
+    assert calls == 2
+    for schema, identifiers in zip(schemas, selections, strict=True):
+        claim_schemas = [
+            definition
+            for definition in schema["$defs"].values()
+            if "evidence_ids" in definition.get("properties", {})
+        ]
+        assert len(claim_schemas) == 1
+        citation_schema = claim_schemas[0]["properties"]["evidence_ids"]
+        assert citation_schema["items"].get("enum") == list(identifiers)
+        assert citation_schema["minItems"] == 1
+        assert citation_schema["maxItems"] == 6

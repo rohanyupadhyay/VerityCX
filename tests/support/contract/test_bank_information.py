@@ -128,6 +128,36 @@ def test_unapproved_and_changed_sources_are_unavailable(
     assert bank_client.get("/bank/api/policies").status_code == 503
 
 
+def test_staff_sources_are_never_published(bank_client: TestClient, tmp_path: Path) -> None:
+    """Approved customer inventories omit internal titles and embedded staff-only segments."""
+    root, cache = tmp_path / "documents", tmp_path / "corpus"
+    for identifier, title, content in [
+        ("private-title", "Internal: Account support", "staff-only-canary"),
+        ("private-body", "Customer protections", "Internal use only. staff-only-canary"),
+        (
+            "public-transfer",
+            "Internal transfers between your accounts",
+            "Read the public internal transfer terms before submitting a transfer.",
+        ),
+    ]:
+        (root / f"{identifier}.json").write_text(
+            json.dumps({"id": identifier, "title": title, "content": content})
+        )
+    manifest = prepare(root, cache, "synthetic", "synthetic-v1")
+    approve(root, cache, manifest.aggregate_hash)
+    listing = bank_client.get("/bank/api/policies")
+    assert listing.status_code == 200 and listing.json()["total"] == 41
+    assert "staff-only-canary" not in listing.text
+    assert bank_client.get("/bank/api/policies?q=staff-only-canary").json()["total"] == 0
+    for identifier in ["private-title", "private-body"]:
+        response = bank_client.get(f"/bank/api/policies/{identifier}")
+        assert response.status_code == 404
+        assert "staff-only-canary" not in response.text
+    response = bank_client.get("/bank/api/policies/public-transfer")
+    assert response.status_code == 200
+    assert "public internal transfer terms" in response.json()["content"]
+
+
 def test_frontend_deep_links_do_not_swallow_api_errors(bank_client: TestClient) -> None:
     """Explicit website routes refresh correctly; API and unknown paths stay real 404s."""
     for url in ["/bank", "/bank/search?q=fees", "/bank/services/cards", "/bank/policies/policy-02"]:
