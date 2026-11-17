@@ -65,21 +65,45 @@ omitting it inherits the answer model. Rewriting has one durably reserved call
 capped at ten seconds. Answering retains at most two attempts within the shared
 60-second turn deadline. Rewrite errors return a clear retry message without
 searching an unresolved original question. Ambiguity requests clarification.
-Focused questions retain normalized retrieval and one WordNet pass only after
-empty primary retrieval. Category overviews use the same rewrite call to choose
-validated service categories. The approved category snapshot matches the bank
-pages and includes Pine alongside Cedar and Hazel. Selection covers documents
-before adding extra sections, while retaining six-section/12,000-character caps.
+Focused questions isolate a named product before normalized retrieval, preserving
+personal/business distinctions, punctuation, and longer product names. Unknown
+names abstain rather than borrowing another product's facts. One WordNet pass is
+allowed only after empty primary retrieval. Category overviews use the same rewrite
+call to choose validated service categories. The approved category snapshot matches
+the bank pages. Discovery prefers distinct product introductions before additional
+details, while retaining six-section/12,000-character caps.
 Related source versions stay together; large categories return partial coverage.
 Successful overviews carry citations and an application-owned note that the
 documented products or services may not be a complete offering list. Unsupported
 qualifiers remain unsupported; category metadata never creates policy facts.
+Answer decoding restricts citations to the selected section IDs, and an independent
+publication check rejects unselected identifiers.
+
+The official checkout contains 698 document files. The customer corpus excludes 59
+explicitly internal or mixed-audience documents, leaving 639 customer-facing policies
+at the pinned release. Restricted sources never enter chat evidence or public policy
+listings and cannot be retrieved through a direct policy URL. Ordinary public policies
+about internal transfers remain eligible. See the [data policy](docs/data/tau3-banking.md).
+
+Existing installations from before this audience/product policy update require one
+explicit preparation and approval of the official corpus before restarting:
+
+```bash
+uv run python scripts/manage_support.py corpus prepare --mode official
+uv run python scripts/manage_support.py corpus approve --hash HASH
+```
+
+Replace `HASH` with the printed digest. Fresh installations initialize automatically.
+For an existing synthetic demo, use `--mode synthetic` in the preparation command.
+Start a new conversation after changing corpus versions.
 
 An existing version-1 or version-2 installation requires an explicit maintenance transition:
 stop owned workers, run the maintained application database migration/bootstrap,
 apply the additive migration 003, prepare the version-3 corpus, review and approve
 its printed hash, and restart.
-Preparation and startup never approve documents. Old conversations retain their
+Preparation and low-level API/worker startup never approve documents. The customer-app
+launcher initializes a missing corpus automatically, but never reapproves changed or
+outdated active sources. Old conversations retain their
 original corpus identity; after activation, start a new conversation rather than
 mixing corpus versions. Completed historical answers remain stored under retention.
 The original keyword retriever and normalized lexical retriever remain available
@@ -99,8 +123,9 @@ Reruns preserve app credentials and existing nonempty settings; conflicting conf
 fails with a value-free category. Existing unregistered app databases/roles are not adopted.
 The default command without `--app` retains its test-only behavior.
 
-If setup reports `corpus=approval_required`, prepare the synthetic documents, review the
-summary, and approve the printed hash explicitly:
+For the customer app, continue directly to the launcher below; it initializes missing
+knowledge automatically. For standalone synthetic API/worker sessions, if setup reports
+`corpus=approval_required`, prepare the documents and approve the printed hash explicitly:
 
 ```bash
 uv run python scripts/manage_support.py corpus prepare --mode synthetic
@@ -118,9 +143,21 @@ uv run python scripts/run_support.py --provider openai --build
 
 This requires Node.js 24 and a valid server-side `OPENAI_API_KEY`. The launcher installs
 locked frontend dependencies if missing, builds the page, verifies readiness, and owns
-both child processes. Ctrl+C stops only those children. It refuses an occupied API port;
+both child processes. Normal startup selects the official banking documents. On first use,
+it acquires and validates the pinned dataset, installs missing pinned language resources,
+and prepares and activates the documents-only corpus. Later starts validate and reuse
+the installed checkout and corpus without downloading or rewriting the manifest.
+This initial activation is authorized by the launcher workflow; changed or invalid existing
+data fails startup rather than being replaced or silently reapproved. Startup makes no paid
+provider calls. Its output reports the selected corpus and document count.
+Ctrl+C stops only those children. It refuses an occupied API port;
 it never kills an existing service. Use `--setup` to run the app database bootstrap first,
 or `--provider deterministic` for explicitly offline authored-fixture behavior.
+Deterministic mode defaults to synthetic knowledge. Use `--corpus-mode synthetic` with
+OpenAI to explicitly retain the small demo corpus. Both children receive the same selection;
+low-level module commands still use the configuration file unless overridden explicitly.
+The customer app launcher defaults to OpenAI even when `--provider` is omitted;
+missing live credentials fail startup instead of switching to fixture answers.
 
 Check `curl --fail-with-body http://127.0.0.1:8000/health/ready` for `{"status":"ready"}`.
 Open `http://127.0.0.1:8000/` for the branded banking support page. Its customer messenger

@@ -15,8 +15,10 @@ from pathlib import Path
 import httpx
 
 from veritycx import PROJECT_ROOT
+from veritycx.data_sources.tau3 import Tau3OperationError, format_tau3_diagnostic
 from veritycx.environment import EnvironmentLoadError, load_project_environment
-from veritycx.knowledge.configuration import active_corpus
+from veritycx.knowledge.resources import ResourceError
+from veritycx.knowledge.startup import ensure_corpus
 from veritycx.policy.sources import SourceError
 from veritycx.service.auth import AuthError, load_principals
 from veritycx.service.configuration import ConfigurationError, load_configuration
@@ -123,8 +125,18 @@ def _wait_ready(base_url: str, processes: LocalProcesses) -> None:
 def main() -> int:
     """Optionally prepare/build, then supervise the API and worker until interrupted."""
     parser = argparse.ArgumentParser(description="Run the VerityCX customer support app")
-    parser.add_argument("--provider", choices=["deterministic", "openai"])
+    parser.add_argument(
+        "--provider",
+        choices=["deterministic", "openai"],
+        default="openai",
+        help="answer provider (default: openai; deterministic is offline fixture mode)",
+    )
     parser.add_argument("--build", action="store_true", help="rebuild the customer frontend")
+    parser.add_argument(
+        "--corpus-mode",
+        choices=["synthetic", "official"],
+        help="knowledge corpus (default: official for OpenAI, synthetic for deterministic)",
+    )
     parser.add_argument(
         "--setup", action="store_true", help="run maintained local app bootstrap first"
     )
@@ -144,20 +156,43 @@ def main() -> int:
             Path("config/support.toml"),
             os.environ,
             provider=arguments.provider,
+            corpus_mode=arguments.corpus_mode
+            or ("synthetic" if arguments.provider == "deterministic" else "official"),
         )
         load_principals(configuration.auth_file)
-        active_corpus(configuration.settings.corpus_mode)
         if not port_available(configuration.settings.bind, configuration.settings.port):
             raise LaunchError("support_port_in_use")
+        mode = configuration.settings.corpus_mode
+        print(f"support_corpus_initializing: {mode}", flush=True)
+        manifest = ensure_corpus(mode)
+        print(f"support_corpus: {mode} documents={len(manifest.entries)}", flush=True)
         if arguments.build or not (PROJECT_ROOT / "dist" / "chat" / "index.html").is_file():
             _build_frontend()
         provider = configuration.settings.provider
+        print(f"support_provider: {provider}", flush=True)
         processes.start(
-            "api", [sys.executable, "-m", "veritycx.service.main", "--provider", provider]
+            "api",
+            [
+                sys.executable,
+                "-m",
+                "veritycx.service.main",
+                "--provider",
+                provider,
+                "--corpus-mode",
+                mode,
+            ],
         )
         processes.start(
             "worker",
-            [sys.executable, "-m", "veritycx.orchestration.worker", "--provider", provider],
+            [
+                sys.executable,
+                "-m",
+                "veritycx.orchestration.worker",
+                "--provider",
+                provider,
+                "--corpus-mode",
+                mode,
+            ],
         )
         host = configuration.settings.bind
         base_url = (
@@ -169,7 +204,17 @@ def main() -> int:
         while all(child.poll() is None for child in processes.children):
             time.sleep(0.5)
         raise LaunchError("support_process_exited")
-    except (LaunchError, ConfigurationError, EnvironmentLoadError, AuthError, SourceError) as error:
+    except Tau3OperationError as error:
+        print(format_tau3_diagnostic(error), flush=True)
+        return 1
+    except (
+        LaunchError,
+        ConfigurationError,
+        EnvironmentLoadError,
+        AuthError,
+        SourceError,
+        ResourceError,
+    ) as error:
         print(str(error), flush=True)
         return 1
     except OSError:

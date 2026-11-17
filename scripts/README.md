@@ -212,8 +212,25 @@ decisions remain later work.
 
 `uv run python scripts/run_support.py --provider openai --build` builds the customer
 page and supervises the loopback API and worker together. It requires Node.js 24 and
-a valid existing server-side OpenAI key. The default provider follows `support.toml`;
-live selection is explicit, and no key or Chatwoot token is bundled into frontend assets.
+a valid existing server-side OpenAI key. The customer app launcher defaults to OpenAI,
+including when started with only `--setup --build`; `--provider deterministic` explicitly
+selects offline authored-fixture behavior. Normal startup defaults to the official knowledge
+corpus, independently of the standalone configuration's synthetic default. The launcher
+acquires the exact pinned dataset when missing, verifies existing checkout integrity,
+installs missing pinned NLP assets, and prepares and activates a missing document corpus.
+Subsequent starts reuse valid assets and manifests offline. Existing invalid/changed data
+is preserved and fails startup; it is never silently repaired or reapproved. Only the
+configured documents subtree enters retrieval, and initialization makes no provider calls.
+Deterministic mode defaults to synthetic knowledge. `--corpus-mode synthetic` explicitly
+selects synthetic knowledge for a live demo. Both API and worker receive the selected mode.
+Low-level module startup and database setup retain their manual activation contracts.
+A concurrent initial activation reports `corpus_setup_in_progress`; retry after it completes.
+If interrupted initialization leaves a `startup.lock` in the selected corpus cache, confirm
+no initializer is running before removing only that lock and retrying.
+Missing live credentials fail startup instead
+of switching to fixtures. The selected provider is printed at startup. The standalone
+API/worker configuration retains its offline defaults. No key or Chatwoot token is
+bundled into frontend assets.
 `--setup` invokes the existing app database bootstrap first. Without `--build`, an
 existing build is reused; a missing build is created automatically. Frontend and service
 diagnostics stay in private files under `.cache/support/local/`. Ctrl+C terminates only

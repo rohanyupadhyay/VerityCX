@@ -12,8 +12,12 @@ These are language-processing assets, not additional banking evidence.
 The optional rewrite_model support setting overrides rewriting only; omission
 inherits the existing answer model.
 Version 3 additionally binds the shared service-category policy and original-title
-catalog snapshot into the prepared corpus manifest. Corpus approval remains
-explicit; language installation and worker startup never approve documents.
+catalog snapshot into the prepared corpus manifest. Manual corpus approval remains
+explicit; language installation and low-level worker startup never approve documents.
+The customer app launcher initializes and activates a missing corpus under its authorized
+startup workflow. Existing changed or outdated active sources still require an explicit
+maintenance transition. Its default is official knowledge for OpenAI and synthetic knowledge
+for deterministic mode; `--corpus-mode` overrides this launcher choice without editing TOML.
 
 ## Purpose and Responsibility
 

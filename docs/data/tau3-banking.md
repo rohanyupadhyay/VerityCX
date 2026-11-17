@@ -52,6 +52,22 @@ loaders, and APIs are default-deny consumers. Source code, examples, simulations
 every other unclassified upstream artifact are also denied unless a later reviewed specification
 explicitly allow-lists them.
 
+## Customer-Facing Knowledge
+
+The customer application applies an additional audience filter within the allow-listed
+documents directory. Explicit internal title labels and staff/agent/internal-use-only
+markings exclude the entire document, including mixed customer/internal sources. Public
+internal-transfer language is retained. Excluded sources are still validated for safe
+paths, strict envelopes, and unique identifiers, but never enter the prepared manifest,
+catalogue, index, public document endpoints, or chat evidence. Direct loading also
+rejects restricted sources from an old inventory.
+
+At the fixed pin, 639 documents are customer-facing and 59 are excluded. The acquisition
+inspector's 698-file count remains correct: acquisition and customer publication have
+different scopes. Audience/product classification is bound into the approved corpus
+identity. Updating that policy requires explicit preparation and approval of a replacement
+corpus, followed by new conversations; old approvals never gain new authority silently.
+
 ## Recovery and Verification
 
 Invalid existing or foreign state is preserved. Resolve it manually after reading the categorized

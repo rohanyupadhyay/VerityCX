@@ -5,11 +5,38 @@ import json
 import httpx2
 import pytest
 from openai import AsyncOpenAI
+from pydantic import ValidationError
 
 from veritycx.knowledge.scope import CategoryHint
 from veritycx.providers.protocol import ProviderError
-from veritycx.providers.rewrite import OpenAIQueryRewriter, RewriteRequest
+from veritycx.providers.rewrite import OpenAIQueryRewriter, RewriteRequest, _ProviderRewriteEnvelope
 from veritycx.service.runtime import run_async
+
+
+@pytest.mark.parametrize("scope,categories", [("focused", ["cards"]), ("category_overview", [])])
+def test_wire_schema_rejects_inconsistent_search_scope(scope: str, categories: list[str]) -> None:
+    """Expose scope rules to constrained decoding rather than reject them only after generation."""
+    with pytest.raises(ValidationError):
+        _ProviderRewriteEnvelope.model_validate_json(
+            json.dumps(
+                {
+                    "result": {
+                        "disposition": "search",
+                        "query": "Cedar card fee",
+                        "scope": scope,
+                        "categories": categories,
+                    }
+                }
+            )
+        )
+
+
+def test_wire_variants_share_the_leading_decision_field() -> None:
+    """Characterize the live decoder's branch choice: search must also start with disposition."""
+    schema = _ProviderRewriteEnvelope.model_json_schema()
+    for variant in schema["properties"]["result"]["anyOf"]:
+        name = variant["$ref"].rsplit("/", 1)[1]
+        assert next(iter(schema["$defs"][name]["properties"])) == "disposition"
 
 
 def test_rewrite_request_and_sanitized_failure() -> None:
@@ -19,13 +46,20 @@ def test_rewrite_request_and_sanitized_failure() -> None:
     def respond(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
         payload = json.loads(request.content)
+        schema = payload["text"]["format"]["schema"]
+        assert (
+            schema["$defs"]["_FocusedSearchResponse"]["properties"]["categories"]["maxItems"] == 0
+        )
+        assert (
+            schema["$defs"]["_OverviewSearchResponse"]["properties"]["categories"]["minItems"] == 1
+        )
         assert payload["model"] == "rewrite-fixture"
         assert payload["store"] is False
         assert payload["tools"] == []
         assert payload["max_output_tokens"] == 2048
         assert payload["text"]["format"]["strict"] is True
         search_input = json.loads(payload["input"])
-        assert search_input["prompt_version"] == 2
+        assert search_input["prompt_version"] == 3
         assert search_input["available_categories"] == [{"key": "cards", "label": "Cards"}]
         assert "category_overview" in payload["instructions"]
         assert "qualifiers" in payload["instructions"]

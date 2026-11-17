@@ -12,6 +12,7 @@ MIGRATIONS = (
     MIGRATION,
     MIGRATION.with_name("002_query_rewrites.sql"),
     MIGRATION.with_name("003_category_retrieval.sql"),
+    MIGRATION.with_name("004_rewrite_discovery.sql"),
 )
 MIGRATION_LOCK = 724063812
 

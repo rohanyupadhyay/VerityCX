@@ -50,6 +50,23 @@ it("renders an honest demo, readable guidance, and unavailable chat controls", a
   ).not.toBeNull();
 });
 
+it("offers policy questions and guidance without inventing product names", async () => {
+  await act(async () => root.render(<App />));
+
+  expect(container.textContent).not.toMatch(/\b(Birch|Cedar|Alder)\b/i);
+  const suggestions = container.querySelectorAll<HTMLButtonElement>(
+    ".suggested-question",
+  );
+  expect(suggestions).toHaveLength(3);
+  expect(suggestions[0]?.textContent).toMatch(/savings.*fees/i);
+  expect(suggestions[1]?.textContent).toMatch(/card.*products/i);
+  expect(suggestions[2]?.textContent).toMatch(/account.*requirements/i);
+  suggestions.forEach((button) => {
+    expect(button.getAttribute("aria-label")).toMatch(/^Open chat to ask: /);
+    expect(button.disabled).toBe(true);
+  });
+});
+
 it("starts a fresh chat from each page action and disables actions until reset finishes", async () => {
   vi.mocked(fetch).mockResolvedValue(
     new Response(

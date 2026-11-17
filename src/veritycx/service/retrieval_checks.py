@@ -10,7 +10,12 @@ from veritycx.knowledge.models import CatalogEntry, EvidenceSection
 from veritycx.knowledge.scope import OVERVIEW_SCOPE_NOTE, CategoryCoverage
 from veritycx.persistence.rewrites import RewriteRow
 from veritycx.providers.protocol import ContextMessage, ProviderRequest, ProviderResult
-from veritycx.providers.rewrite import RewriteRequest, RewriteResult, SearchRewrite
+from veritycx.providers.rewrite import (
+    REWRITE_PROMPT_VERSION,
+    RewriteRequest,
+    RewriteResult,
+    SearchRewrite,
+)
 from veritycx.service.retrieval_cases import EvidenceExpectation, RegressionTurn
 
 Reason = Literal[
@@ -181,7 +186,7 @@ def judge_turn(
     row = observed.rewrite_row
     if rewrite is None or rewrite.disposition not in turn.expected.rewrite_kinds:
         rewrite_errors.append("rewrite_kind_mismatch")
-    if row is None or row.status != "succeeded" or row.prompt_version != 2:
+    if row is None or row.status != "succeeded" or row.prompt_version != REWRITE_PROMPT_VERSION:
         rewrite_errors.append("journal_mismatch")
     elif observed.rewrite is not None:
         try:

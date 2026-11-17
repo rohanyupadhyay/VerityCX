@@ -40,6 +40,11 @@ relabelled using the newest worker's prompt. Answer attempts remain capped at tw
 Native fresh-install and v2-upgrade tests own temporary foreground PostgreSQL
 clusters; they never downgrade or reset the shared dedicated database.
 
+Migration 004 permits rewrite prompt 3 without changing any historical rewrite or
+answer row. Fresh installs and upgrades from both the 002 and 003 prefixes retain
+historical provenance. Apply it administratively before starting the new worker;
+runtime credentials cannot perform the upgrade.
+
 ## Implemented Typed Contracts
 
 `models.py` implements strict driver-row models for conversations, turns, jobs, operations,

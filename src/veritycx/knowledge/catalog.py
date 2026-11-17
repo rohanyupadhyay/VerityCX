@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import Field
 
 from veritycx.conversations.models import ClosedModel
+from veritycx.knowledge.audience import audience_policy_identity
+from veritycx.knowledge.products import product_policy_identity, source_category
 
 if TYPE_CHECKING:
     from veritycx.knowledge.models import KnowledgeDocument
@@ -54,6 +56,8 @@ def category_policy_identity() -> CategoryPolicyIdentity:
         "synthetic": list(SYNTHETIC_CATEGORIES.items()),
         "title_rules": list(TITLE_CATEGORIES.items()),
         "related_titles": "casefold-original-title-v1",
+        "audience": audience_policy_identity(),
+        "products": product_policy_identity(),
     }
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return CategoryPolicyIdentity(digest=sha256(raw.encode()).hexdigest())
@@ -78,6 +82,8 @@ def category_for(
         for category, numbers in SYNTHETIC_CATEGORIES.items():
             if document.id in {f"policy-{number:02}" for number in numbers}:
                 return category
+    elif (domain_category := source_category(document.id)) is not None:
+        return domain_category
     words = set(re.findall(r"\w+", document.title.casefold()))
     return next(
         (category for category, terms in TITLE_CATEGORIES.items() if words.intersection(terms)),

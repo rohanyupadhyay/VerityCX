@@ -18,6 +18,17 @@ or subprocess handles created by that test; it must never reset unrelated databa
 
 ## Current files
 
+`test_corpus_audience.py` checks restricted-source exclusion before indexing, public
+internal-transfer retention, complete source validation, and rejection of unsafe old
+inventories. `test_product_retrieval.py` checks personal/business isolation, full product
+modifiers, unknown-product abstention, source-domain categories, and distinct-product
+discovery. These tests use project-authored sources only.
+
+`test_corpus_startup.py` verifies first activation, repeat stability, acquisition failure,
+changed-source preservation, document-only selection, and exclusive initialization locks.
+External acquisition is replaced with temporary authored sources; tests never download
+official data or activate the application's corpus.
+
 `test_checkpoint_serialization.py`, `test_configuration.py`, `test_corpus.py`, `test_event_loop.py`, `test_models.py`, `test_retrieval.py`, `test_routing.py`, `test_safety.py`, `test_trace_privacy.py`.
 
 `test_chatwoot.py` adds offline signed-webhook, public configuration, two-token HTTP

@@ -14,7 +14,7 @@ from veritycx.knowledge.manifest import load_documents, load_sections, read_acti
 from veritycx.knowledge.models import CorpusManifest, EvidenceSection, KnowledgeDocument
 from veritycx.knowledge.resources import configured_identity
 from veritycx.policy.sources import SourceError
-from veritycx.service.configuration import PROJECT_ROOT
+from veritycx.service.configuration import PROJECT_ROOT as PROJECT_ROOT
 
 
 def corpus_cache(mode: Literal["synthetic", "official"], *, validation: bool = False) -> Path:
